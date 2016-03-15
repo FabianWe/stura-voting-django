@@ -53,7 +53,7 @@ class VotingWeightGroup(models.Model):
         help_text='Abstimmungszeitraum dem diese Gewichtung zugeordnet wird')
 
 
-class VotingWeight(models.Model):
+class WeightedVoter(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(
         _('Name'),
@@ -76,7 +76,7 @@ class VotingDay(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     date = models.DateField(
         verbose_name=_('Datum'),
-        help_text='Datum an dem die Abstimmungen durchgeführt werden.')
+        help_text='Datum an dem die Abstimmungen durchgeführt werden')
     weights = models.ForeignKey(
         VotingWeightGroup,
         on_delete=models.CASCADE,
@@ -86,11 +86,22 @@ class VotingDay(models.Model):
 
 class GeneralPoll(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    name = models.CharField(
+        _('Name'),
+        help_text=_('Name / Beschreibung der Abstimmung'),
+        max_length=250)
+    voting_day = models.ForeignKey(
+        VotingDay,
+        on_delete=models.CASCADE,
+        verbose_name=_('Abstimmungstag'),
+        help_text='Tag an dem diese Abstimmung stattfindet')
+    poll_id = models.PositiveSmallIntegerField(
+        verbose_name=_('AbstimmungsID innerhalb des Tages'))
     percent_required = models.DecimalField(
         _('Prozent'),
         help_text=_(
             'Prozent die nötig sind, damit die Abstimmung als angenommen gilt'),
-        max_digits=4,
+        max_digits=5,
         decimal_places=2,
         default=Decimal('50.00'),
         validators=[MinValueValidator(Decimal('0.00')),
@@ -100,3 +111,70 @@ class GeneralPoll(models.Model):
         help_text=_(
             'Wenn aktiviert werden ALLE Stimmen gezählt, auch jene die nicht mit abgestimmt haben!'),
         default=False)
+
+    class Meta:
+        unique_together = ('voting_day', 'poll_id')
+
+
+class MedianPoll(GeneralPoll):
+    max_value = models.DecimalField(
+        _('Abzustimmender Betrag'),
+        help_text=_('Betrag welcher beantragt wurde'),
+        max_digits=20,
+        decimal_places=2)
+
+
+class SchulzePoll(GeneralPoll):
+    pass
+
+
+class SchulzePollOption(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    option = models.CharField(
+        _('Option'),
+        help_text=_('Die Option für diesen Abstimmungsgegenstand'),
+        max_length=250)
+    poll = models.ForeignKey(
+        SchulzePoll,
+        on_delete=models.CASCADE,
+        verbose_name=_('Schulze-Abstimmung'),
+        help_text=_('Abstimmung, zu der diese Option gehört'))
+
+
+class MedianVote(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    poll = models.ForeignKey(
+        MedianPoll,
+        on_delete=models.CASCADE,
+        verbose_name=_('Abstimmung'),
+        help_text='Abstimmung, auf welche sich die Antwort bezieht')
+    voter = models.ForeignKey(
+        WeightedVoter,
+        on_delete=models.CASCADE,
+        verbose_name=_('Abstimmende Gruppe'))
+    models.DecimalField(
+        _('Abgestimmter Betrag'),
+        help_text=_('Betrag welchen diese Gruppe abgestimmt hat'),
+        max_digits=20,
+        decimal_places=2)
+
+    class Meta:
+        unique_together = ('poll', 'voter')
+
+
+class SchulzeVote(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    poll_option = models.ForeignKey(
+        SchulzePollOption,
+        on_delete=models.CASCADE,
+        verbose_name=_('Option'),
+        help_text='Option auf welch sich diese Antwort bezieht')
+    voter = models.ForeignKey(
+        WeightedVoter,
+        on_delete=models.CASCADE,
+        verbose_name=_('Abstimmende Gruppe'))
+    rank = models.PositiveSmallIntegerField(
+        verbose_name=_('Position im Ranking'))
+
+    class Meta:
+        unique_together = ('poll_option', 'voter')
