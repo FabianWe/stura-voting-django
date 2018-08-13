@@ -46,12 +46,14 @@ class VotingGroup(models.Model):
 
 class MedianVoting(models.Model):
     name = models.CharField(max_length=150, help_text='Name of the voting')
-    value = models.PositiveIntegerField(help_text='Value for this voting (for example 2000 (cent))')
+    value = models.PositiveIntegerField(help_text='Value for this voting (for example 2000 (cent). Always meassured in cents, pence etc.)')
     percent_required = models.DecimalField(help_text='Percent of votes required, for example 50 (half of all votes) or 75 (three-quarters)',
         max_digits=4,
         decimal_places=1,
         default=Decimal('50.0'),
         validators=[MinValueValidator(Decimal('0.0')), MaxValueValidator(Decimal('100.0'))])
+    count_all_votes = models.BooleanField(help_text='Set to true if all voters should be considerd, even those who did not cast a vote. Thes voters will be treated as if they voted for 0€', default=False)
+    currency = models.CharField(max_length=10, blank=True, help_text='Currency of the vote, for example "$" or "€". For example value=100 and currency=€ means 1,00€.')
     group = models.ForeignKey('VotingGroup', on_delete=models.CASCADE, help_text='Group this voting belongs to')
 
     class Meta:
@@ -65,6 +67,7 @@ class SchulzeVoting(models.Model):
         decimal_places=1,
         default=Decimal('50.0'),
         validators=[MinValueValidator(Decimal('0.0')), MaxValueValidator(Decimal('100.0'))])
+    count_all_votes = models.BooleanField(help_text='Set to true if all voters should be considerd, even those who did not cast a vote. Thes voters will be treated as if they voted for no (which is considered to be the last option)', default=False)
     group = models.ForeignKey('VotingGroup', on_delete=models.CASCADE, help_text='Group this voting belongs to')
 
     class Meta:

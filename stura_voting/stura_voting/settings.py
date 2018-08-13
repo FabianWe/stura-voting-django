@@ -108,7 +108,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Europe/Berlin'
 
 USE_I18N = True
 
@@ -121,3 +121,12 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/2.0/howto/static-files/
 
 STATIC_URL = '/static/'
+
+BOOTSTRAP4 = {
+    # TODO not possible with the current version on pypi...
+    # included by hand
+    'include_jquery': True,
+    # it seems that otherwise we can't include jquery before bootstrap...
+    # so this is commented out, seems to work without it though
+    #'javascript_in_head': True,
+}

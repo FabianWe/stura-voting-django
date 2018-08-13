@@ -1,3 +1,9 @@
+# virtual env
+django-env
+
+# IDE
+.idea
+
 # sqlite
 *.sqlite3
 
