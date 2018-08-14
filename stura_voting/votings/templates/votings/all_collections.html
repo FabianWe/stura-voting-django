@@ -1,0 +1,20 @@
+{% extends 'votings/base.html' %}
+{% load bootstrap4 %}
+
+{% block content %}
+    <h2>Sitzungen</h2>
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Name</td>
+          <th>Datum</td>
+        </tr>
+      </thead>
+      {% for collection in collections %}
+        <tr>
+          <td>{{ collection.name }}</td>
+          <td>{{ collection.time }}</td>
+        </tr>
+      {% endfor %}
+    </table>
+{% endblock %}

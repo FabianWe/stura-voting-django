@@ -1,5 +1,6 @@
 from django.shortcuts import render
 from django.views.generic.detail import DetailView
+from django.views.generic import ListView
 
 # Create your views here.
 
@@ -13,8 +14,8 @@ def index(request):
 
 def archive_index(request):
     return render(request, 'votings/archive.html',
-             {'periods': Period.objects.order_by('start')[:10],
-              'collections': VotingCollection.objects.order_by('time')[:10]})
+             {'periods': Period.objects.order_by('-start', '-created')[:10],
+              'collections': VotingCollection.objects.order_by('-time')[:10]})
 
 
 class PeriodDetailView(DetailView):
@@ -26,10 +27,10 @@ class PeriodDetailView(DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         period = context['period']
-        revs = VotersRevision.objects.filter(period=period).order_by('created')
+        revs = VotersRevision.objects.filter(period=period).order_by('-created')
         context['revisions'] = revs
         # TODO is this even working?
-        collections = VotingCollection.objects.filter(revision__period=period).order_by('time')
+        collections = VotingCollection.objects.filter(revision__period=period).order_by('-time')
         context['collections'] = collections
         return context
 
@@ -63,3 +64,23 @@ def new_revision(request):
 
 
     return render(request, 'votings/new_revision.html', {'form': form})
+
+
+class PeriodsList(ListView):
+    template_name = 'votings/all_periods.html'
+    model = Period
+    context_object_name = 'periods'
+
+    def get_queryset(self):
+        res = super().get_queryset()
+        return res.order_by('-start', '-created')
+
+
+class CollectionsList(ListView):
+    template_name = 'votings/all_collections.html'
+    model = VotingCollection
+    context_object_name = 'collections'
+
+    def get_queryset(self):
+        res = super().get_queryset()
+        return res.order_by('-time')

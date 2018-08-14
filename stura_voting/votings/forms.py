@@ -22,4 +22,4 @@ class RevisionForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(RevisionForm, self).__init__(*args, **kwargs)
-        self.fields['period'].queryset = self.fields['period'].queryset.order_by('created')
+        self.fields['period'].queryset = self.fields['period'].queryset.order_by('-start', '-created')

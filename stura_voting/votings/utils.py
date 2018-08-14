@@ -76,7 +76,3 @@ def get_semester_name(reference_date=None):
         return 'Wintersemester %d/%d' % (next_start.year, next_start.year+1)
     else:
         return 'Sommersemester %d' % next_start.year
-
-
-def get_collections():
-    pass

@@ -1,0 +1,22 @@
+{% extends 'votings/base.html' %}
+{% load bootstrap4 %}
+
+{% block content %}
+    <h2>Abstimmungsperioden</h2>
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Von</th>
+          <th>Bis</th>
+        </tr>
+      </thead>
+      {% for period in periods %}
+        <tr>
+          <td><a href="{% url 'period_detail' period.id %}">{{ period.name }}</a></td>
+          <td>{{ period.start }}</td>
+          <td>{{ period.end }}</td>
+        </tr>
+      {% endfor %}
+    </table>
+{% endblock %}
