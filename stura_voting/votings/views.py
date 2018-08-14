@@ -3,7 +3,7 @@ from django.views.generic.detail import DetailView
 
 # Create your views here.
 
-from .models import VotersRevision, Voter, Period
+from .models import VotersRevision, Voter, Period, VotingCollection
 from .forms import PeriodForm, RevisionForm
 
 
@@ -12,7 +12,9 @@ def index(request):
 
 
 def archive_index(request):
-    return render(request, 'votings/archive.html', {'periods': Period.objects.order_by('created')[:10]})
+    return render(request, 'votings/archive.html',
+             {'periods': Period.objects.order_by('start')[:10],
+              'collections': VotingCollection.objects.order_by('time')[:10]})
 
 
 class PeriodDetailView(DetailView):
@@ -20,6 +22,16 @@ class PeriodDetailView(DetailView):
 
     context_object_name = 'period'
     template_name = 'votings/period_detail.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        period = context['period']
+        revs = VotersRevision.objects.filter(period=period).order_by('created')
+        context['revisions'] = revs
+        # TODO is this even working?
+        collections = VotingCollection.objects.filter(revision__period=period).order_by('time')
+        context['collections'] = collections
+        return context
 
 
 def new_period(request):
