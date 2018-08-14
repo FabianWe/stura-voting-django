@@ -1,8 +1,9 @@
 from django.shortcuts import render
+from django.views.generic.detail import DetailView
 
 # Create your views here.
 
-from .models import VotersRevision, Voter
+from .models import VotersRevision, Voter, Period
 from .forms import PeriodForm, RevisionForm
 
 
@@ -11,7 +12,14 @@ def index(request):
 
 
 def archive_index(request):
-    pass
+    return render(request, 'votings/archive.html', {'periods': Period.objects.order_by('created')[:10]})
+
+
+class PeriodDetailView(DetailView):
+    model = Period
+
+    context_object_name = 'period'
+    template_name = 'votings/period_detail.html'
 
 
 def new_period(request):

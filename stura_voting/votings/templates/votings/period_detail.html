@@ -2,12 +2,14 @@
 {% load bootstrap4 %}
 
 {% block content %}
+<h2>{{ period.name }}</h2>
+
 <div class="row">
     <div class="col-sm-3 col-md-6">
       <table class="table">
         <thead>
           <tr>
-            <th>Sitzungen (<a href="todo">alle</a>)</th>
+            <th>Sitzungen</th>
           </tr>
         </thead>
       </table>
@@ -16,14 +18,9 @@
       <table class="table">
         <thead>
           <tr>
-            <th>Abstimmungsperioden (<a href="todo">alle</a>)</th>
+            <th>Revisionen</th>
           </tr>
         </thead>
-        {% for period in periods %}
-          <tr>
-            <td><a href="{% url 'period_detail' period.id %}">{{ period.name }}</a></td>
-          </tr>
-        {% endfor %}
       </table>
     </div>
 </div>
