@@ -14,6 +14,8 @@ class PeriodForm(forms.ModelForm):
 
 class RevisionForm(forms.ModelForm):
 
+    voters = VotersRevisionField(required=True)
+
     class Meta:
         model = VotersRevision
         fields = ('period', 'note')

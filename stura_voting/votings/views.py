@@ -10,6 +10,10 @@ def index(request):
     return render(request, 'votings/index.html')
 
 
+def archive_index(request):
+    pass
+
+
 def new_period(request):
     if request.method == 'GET':
         form = PeriodForm()
@@ -30,5 +34,12 @@ def new_revision(request):
     if request.method == 'GET':
         form = RevisionForm()
     else:
-        pass
+        form = RevisionForm(request.POST)
+        if form.is_valid():
+            rev = form.save()
+            for voter in form.cleaned_data['voters']:
+                Voter.objects.create(revision=rev, name=voter.name, weight=voter.weight)
+            return render(request, 'votings/success_revision.html', {'period': rev.period.name})
+
+
     return render(request, 'votings/new_revision.html', {'form': form})

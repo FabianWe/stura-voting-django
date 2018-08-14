@@ -22,7 +22,7 @@ class Period(models.Model):
 class VotersRevision(models.Model):
     period = models.ForeignKey('Period', on_delete=models.CASCADE, help_text='Periode für diese Revision')
     created = models.DateTimeField(help_text='Erstellungszeitpunkt', default=timezone.now)
-    note = models.TextField(help_text='Optinale Notiz')
+    note = models.TextField(help_text='Optinale Notiz', blank=True)
 
 
 class Voter(models.Model):
