@@ -15,11 +15,14 @@ class Period(models.Model):
     start = models.DateField(blank=True, null=True, help_text='Start der Periode', default=get_semester_start)
     end = models.DateField(blank=True, null=True, help_text='Ende der Periode', default=get_semester_end)
 
+    def __str__(self):
+        return str(self.name)
+
 
 class VotersRevision(models.Model):
-    period = models.ForeignKey('Period', on_delete=models.CASCADE, help_text='Period this revision is used in')
-    created = models.DateTimeField(help_text='Time when the revision was created', default=timezone.now)
-    note = models.TextField(help_text='Optional note for this revision')
+    period = models.ForeignKey('Period', on_delete=models.CASCADE, help_text='Periode für diese Revision')
+    created = models.DateTimeField(help_text='Erstellungszeitpunkt', default=timezone.now)
+    note = models.TextField(help_text='Optinale Notiz')
 
 
 class Voter(models.Model):
