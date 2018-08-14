@@ -3,20 +3,22 @@ from django.db import models
 from decimal import Decimal
 from django.core.validators import MaxValueValidator, MinValueValidator
 
+from django.utils import timezone
+
+from .utils import *
+
 # Create your models here.
 
 class Period(models.Model):
-    name = models.CharField(max_length=150, help_text='Name of the period, for example "Summer Term 2018"', unique=True)
-    # TODO timezone?
-    created = models.DateTimeField(auto_now_add=True, help_text='Time when the category was created')
-    # TODO default method
-    start = models.DateField(blank=True, null=True, help_text='Start of the period (for example start of term)')
-    end = models.DateField(blank=True, null=True, help_text='End ofthe period (for example end of term)')
+    name = models.CharField(max_length=150, help_text='Name der Abstimmungsperiode, z.B. "Sommersemester 2018"', unique=True, default=get_semester_name)
+    created = models.DateTimeField(help_text='Erstellungszeitpunkt', default=timezone.now)
+    start = models.DateField(blank=True, null=True, help_text='Start der Periode', default=get_semester_start)
+    end = models.DateField(blank=True, null=True, help_text='Ende der Periode', default=get_semester_end)
 
 
 class VotersRevision(models.Model):
     period = models.ForeignKey('Period', on_delete=models.CASCADE, help_text='Period this revision is used in')
-    created = models.DateTimeField(auto_now_add=True, help_text='Time when the revision was created')
+    created = models.DateTimeField(help_text='Time when the revision was created', default=timezone.now)
     note = models.TextField(help_text='Optional note for this revision')
 
 
