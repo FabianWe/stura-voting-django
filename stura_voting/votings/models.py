@@ -35,15 +35,19 @@ class Voter(models.Model):
 
 
 class VotingCollection(models.Model):
-    name = models.CharField(max_length=150, help_text='Name of the collection (for example "StuRa-Sitzung vom XX.XX.XXXX")')
-    # TODO default
-    time = models.DateTimeField(help_text='Time the votings take place')
+    # TODO test default methods
+    name = models.CharField(max_length=150,
+                            help_text='Name of the collection (for example "StuRa-Sitzung vom XX.XX.XXXX")',
+                            default=get_next_session_name_stura)
+    time = models.DateTimeField(help_text='Time the votings take place',
+                                default=get_next_session_stura)
     revision = models.ForeignKey('VotersRevision', on_delete=models.CASCADE, help_text='Group of voters for this voting')
 
 
 class VotingGroup(models.Model):
     name = models.CharField(max_length=150, help_text='Name of the group, for example "Financial Votes"')
     collection = models.ForeignKey('VotingCollection', on_delete=models.CASCADE, help_text='Collection this group belongs to')
+    group_num = models.PositiveIntegerField(help_text='Gruppen Nummer')
 
     class Meta:
         unique_together = ('name', 'collection',)
@@ -60,6 +64,7 @@ class MedianVoting(models.Model):
     count_all_votes = models.BooleanField(help_text='Set to true if all voters should be considerd, even those who did not cast a vote. Thes voters will be treated as if they voted for 0€', default=False)
     currency = models.CharField(max_length=10, blank=True, help_text='Currency of the vote, for example "$" or "€". For example value=100 and currency=€ means 1,00€.')
     group = models.ForeignKey('VotingGroup', on_delete=models.CASCADE, help_text='Group this voting belongs to')
+    voting_num = models.PositiveIntegerField(help_text='Abstimmungsnummer innerhalb der Gruppe')
 
     class Meta:
         unique_together = ('name', 'group',)
@@ -74,6 +79,7 @@ class SchulzeVoting(models.Model):
         validators=[MinValueValidator(Decimal('0.0')), MaxValueValidator(Decimal('100.0'))])
     count_all_votes = models.BooleanField(help_text='Set to true if all voters should be considerd, even those who did not cast a vote. Thes voters will be treated as if they voted for no (which is considered to be the last option)', default=False)
     group = models.ForeignKey('VotingGroup', on_delete=models.CASCADE, help_text='Group this voting belongs to')
+    voting_num = models.PositiveIntegerField(help_text='Abstimmungsnummer innerhalb der Gruppe')
 
     class Meta:
         # TODO we should enforce name and group to be unique in median and schulze
@@ -106,3 +112,5 @@ class SchulzeVote(models.Model):
 
     class Meta:
         unique_together = ('voter', 'option',)
+
+

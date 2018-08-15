@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/2.0/ref/settings/
 
 import os
 
+from dateutil import relativedelta
+
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -102,6 +104,12 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+
+VOTING_SESSIONS_CONFIG = {
+    'weekday': relativedelta.TH,
+    'hour': 18,
+    'minute': 00,
+}
 
 # Internationalization
 # https://docs.djangoproject.com/en/2.0/topics/i18n/

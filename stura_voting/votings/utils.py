@@ -1,4 +1,8 @@
 import datetime
+from dateutil import relativedelta
+from django.utils.timezone import make_aware
+from django.utils import formats
+from django.conf import settings
 
 def get_next_semester(reference_date=None):
     """
@@ -76,3 +80,30 @@ def get_semester_name(reference_date=None):
         return 'Wintersemester %d/%d' % (next_start.year, next_start.year+1)
     else:
         return 'Sommersemester %d' % next_start.year
+
+def next_session_date(weekday, reference_date=None):
+    if reference_date is None:
+        reference_date = datetime.date.today()
+    return reference_date + relativedelta.relativedelta(days=+1, weekday=weekday(+1))
+
+
+def get_next_session_datetime(weekday, hour, minute, reference_date=None):
+    date = next_session_date(weekday, reference_date)
+    time = datetime.datetime(year=date.year, month=date.month, day=date.day,
+                             hour=hour, minute=minute)
+    # TODO check timezone stuff...
+    return make_aware(time)
+
+
+def get_next_session_name(weekday, reference_date=None, format='Sitzung vom %s'):
+    date = next_session_date(weekday, reference_date)
+    fmt_date = formats.date_format(date, 'DATE_FORMAT')
+    return format % fmt_date
+
+def get_next_session_stura():
+    return get_next_session_name(settings.VOTING_SESSIONS_CONFIG['weekday'])
+
+
+def get_next_session_name_stura():
+    config = settings.VOTING_SESSIONS_CONFIG
+    return get_next_session_name(config['weekday'], config['hour'], config['minute'])

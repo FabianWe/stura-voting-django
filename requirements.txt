@@ -4,3 +4,4 @@ django-bootstrap4
 pytz
 pdfkit
 stura_voting_utils
+python-dateutil
