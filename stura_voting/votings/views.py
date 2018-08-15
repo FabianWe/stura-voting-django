@@ -154,3 +154,17 @@ class SessionDelete(DeleteView):
     model = VotingCollection
     success_url = 'session_delete_success'
     template_name = 'votings/session_confirm_delete.html'
+
+
+class SessionPrintView(DetailView):
+    model = VotingCollection
+
+    context_object_name = 'voting_session'
+    template_name = 'votings/session_print.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        groups, option_map = get_groups_template(self.object)
+        context['groups'] = groups
+        context['option_map'] = option_map
+        return context

@@ -1,3 +1,46 @@
 .bg-stura-orange {
     background-color: #FF6600;
 }
+
+.print-head-small {
+  font-size: 125%;
+}
+
+.print-head {
+  font-size: 200%;
+}
+
+.borderless td, .borderless th {
+    border: none;
+}
+
+.median-table-value {
+  width: 15%;
+}
+
+.schulze-table-pos {
+  width: 15%;
+}
+
+.signature-table-cell {
+  width: 50%;
+}
+
+.signature-date-line {
+  width: 40%;
+  border-top: 3px solid #8c8b8b;
+  margin-left: 0;
+}
+
+.signature-line {
+  border-top: 3px solid #8c8b8b;
+  margin-left: 0;
+}
+
+.bottom-three {
+     margin-bottom: 3cm;
+}
+
+.table-signature-line {
+  width: 50%;
+}

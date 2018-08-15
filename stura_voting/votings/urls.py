@@ -36,5 +36,6 @@ urlpatterns = [
     path('session/<int:pk>/edit/', views.SessionUpdate.as_view(), name='session_update'),
     path('session/<int:pk>/', views.SessionDetailView.as_view(), name='session_detail'),
     path('session/delete/success/', views.success_session_delete, name='session_delete_success'),
-    path('session/delete/<int:pk>/', views.SessionDelete.as_view(), name='session_delete')
+    path('session/delete/<int:pk>/', views.SessionDelete.as_view(), name='session_delete'),
+    path('session/<int:pk>/print/', views.SessionPrintView.as_view(), name='session_print'),
 ]
