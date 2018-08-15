@@ -22,8 +22,8 @@
 
 from django import forms
 
-from .models import Period, VotersRevision, VotingCollection
-from .fields import VotersRevisionField, VotingCollectionField
+from .models import *
+from .fields import *
 
 class PeriodForm(forms.ModelForm):
 
@@ -61,8 +61,12 @@ class EnterResultsForm(forms.Form):
         votings = kwargs.pop('votings', [])
         super().__init__(self, *args, **kwargs)
         for voting in votings:
-            # TODO do stuff
-            pass
+            if isinstance(voting, MedianVoting):
+                pass
+            elif isinstance(voting, SchulzeVoting):
+                pass
+            else:
+                assert False
 
 
 # TODO aufpassen mit update und erzeugen

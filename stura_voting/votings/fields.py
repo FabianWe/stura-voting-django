@@ -49,16 +49,24 @@ class VotingCollectionField(forms.CharField):
         except ParseException as e:
             raise forms.ValidationError("Can't parse voting collection from field: %s" % str(e))
 
+
 # TODO test both fields
 
 class CurrencyField(forms.CharField):
 
+    def __init__(self, *args, **kwargs):
+        self.max_value = kwargs.pop('max_value')
+        super().__init__(self, *args, **kwargs)
+
     def clean(self, value):
         cleaned = super().clean(value).strip()
         try:
-            return parse_currency(cleaned)
+            val, currency = parse_currency(cleaned)
         except ParseException as e:
-            raise forms.MultiValueField('No valid currency: %s' % str(e))
+            raise forms.ValidationError('No valid currency: %s' % str(e))
+        if val < 0 or val > self.max_value:
+            raise forms.ValidationError('Invalid currency: Must be >= 0 and <= max_value (%d)' % self.max_value)
+        return val, currency
 
 
 _schulze_option_rx = re.compile(r'[ /;,]')
@@ -84,7 +92,10 @@ class SchulzeVoteField(forms.CharField):
             if not s:
                 continue
             try:
-                ranking.append(int(s))
+                val = int(s)
+                if val < 0:
+                    raise forms.ValidationError('Invalid Schulze vote: Must be a postive integer')
+                ranking.append(val)
             except ValueError as e:
                 raise forms.ValidationError('Invalid Schulze vote: Must be list of integers: %s' % str(e))
         if len(ranking) != self.num_options:
