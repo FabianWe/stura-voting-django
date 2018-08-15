@@ -23,6 +23,7 @@
 from django.shortcuts import render, reverse
 from django.views.generic.detail import DetailView
 from django.views.generic import ListView, UpdateView
+from django.views.generic.edit import DeleteView
 
 # TODO when parsing inputs via our library, check lengths before inserting?
 
@@ -143,3 +144,13 @@ class SessionDetailView(DetailView):
         context['groups'] = groups
         context['option_map'] = option_map
         return context
+
+
+def success_session_delete(request):
+    return render(request, 'votings/success_session_delete.html')
+
+
+class SessionDelete(DeleteView):
+    model = VotingCollection
+    success_url = 'session_delete_success'
+    template_name = 'votings/session_confirm_delete.html'

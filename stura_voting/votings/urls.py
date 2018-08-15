@@ -34,5 +34,7 @@ urlpatterns = [
     path('sesions/', views.CollectionsList.as_view(), name='collections_list'),
     path('session/new', views.new_session, name='new_session'),
     path('session/<int:pk>/edit/', views.SessionUpdate.as_view(), name='session_update'),
-    path('session/<int:pk>/', views.SessionDetailView.as_view(), name='session_detail')
+    path('session/<int:pk>/', views.SessionDetailView.as_view(), name='session_detail'),
+    path('session/delete/success/', views.success_session_delete, name='session_delete_success'),
+    path('session/delete/<int:pk>/', views.SessionDelete.as_view(), name='session_delete')
 ]
