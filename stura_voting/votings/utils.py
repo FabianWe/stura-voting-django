@@ -31,6 +31,8 @@ from django.conf import settings
 # otherwise some really ugly import stuff
 from . import models as voting_models
 
+from stura_voting_utils import SchulzeVotingSkeleton, MedianVotingSkeleton
+
 
 def get_next_semester(reference_date=None):
     """
@@ -141,10 +143,31 @@ def get_next_session_name_stura():
 
 
 def add_votings(parsed_collection, collection_model):
-    # TODO fix import
-    # TODO fix id
-    for group_num, group in enumerate(parsed_collection.groups, 1):
+    for group_num, group in enumerate(parsed_collection.groups):
         model_group = voting_models.VotingGroup.objects.create(name=group.name,
                                                  collection=collection_model,
                                                  group_num=group_num)
-
+        for skel in group.get_votings():
+            if isinstance(skel, SchulzeVotingSkeleton):
+                schulze_voting = voting_models.SchulzeVoting.objects.create(
+                    name=skel.name,
+                    voting_num=skel.id if skel.id is not None else 0,
+                    group=model_group,
+                )
+                # add all options
+                for option_num, option in enumerate(skel.options):
+                    voting_models.SchulzeOption.objects.create(
+                        option=option,
+                        option_num=option_num,
+                        voting=schulze_voting,
+                    )
+            elif isinstance(skel, MedianVotingSkeleton):
+                voting_models.MedianVoting.objects.create(
+                    name=skel.name,
+                    value=skel.value,
+                    currency=skel.concurrency if skel.concurrency is not None else '€',
+                    voting_num=skel.id if skel.id is not None else 0,
+                    group=model_group,
+                )
+            else:
+                assert False

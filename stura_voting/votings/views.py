@@ -28,6 +28,7 @@ from django.views.generic import ListView
 
 from .models import VotersRevision, Voter, Period, VotingCollection
 from .forms import PeriodForm, RevisionForm, SessionForm
+from .utils import add_votings
 
 
 def index(request):
@@ -93,17 +94,10 @@ def new_session(request):
         form = SessionForm(request.POST)
         if form.is_valid():
             parsed_collection = form.cleaned_data['collection']
-            # TODO remove
-            for group in parsed_collection.groups:
-                for v in group.get_votings():
-                    print(v.id)
-
-
-            # TODO create votings
             session = form.save(commit=False)
-
             session.name = parsed_collection.name
             session.save()
+            add_votings(parsed_collection, session)
             return render(request, 'votings/success_session.html', {'voting_session': session})
     return render(request, 'votings/new_session.html', {'form': form})
 

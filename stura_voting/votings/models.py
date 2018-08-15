@@ -31,6 +31,7 @@ from .utils import *
 
 # TODO change display names
 
+
 class Period(models.Model):
     name = models.CharField(max_length=150, help_text='Name der Abstimmungsperiode, z.B. "Sommersemester 2018"', unique=True, default=get_semester_name)
     created = models.DateTimeField(help_text='Erstellungszeitpunkt', default=timezone.now)
@@ -93,9 +94,6 @@ class MedianVoting(models.Model):
     group = models.ForeignKey('VotingGroup', on_delete=models.CASCADE, help_text='Group this voting belongs to')
     voting_num = models.PositiveIntegerField(help_text='Abstimmungsnummer innerhalb der Gruppe')
 
-    class Meta:
-        unique_together = ('name', 'group',)
-
 
 class SchulzeVoting(models.Model):
     name = models.CharField(max_length=150, help_text='Name of the voting')
@@ -108,14 +106,11 @@ class SchulzeVoting(models.Model):
     group = models.ForeignKey('VotingGroup', on_delete=models.CASCADE, help_text='Group this voting belongs to')
     voting_num = models.PositiveIntegerField(help_text='Abstimmungsnummer innerhalb der Gruppe')
 
-    class Meta:
-        # TODO we should enforce name and group to be unique in median and schulze
-        unique_together = ('name', 'group',)
-
 
 class SchulzeOption(models.Model):
     option = models.CharField(max_length=150, help_text='Option text')
     voting = models.ForeignKey('SchulzeVoting', on_delete=models.CASCADE, help_text='Voting this option belongs to')
+    option_num = models.PositiveIntegerField(help_text='Optionsnummer innerhalb der Schulze Abstimmung')
 
     class Meta:
         unique_together = ('option', 'voting',)
