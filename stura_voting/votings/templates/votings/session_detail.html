@@ -25,8 +25,29 @@ SOFTWARE.
 {% endcomment %}
 
 {% load bootstrap4 %}
+{% load currency %}
+{% load hash %}
 
 {% block content %}
     <h2>{{ object.name }}</h2>
+    <p><a href="{% url 'session_update' object.id %}" class="btn btn-secondary" role="button"><i class="fas fa-edit"></i> Bearbeiten</a></p>
     Sitzung vom {{ object.time }}
+    {% for group_name, group_entries in groups %}
+        <h3>{{ group_name }}</h3>
+        {% for voting_type, voting in group_entries %}
+            {% if voting_type == "schulze" %}
+                <p>Abstimmung {{ voting.name }}
+                {% with options=option_map|hash:voting.id %}
+                    <ul>
+                        {% for option in options %}
+                            <li>{{ option }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endwith %}
+                </p>
+                {% else %}
+                <p>Finanzantrag "{{ voting.name }}" über {{ voting.value|currency:voting.currency }}</p>
+            {% endif %}
+        {% endfor %}
+    {% endfor %}
 {% endblock %}

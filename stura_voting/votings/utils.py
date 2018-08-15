@@ -178,9 +178,11 @@ def get_groups_template(collection):
     groups_model = list(voting_models.VotingGroup.objects.filter(collection=collection).order_by('group_num', 'name'))
     # transform the model to a list: It consists of one list for each group
     # and contains tuples (type, voting) where type is either 'median' or 'schulze'
+    # TODO update as soon as finished
     groups = []
+    option_map = dict()
     for group_model in groups_model:
-        group = []
+        group_list = []
         # now get all votings for both types
         # and sort them according to the id
         schulze_votings = list(voting_models.SchulzeVoting.objects.filter(group=group_model).order_by('voting_num', 'name'))
@@ -188,10 +190,14 @@ def get_groups_template(collection):
         all_vottings = merge(schulze_votings, median_votings)
         for v in all_vottings:
             if isinstance(v, voting_models.SchulzeVoting):
-                group.append(('schulze', v))
+                group_list.append(('schulze', v))
+                # for a schulze voting we also must collect all options
+                options_model = voting_models.SchulzeOption.objects.filter(voting=v).order_by('option_num', 'option')
+                options = [o.option for o in options_model]
+                option_map[v.id] = options
             elif isinstance(v, voting_models.MedianVoting):
-                group.append(('median', v))
+                group_list.append(('median', v))
             else:
                 assert False
-        groups.append(group)
-    return groups
+        groups.append((group_model.name, group_list))
+    return groups, option_map
