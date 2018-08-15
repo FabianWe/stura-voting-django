@@ -21,6 +21,7 @@
 # SOFTWARE.
 
 import datetime
+from heapq import merge
 
 from dateutil import relativedelta
 
@@ -171,3 +172,26 @@ def add_votings(parsed_collection, collection_model):
                 )
             else:
                 assert False
+
+
+def get_groups_template(collection):
+    groups_model = list(voting_models.VotingGroup.objects.filter(collection=collection).order_by('group_num', 'name'))
+    # transform the model to a list: It consists of one list for each group
+    # and contains tuples (type, voting) where type is either 'median' or 'schulze'
+    groups = []
+    for group_model in groups_model:
+        group = []
+        # now get all votings for both types
+        # and sort them according to the id
+        schulze_votings = list(voting_models.SchulzeVoting.objects.filter(group=group_model).order_by('voting_num', 'name'))
+        median_votings = list(voting_models.MedianVoting.objects.filter(group=group_model).order_by('voting_num', 'name'))
+        all_vottings = merge(schulze_votings, median_votings)
+        for v in all_vottings:
+            if isinstance(v, voting_models.SchulzeVoting):
+                group.append(('schulze', v))
+            elif isinstance(v, voting_models.MedianVoting):
+                group.append(('median', v))
+            else:
+                assert False
+        groups.append(group)
+    return groups

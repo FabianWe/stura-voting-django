@@ -39,7 +39,7 @@ SOFTWARE.
         </thead>
         {% for collection in collections %}
           <tr>
-            <td><a href="{% url 'session_update' collection.id %}">{{ collection.name }}</a></td>
+            <td><a href="{% url 'session_detail' collection.id %}">{{ collection.name }}</a></td>
             <td>{{ collection.time }}</td>
           </tr>
         {% endfor %}

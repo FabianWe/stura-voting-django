@@ -26,9 +26,9 @@ from django.views.generic import ListView, UpdateView
 
 # TODO when parsing inputs via our library, check lengths before inserting?
 
-from .models import VotersRevision, Voter, Period, VotingCollection
+from .models import *
 from .forms import PeriodForm, RevisionForm, SessionForm
-from .utils import add_votings
+from .utils import add_votings, get_groups_template
 
 
 def index(request):
@@ -139,5 +139,5 @@ class SessionDetailView(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        # TODO
+        context['groups'] = get_groups_template(self.object)
         return context
