@@ -165,7 +165,7 @@ def add_votings(parsed_collection, collection_model):
                 voting_models.MedianVoting.objects.create(
                     name=skel.name,
                     value=skel.value,
-                    currency=skel.concurrency if skel.concurrency is not None else '€',
+                    currency=skel.currency if skel.currency is not None else '€',
                     voting_num=skel.id if skel.id is not None else 0,
                     group=model_group,
                 )
