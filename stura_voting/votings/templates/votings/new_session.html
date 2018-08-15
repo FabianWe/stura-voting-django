@@ -1,0 +1,12 @@
+{% extends 'votings/base.html' %}
+{% load bootstrap4 %}
+
+{% block content %}
+    <h2>Neue Sitzung Erstellen</h2>
+
+    <form role="form" method="post">
+        {% csrf_token %}
+        {% bootstrap_form form %}
+        {% buttons submit='Speichern' %}{% endbuttons %}
+    </form>
+{% endblock %}

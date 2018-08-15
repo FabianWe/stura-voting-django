@@ -5,7 +5,7 @@ from django.views.generic import ListView
 # Create your views here.
 
 from .models import VotersRevision, Voter, Period, VotingCollection
-from .forms import PeriodForm, RevisionForm
+from .forms import PeriodForm, RevisionForm, SessionForm
 
 
 def index(request):
@@ -27,7 +27,7 @@ class PeriodDetailView(DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         period = context['period']
-        revs = VotersRevision.objects.filter(period=period).order_by('-created')
+        revs = VotersRevision.objects.filter(period=period).order_by('-period__start', '-period__created', '-created')
         context['revisions'] = revs
         # TODO is this even working?
         collections = VotingCollection.objects.filter(revision__period=period).order_by('-time')
@@ -61,9 +61,18 @@ def new_revision(request):
             for voter in form.cleaned_data['voters']:
                 Voter.objects.create(revision=rev, name=voter.name, weight=voter.weight)
             return render(request, 'votings/success_revision.html', {'period': rev.period.name})
-
-
     return render(request, 'votings/new_revision.html', {'form': form})
+
+
+def new_session(request):
+    if request.method == 'GET':
+        form = SessionForm()
+    else:
+        form = SessionForm(request.POST)
+        if form.is_valid():
+            # TODO do stuff, fix success_session
+            return render(request, 'votings/success_session.html')
+    return render(request, 'votings/new_session.html', {'form': form})
 
 
 class PeriodsList(ListView):

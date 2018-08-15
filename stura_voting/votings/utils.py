@@ -100,10 +100,12 @@ def get_next_session_name(weekday, reference_date=None, format='Sitzung vom %s')
     fmt_date = formats.date_format(date, 'DATE_FORMAT')
     return format % fmt_date
 
+
 def get_next_session_stura():
-    return get_next_session_name(settings.VOTING_SESSIONS_CONFIG['weekday'])
+    config = settings.VOTING_SESSIONS_CONFIG
+    return get_next_session_datetime(config['weekday'], config['hour'], config['minute'])
 
 
 def get_next_session_name_stura():
     config = settings.VOTING_SESSIONS_CONFIG
-    return get_next_session_name(config['weekday'], config['hour'], config['minute'])
+    return get_next_session_name(config['weekday'])

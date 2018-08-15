@@ -1,6 +1,6 @@
 from django import forms
 
-from .models import Period, VotersRevision
+from .models import Period, VotersRevision, VotingCollection
 from .fields import VotersRevisionField
 
 class PeriodForm(forms.ModelForm):
@@ -23,3 +23,12 @@ class RevisionForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(RevisionForm, self).__init__(*args, **kwargs)
         self.fields['period'].queryset = self.fields['period'].queryset.order_by('-start', '-created')
+
+
+class SessionForm(forms.ModelForm):
+
+    # TODO add votings block
+
+    class Meta:
+        model = VotingCollection
+        fields = ('name', 'time', 'revision')

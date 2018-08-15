@@ -4,6 +4,7 @@ from decimal import Decimal
 from django.core.validators import MaxValueValidator, MinValueValidator
 
 from django.utils import timezone
+from django.utils import formats
 
 from .utils import *
 
@@ -23,6 +24,11 @@ class VotersRevision(models.Model):
     period = models.ForeignKey('Period', on_delete=models.CASCADE, help_text='Periode für diese Revision')
     created = models.DateTimeField(help_text='Erstellungszeitpunkt', default=timezone.now)
     note = models.TextField(help_text='Optinale Notiz', blank=True)
+
+    def __str__(self):
+        created_format = formats.date_format(self.created, 'DATETIME_FORMAT')
+        period = str(self.period)
+        return 'Revision vom %s für %s' % (created_format, period)
 
 
 class Voter(models.Model):
