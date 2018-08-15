@@ -20,9 +20,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from django.shortcuts import render
+from django.shortcuts import render, reverse
 from django.views.generic.detail import DetailView
-from django.views.generic import ListView
+from django.views.generic import ListView, UpdateView
 
 # TODO when parsing inputs via our library, check lengths before inserting?
 
@@ -120,3 +120,24 @@ class CollectionsList(ListView):
     def get_queryset(self):
         res = super().get_queryset()
         return res.order_by('-time')
+
+
+class SessionUpdate(UpdateView):
+    model = VotingCollection
+    fields = ('name', 'time', 'revision')
+    template_name = 'votings/update_session.html'
+
+    def get_success_url(self):
+        return reverse('session_update', args=[self.object.id])
+
+
+class SessionDetailView(DetailView):
+    model = VotingCollection
+
+    context_object_name = 'voting_session'
+    template_name = 'votings/session_detail.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # TODO
+        return context

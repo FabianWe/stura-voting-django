@@ -33,4 +33,5 @@ urlpatterns = [
     path('periods/', views.PeriodsList.as_view(), name='periods_list'),
     path('sesions/', views.CollectionsList.as_view(), name='collections_list'),
     path('session/new', views.new_session, name='new_session'),
+    path('session/<int:pk>/', views.SessionUpdate.as_view(), name='session_update'),
 ]
