@@ -1,8 +1,30 @@
+# MIT License
+#
+# Copyright (c) 2018 Fabian Wenzelmann
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
 from django.shortcuts import render
 from django.views.generic.detail import DetailView
 from django.views.generic import ListView
 
-# Create your views here.
+# TODO when parsing inputs via our library, check lengths before inserting?
 
 from .models import VotersRevision, Voter, Period, VotingCollection
 from .forms import PeriodForm, RevisionForm, SessionForm
@@ -70,8 +92,19 @@ def new_session(request):
     else:
         form = SessionForm(request.POST)
         if form.is_valid():
-            # TODO do stuff, fix success_session
-            return render(request, 'votings/success_session.html')
+            parsed_collection = form.cleaned_data['collection']
+            # TODO remove
+            for group in parsed_collection.groups:
+                for v in group.get_votings():
+                    print(v.id)
+
+
+            # TODO create votings
+            session = form.save(commit=False)
+
+            session.name = parsed_collection.name
+            session.save()
+            return render(request, 'votings/success_session.html', {'voting_session': session})
     return render(request, 'votings/new_session.html', {'form': form})
 
 

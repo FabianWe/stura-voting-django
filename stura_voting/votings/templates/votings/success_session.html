@@ -1,4 +1,4 @@
-{% extends 'votings/bootstrap.html' %}
+{% extends 'votings/success.html' %}
 
 {% comment %}
 MIT License
@@ -24,23 +24,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 {% endcomment %}
 
-{% load static %}
 {% load bootstrap4 %}
 
-{% block bootstrap4_content %}
-
-  <script src="{% static 'votings/jquery-3.3.1.min.js' %}"></script>
-
-    <div class="container">
-      {% block bootstrap4_navbar %} {% include 'votings/navbar.html' %} {% endblock %}
-        <h1>{% block title %}StuRa Abstimmungstool{% endblock %}</h1>
-
-        {% autoescape off %}{% bootstrap_messages %}{% endautoescape %}
-
-        {% block content %}(no content){% endblock %}
-    </div>
-    {% block additional_static %}
-      <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.2.0/css/all.css" integrity="sha384-hWVjflwFxL6sNzntih27bfxkr27PmbbK/iSvJ+a4+0owXq79v+lsFkW54bOGbiDQ" crossorigin="anonymous">
-      <link rel="stylesheet" type="text/css" href="{% static 'votings/votings.css' %}" />
-    {% endblock %}
+{% block success %}
+Die Sitzung "{{ voting_session.name }}" am {{ voting_session.time }} wurde erfolgreich angelegt.
 {% endblock %}
+
+{% comment %} TODO Anzahl Abstimmungen / Link zu Details einfügen {% endcomment %}

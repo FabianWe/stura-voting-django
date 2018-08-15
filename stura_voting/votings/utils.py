@@ -1,8 +1,36 @@
+# MIT License
+#
+# Copyright (c) 2018 Fabian Wenzelmann
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
 import datetime
+
 from dateutil import relativedelta
+
 from django.utils.timezone import make_aware
 from django.utils import formats
 from django.conf import settings
+
+# otherwise some really ugly import stuff
+from . import models as voting_models
+
 
 def get_next_semester(reference_date=None):
     """
@@ -81,6 +109,7 @@ def get_semester_name(reference_date=None):
     else:
         return 'Sommersemester %d' % next_start.year
 
+
 def next_session_date(weekday, reference_date=None):
     if reference_date is None:
         reference_date = datetime.date.today()
@@ -109,3 +138,13 @@ def get_next_session_stura():
 def get_next_session_name_stura():
     config = settings.VOTING_SESSIONS_CONFIG
     return get_next_session_name(config['weekday'])
+
+
+def add_votings(parsed_collection, collection_model):
+    # TODO fix import
+    # TODO fix id
+    for group_num, group in enumerate(parsed_collection.groups, 1):
+        model_group = voting_models.VotingGroup.objects.create(name=group.name,
+                                                 collection=collection_model,
+                                                 group_num=group_num)
+
