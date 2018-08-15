@@ -1,3 +1,5 @@
+{% extends 'votings/base.html' %}
+
 {% comment %}
 MIT License
 
@@ -22,29 +24,20 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 {% endcomment %}
 
-<nav class="navbar navbar-expand-sm navbar-light bg-stura-orange">
-  <ul class="navbar-nav">
-      <li class="nav-item">
-        <a class="nav-link" href="{% url 'index' %}"><i class="fas fa-home"></i> Start</a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" href="{% url 'new_session' %}"><i class="far fa-file"></i> Neue Sitzung</a>
-      </li>
-      <!-- Dropdown -->
-      <li class="nav-item dropdown">
-        <a class="nav-link dropdown-toggle" href="#" id="navbardrop" data-toggle="dropdown">
-          <i class="fas fa-plus"></i> Neu
-        </a>
-        <div class="dropdown-menu">
-          <a class="dropdown-item" href="{% url 'new_period' %}">Sitzungsperiode</a>
-          <a class="dropdown-item" href="{% url 'new_revision' %}">Revision</a>
-        </div>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" href="{% url 'archive_index' %}"><i class="fas fa-archive"></i> Archiv</a>
-      </li>
-      <li class="nav-item">
-          <a class="nav-link" href="#"><i class="fas fa-envelope-open"></i> Ergebnisse Eintragen</a>
-      </li>
-    </ul>
-</nav>
+{% load bootstrap4 %}
+
+{% block content %}
+
+    <form role="form" method="post">
+        {% csrf_token %}
+        <select class="custom-select" size="7">
+            <option value="1">One</option>
+            <option value="2">Two</option>
+            <option value="3">Three</option>
+            <option value="1">One</option>
+            <option value="2">Two</option>
+            <option value="3">Three</option>
+        </select>
+    </form>
+
+{% endblock %}

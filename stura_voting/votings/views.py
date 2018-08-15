@@ -28,7 +28,7 @@ from django.views.generic.edit import DeleteView
 # TODO when parsing inputs via our library, check lengths before inserting?
 
 from .models import *
-from .forms import PeriodForm, RevisionForm, SessionForm
+from .forms import PeriodForm, RevisionForm, SessionForm, EnterResultsForm
 from .utils import add_votings, get_groups_template
 
 
@@ -168,3 +168,14 @@ class SessionPrintView(DetailView):
         context['groups'] = groups
         context['option_map'] = option_map
         return context
+
+
+def enter_results_view(request, pk):
+    if request.method == 'GET':
+        form = EnterResultsForm()
+    else:
+        pass
+        # TODO
+    return render(request, 'votings/enter_results.html', {'form': form})
+
+# TODO on success redirect, not render

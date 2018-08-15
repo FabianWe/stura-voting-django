@@ -54,3 +54,16 @@ class SessionForm(forms.ModelForm):
     class Meta:
         model = VotingCollection
         fields = ('time', 'revision')
+
+
+class EnterResultsForm(forms.Form):
+    def __init__(self, *args, **kwargs):
+        votings = kwargs.pop('votings', [])
+        super().__init__(self, *args, **kwargs)
+        for voting in votings:
+            # TODO do stuff
+            pass
+
+
+# TODO aufpassen mit update und erzeugen
+# https://jacobian.org/writing/dynamic-form-generation/

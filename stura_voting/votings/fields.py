@@ -21,8 +21,9 @@
 # SOFTWARE.
 
 from django import forms
-from stura_voting_utils.parser import parse_voters, parse_voting_collection, ParseException
+from stura_voting_utils.parser import parse_voters, parse_voting_collection, ParseException, parse_currency
 
+import re
 
 class VotersRevisionField(forms.CharField):
 
@@ -47,3 +48,44 @@ class VotingCollectionField(forms.CharField):
             return parse_voting_collection(cleaned.split('\n'))
         except ParseException as e:
             raise forms.ValidationError("Can't parse voting collection from field: %s" % str(e))
+
+# TODO test both fields
+
+class CurrencyField(forms.CharField):
+
+    def clean(self, value):
+        cleaned = super().clean(value).strip()
+        try:
+            return parse_currency(cleaned)
+        except ParseException as e:
+            raise forms.MultiValueField('No valid currency: %s' % str(e))
+
+
+_schulze_option_rx = re.compile(r'[ /;,]')
+
+
+class SchulzeVoteField(forms.CharField):
+
+    def __init__(self, *args, **kwargs):
+        num_options = kwargs.pop('num_options')
+        self.num_options = num_options
+        super().__init__(*args, **kwargs)
+
+
+    def clean(self, value):
+        cleaned = super().clean(value)
+        cleaned = cleaned.strip()
+        if not cleaned:
+            raise forms.ValidationError('Invalid Schulze option')
+        split = _schulze_option_rx.split(cleaned)
+        ranking = []
+        for s in split:
+            s = s.strip()
+            if not s:
+                continue
+            try:
+                ranking.append(int(s))
+            except ValueError as e:
+                raise forms.ValidationError('Invalid Schulze vote: Must be list of integers: %s' % str(e))
+        if len(ranking) != self.num_options:
+            raise forms.ValidationError('Invalid Schulze vote: Does not match number of options in voting')

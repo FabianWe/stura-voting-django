@@ -25,6 +25,7 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
+    # TODO singular / plural?
     path('', views.index, name='index'),
     path('period/new', views.new_period, name='new_period'),
     path('revision/new', views.new_revision, name='new_revision'),
@@ -38,4 +39,5 @@ urlpatterns = [
     path('session/delete/success/', views.success_session_delete, name='session_delete_success'),
     path('session/delete/<int:pk>/', views.SessionDelete.as_view(), name='session_delete'),
     path('session/<int:pk>/print/', views.SessionPrintView.as_view(), name='session_print'),
+    path('session/<int:pk>/results/', views.enter_results_view, name='votins_results'),
 ]
