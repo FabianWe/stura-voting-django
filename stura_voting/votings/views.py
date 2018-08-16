@@ -29,7 +29,7 @@ from django.views.generic.edit import DeleteView
 
 from .models import *
 from .forms import PeriodForm, RevisionForm, SessionForm, EnterResultsForm
-from .utils import add_votings, get_groups_template, get_groups
+from .utils import add_votings, get_groups_template
 
 
 def index(request):
@@ -171,13 +171,21 @@ class SessionPrintView(DetailView):
 
 
 def enter_results_view(request, pk):
+    session = get_object_or_404(VotingCollection, pk=pk)
     if request.method == 'GET':
-        session = get_object_or_404(VotingCollection, pk=pk)
-        groups = get_groups(session)
-        form = EnterResultsForm(groups=groups)
+        last_voter_id = request.GET.get('last_voter', None)
+        if last_voter_id is not None:
+            try:
+                last_voter_id = int(last_voter_id)
+            except ValueError:
+                # we don't care about an error
+                pass
+        form = EnterResultsForm(session=session, last_voter_id=last_voter_id)
     else:
-        pass
-        # TODO
+        form = EnterResultsForm(request.POST, session=session)
+        if form.is_valid():
+            for v_type, v_id, val in filter(lambda x: x[2] is not None, form.votings()):
+                print(v_type, v_id, val)
     return render(request, 'votings/enter_results.html', {'form': form})
 
 # TODO on success redirect, not render

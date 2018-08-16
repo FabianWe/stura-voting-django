@@ -24,6 +24,7 @@ from django import forms
 
 from .models import *
 from .fields import *
+from .utils import get_groups
 
 
 class PeriodForm(forms.ModelForm):
@@ -64,9 +65,39 @@ class EnterResultsForm(forms.Form):
     schulze_field_prefix = 'extra_schulze_'
     label_field_prefix = 'group_label_'
 
+    # I think None is not the best way, but okay
+    voter = forms.ModelChoiceField(None)
+
+    voter.widget.attrs.update({'class': 'custom-select', 'size': '7'})
+
     def __init__(self, *args, **kwargs):
-        groups = kwargs.pop('groups', [])
+        session = kwargs.pop('session')
+        last_voter_id = kwargs.pop('last_voter_id', None)
+        groups = get_groups(session) if session is not None else []
         super().__init__(*args, **kwargs)
+        voters_qs = Voter.objects.filter(revision=session.revision).order_by('name')
+        self.fields['voter'].queryset = voters_qs
+        voters_list = list(voters_qs)
+        # not so efficient but works
+        # What we do is:
+        # Find the last user (if it exists) and then take the next user
+        # as the initial value in the select field
+        # we store the next value in the variable next_user_id
+        next_voter_id = None
+        if last_voter_id is None:
+            # no last user provided, so use the first one
+            if voters_list:
+                next_voter_id = voters_list[0].id
+        else:
+            # list is sorted according to name, not id, so just search
+            print('SEARCH for', last_voter_id, 'in', [v.id for v in voters_list])
+            for i, voter in enumerate(voters_list):
+                if voter.id == last_voter_id:
+                    if (i + 1) < len(voters_list):
+                        next_voter_id = voters_list[i + 1].id
+                break
+        if next_voter_id is not None:
+            self.fields['voter'].initial = next_voter_id
         # TODO insert in field order
         # TODO what happens when creating it with POST given? Will this here
         # then do something wrong?
@@ -95,10 +126,10 @@ class EnterResultsForm(forms.Form):
         for name, value in self.cleaned_data.items():
             if name.startswith(self.median_field_prefix):
                 voting_id = int(name[len(self.median_field_prefix):])
-                yield voting_id, value
+                yield 'median', voting_id, value
             elif name.startswith(self.schulze_field_prefix):
                 voting_id = int(name[len(self.schulze_field_prefix):])
-                yield voting_id, value
+                yield 'schulze', voting_id, value
 
 
 # TODO aufpassen mit update und erzeugen

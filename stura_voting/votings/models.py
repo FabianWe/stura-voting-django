@@ -58,6 +58,9 @@ class Voter(models.Model):
     name = models.CharField(max_length=150, help_text='Name of the voter / group')
     weight = models.PositiveIntegerField(help_text='Weight of the votes, i.e. how many votes the voter actually casts')
 
+    def __str__(self):
+        return str(self.name)
+
     class Meta:
         unique_together = ('revision', 'name',)
 
