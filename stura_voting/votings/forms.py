@@ -90,7 +90,6 @@ class EnterResultsForm(forms.Form):
                 next_voter_id = voters_list[0].id
         else:
             # list is sorted according to name, not id, so just search
-            print('SEARCH for', last_voter_id, 'in', [v.id for v in voters_list])
             for i, voter in enumerate(voters_list):
                 if voter.id == last_voter_id:
                     if (i + 1) < len(voters_list):

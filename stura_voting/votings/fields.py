@@ -102,3 +102,4 @@ class SchulzeVoteField(forms.CharField):
                 raise forms.ValidationError('Invalid Schulze vote: Must be list of integers: %s' % str(e))
         if len(ranking) != self.num_options:
             raise forms.ValidationError('Invalid Schulze vote: Does not match number of options in voting')
+        return ranking

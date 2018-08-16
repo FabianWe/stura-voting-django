@@ -53,7 +53,6 @@ class PeriodDetailView(DetailView):
         period = context['period']
         revs = VotersRevision.objects.filter(period=period).order_by('-period__start', '-period__created', '-created')
         context['revisions'] = revs
-        # TODO is this even working?
         collections = VotingCollection.objects.filter(revision__period=period).order_by('-time')
         context['collections'] = collections
         return context
@@ -185,7 +184,10 @@ def enter_results_view(request, pk):
         form = EnterResultsForm(request.POST, session=session)
         if form.is_valid():
             for v_type, v_id, val in filter(lambda x: x[2] is not None, form.votings()):
-                print(v_type, v_id, val)
+                if v_type == 'median':
+                    print('m')
+                else:
+                    print('s')
     return render(request, 'votings/enter_results.html', {'form': form})
 
 # TODO on success redirect, not render
