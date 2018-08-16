@@ -30,8 +30,7 @@ urlpatterns = [
     path('period/new', views.new_period, name='new_period'),
     path('revision/new', views.new_revision, name='new_revision'),
     path('archive', views.archive_index, name='archive_index'),
-    path('period/<int:pk>/', views.PeriodDetailView.as_view(), name='period_detail'),
-    path('periods/', views.PeriodsList.as_view(), name='periods_list'),
+    path('period/<int:pk>/', views.PeriodDetailView.as_view(), name='period_detail'),    path('periods/', views.PeriodsList.as_view(), name='periods_list'),
     path('sesions/', views.CollectionsList.as_view(), name='collections_list'),
     path('session/new', views.new_session, name='new_session'),
     path('session/<int:pk>/edit/', views.SessionUpdate.as_view(), name='session_update'),
@@ -39,5 +38,5 @@ urlpatterns = [
     path('session/delete/success/', views.success_session_delete, name='session_delete_success'),
     path('session/delete/<int:pk>/', views.SessionDelete.as_view(), name='session_delete'),
     path('session/<int:pk>/print/', views.SessionPrintView.as_view(), name='session_print'),
-    path('session/<int:pk>/results/', views.enter_results_view, name='votins_results'),
+    path('session/<int:pk>/results/', views.enter_results_view, name='session_results'),
 ]

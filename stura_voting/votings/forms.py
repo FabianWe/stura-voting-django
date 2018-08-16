@@ -25,6 +25,7 @@ from django import forms
 from .models import *
 from .fields import *
 
+
 class PeriodForm(forms.ModelForm):
 
     revision = VotersRevisionField(required=False)
@@ -43,7 +44,7 @@ class RevisionForm(forms.ModelForm):
         fields = ('period', 'note')
 
     def __init__(self, *args, **kwargs):
-        super(RevisionForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.fields['period'].queryset = self.fields['period'].queryset.order_by('-start', '-created')
 
 
@@ -57,16 +58,40 @@ class SessionForm(forms.ModelForm):
 
 
 class EnterResultsForm(forms.Form):
+    # TODO add some fields for groups as well?
+
+    median_field_prefix = 'extra_median_'
+    schulze_field_prefix = 'extra_schulze_'
+
     def __init__(self, *args, **kwargs):
         votings = kwargs.pop('votings', [])
-        super().__init__(self, *args, **kwargs)
+        super().__init__(*args, **kwargs)
+        # TODO insert in field order
+        # TODO what happens when creating it with POST given? Will this here
+        # then do something wrong?
         for voting in votings:
             if isinstance(voting, MedianVoting):
-                pass
+                field_name = self.median_field_prefix + str(voting.id)
+                self.fields[field_name] = CurrencyField(max_value=voting.value,
+                                                        label='Finanzantrag: ' + str(voting.name),
+                                                        required=False)
             elif isinstance(voting, SchulzeVoting):
-                pass
+                field_name = self.schulze_field_prefix + str(voting.id)
+                num_options = SchulzeOption.objects.filter(voting=voting).count()
+                self.fields[field_name] = SchulzeVoteField(num_options=num_options,
+                                                           label='Abstimmung: ' + str(voting.name),
+                                                           required=False)
             else:
                 assert False
+
+    def votings(self):
+        for name, value in self.cleaned_data.items():
+            if name.startswith(self.median_field_prefix):
+                voting_id = int(name[len(self.median_field_prefix):])
+                yield voting_id, value
+            elif name.startswith(self.schulze_field_prefix):
+                voting_id = int(name[len(self.schulze_field_prefix):])
+                yield voting_id, value
 
 
 # TODO aufpassen mit update und erzeugen

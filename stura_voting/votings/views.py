@@ -29,7 +29,7 @@ from django.views.generic.edit import DeleteView
 
 from .models import *
 from .forms import PeriodForm, RevisionForm, SessionForm, EnterResultsForm
-from .utils import add_votings, get_groups_template
+from .utils import add_votings, get_groups_template, get_groups
 
 
 def index(request):
@@ -172,7 +172,9 @@ class SessionPrintView(DetailView):
 
 def enter_results_view(request, pk):
     if request.method == 'GET':
-        form = EnterResultsForm()
+        session = VotingCollection.objects.get(id=pk)
+        all_votings = [item for name, sublist in get_groups(session) for item in sublist]
+        form = EnterResultsForm(votings=all_votings)
     else:
         pass
         # TODO

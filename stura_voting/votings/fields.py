@@ -42,7 +42,7 @@ class VotingCollectionField(forms.CharField):
 
     widget = forms.Textarea
 
-    def clean(selfself, value):
+    def clean(self, value):
         cleaned = super().clean(value)
         try:
             return parse_voting_collection(cleaned.split('\n'))
@@ -54,9 +54,9 @@ class VotingCollectionField(forms.CharField):
 
 class CurrencyField(forms.CharField):
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, **kwargs):
         self.max_value = kwargs.pop('max_value')
-        super().__init__(self, *args, **kwargs)
+        super().__init__(**kwargs)
 
     def clean(self, value):
         cleaned = super().clean(value).strip()
@@ -74,10 +74,10 @@ _schulze_option_rx = re.compile(r'[ /;,]')
 
 class SchulzeVoteField(forms.CharField):
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, **kwargs):
         num_options = kwargs.pop('num_options')
         self.num_options = num_options
-        super().__init__(*args, **kwargs)
+        super().__init__(**kwargs)
 
 
     def clean(self, value):

@@ -43,8 +43,10 @@ SOFTWARE.
       <li class="nav-item">
         <a class="nav-link" href="{% url 'archive_index' %}"><i class="fas fa-archive"></i> Archiv</a>
       </li>
+      {% comment %}
       <li class="nav-item">
-          <a class="nav-link" href="#"><i class="fas fa-envelope-open"></i> Ergebnisse Eintragen</a>
+          <a class="nav-link" href="{% url 'voting_results' %}"><i class="fas fa-envelope-open"></i> Ergebnisse Eintragen</a>
       </li>
+      {% endcomment %}
     </ul>
 </nav>
