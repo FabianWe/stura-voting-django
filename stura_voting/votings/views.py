@@ -20,7 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from django.shortcuts import render, reverse
+from django.shortcuts import render, reverse, get_object_or_404
 from django.views.generic.detail import DetailView
 from django.views.generic import ListView, UpdateView
 from django.views.generic.edit import DeleteView
@@ -172,7 +172,7 @@ class SessionPrintView(DetailView):
 
 def enter_results_view(request, pk):
     if request.method == 'GET':
-        session = VotingCollection.objects.get(id=pk)
+        session = get_object_or_404(VotingCollection, pk=pk)
         groups = get_groups(session)
         form = EnterResultsForm(groups=groups)
     else:
