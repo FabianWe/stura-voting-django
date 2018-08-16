@@ -186,7 +186,7 @@ def get_groups(collection):
         median_votings = list(
             voting_models.MedianVoting.objects.filter(group=group_model).order_by('voting_num', 'name'))
         all_votings = merge(schulze_votings, median_votings)
-        yield groups_model, all_votings
+        yield group_model, all_votings
 
 
 def get_groups_template(collection):

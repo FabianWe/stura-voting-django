@@ -173,8 +173,8 @@ class SessionPrintView(DetailView):
 def enter_results_view(request, pk):
     if request.method == 'GET':
         session = VotingCollection.objects.get(id=pk)
-        all_votings = [item for name, sublist in get_groups(session) for item in sublist]
-        form = EnterResultsForm(votings=all_votings)
+        groups = get_groups(session)
+        form = EnterResultsForm(groups=groups)
     else:
         pass
         # TODO

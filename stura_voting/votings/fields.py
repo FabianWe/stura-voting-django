@@ -60,6 +60,8 @@ class CurrencyField(forms.CharField):
 
     def clean(self, value):
         cleaned = super().clean(value).strip()
+        if not cleaned:
+            return None
         try:
             val, currency = parse_currency(cleaned)
         except ParseException as e:
@@ -84,7 +86,7 @@ class SchulzeVoteField(forms.CharField):
         cleaned = super().clean(value)
         cleaned = cleaned.strip()
         if not cleaned:
-            raise forms.ValidationError('Invalid Schulze option')
+            return None
         split = _schulze_option_rx.split(cleaned)
         ranking = []
         for s in split:

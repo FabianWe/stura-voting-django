@@ -62,27 +62,34 @@ class EnterResultsForm(forms.Form):
 
     median_field_prefix = 'extra_median_'
     schulze_field_prefix = 'extra_schulze_'
+    label_field_prefix = 'group_label_'
 
     def __init__(self, *args, **kwargs):
-        votings = kwargs.pop('votings', [])
+        groups = kwargs.pop('groups', [])
         super().__init__(*args, **kwargs)
         # TODO insert in field order
         # TODO what happens when creating it with POST given? Will this here
         # then do something wrong?
-        for voting in votings:
-            if isinstance(voting, MedianVoting):
-                field_name = self.median_field_prefix + str(voting.id)
-                self.fields[field_name] = CurrencyField(max_value=voting.value,
-                                                        label='Finanzantrag: ' + str(voting.name),
-                                                        required=False)
-            elif isinstance(voting, SchulzeVoting):
-                field_name = self.schulze_field_prefix + str(voting.id)
-                num_options = SchulzeOption.objects.filter(voting=voting).count()
-                self.fields[field_name] = SchulzeVoteField(num_options=num_options,
-                                                           label='Abstimmung: ' + str(voting.name),
-                                                           required=False)
-            else:
-                assert False
+        for group, voting_list in groups:
+            group_field_name = self.label_field_prefix + str(group.id)
+            self.fields[group_field_name] = forms.CharField(label='',
+                                                            initial=str(group.name),
+                                                            required=False,
+                                                            disabled=True)
+            for voting in voting_list:
+                if isinstance(voting, MedianVoting):
+                    field_name = self.median_field_prefix + str(voting.id)
+                    self.fields[field_name] = CurrencyField(max_value=voting.value,
+                                                            label='Finanzantrag: ' + str(voting.name),
+                                                            required=False)
+                elif isinstance(voting, SchulzeVoting):
+                    field_name = self.schulze_field_prefix + str(voting.id)
+                    num_options = SchulzeOption.objects.filter(voting=voting).count()
+                    self.fields[field_name] = SchulzeVoteField(num_options=num_options,
+                                                               label='Abstimmung: ' + str(voting.name),
+                                                               required=False)
+                else:
+                    assert False
 
     def votings(self):
         for name, value in self.cleaned_data.items():
