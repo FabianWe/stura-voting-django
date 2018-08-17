@@ -28,6 +28,8 @@ from dateutil import relativedelta
 from django.utils.timezone import make_aware
 from django.utils import formats
 from django.conf import settings
+from django.shortcuts import get_object_or_404
+from django.http import HttpResponseBadRequest
 
 # otherwise some really ugly import stuff
 from . import models as voting_models
@@ -216,3 +218,40 @@ def get_groups_template(collection):
                 assert False
         groups.append((group_model.name, group_list))
     return groups, option_map
+
+
+def get_instance(klass, obj, *args, **kwargs):
+    if not isinstance(obj, klass):
+        obj = get_object_or_404(klass, pk=obj, *args, **kwargs)
+    return obj
+
+
+def insert_median_vote(value, voter, voting):
+    # TODO for the docs:
+    # voting / voter can be int for id or voting
+    # some consistency checks: the voter must be in the right revision, otherwise reject
+    # testing this on database level is very complicated (don't know if even possible)
+    # so we will just do it here
+    voting = get_instance(voting_models.MedianVoting, voting)
+    # same for voter
+    voter = get_instance(voting_models.Voter, voter)
+    # now check if we got the correct revision
+    if voter.revision != voting.group.collection.revision:
+        return HttpResponseBadRequest('Invalid voter for that voting (not in the correct revision)')
+    # everything correct, so now add it
+    voting_models.MedianVote.objects.create(value=value, voter=voter, voting=voting)
+    return True
+
+
+def insert_schulze_vote(ranking, voter, voting):
+    # TODO docs same wie oben
+    voter = get_instance(voting_models.Voter, voter)
+    voting = get_instance(voting_models.SchulzeVoting, voting)
+    options = list(voting_models.SchulzeOption.objects.filter(voting=voting).order_by('option_num'))
+    if len(options) != len(ranking):
+        return HttpResponseBadRequest('Invalid Schulze vote: Does not match number of options in voting')
+    for option, ranking_pos in zip(options, ranking):
+        voting_models.SchulzeVote.objects.create(sorting_position=ranking_pos,
+                                                 voter=voter,
+                                                 option=option)
+    return True

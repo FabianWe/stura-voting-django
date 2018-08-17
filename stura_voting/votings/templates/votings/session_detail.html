@@ -30,6 +30,13 @@ SOFTWARE.
 
 {% block content %}
     <h2>{{ object.name }}</h2>
+
+    {% if success %}
+    <div class="alert alert-success" role="alert">
+        Die Sitzung "{{ object.name }}" wurde erfolgreich erstellt.
+    </div>
+    {% endif %}
+
     <p>
         <a href="{% url 'session_update' object.id %}" class="btn btn-primary" role="button"><i class="fas fa-edit"></i> Bearbeiten</a>
         <a href="{% url 'session_print' object.id %}" target="_blank" class="btn btn-primary" role="button"><i class="fas fa-print"></i> Druckansicht</a>

@@ -20,16 +20,17 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from django.shortcuts import render, reverse, get_object_or_404
+from django.shortcuts import render, reverse, get_object_or_404, redirect
 from django.views.generic.detail import DetailView
 from django.views.generic import ListView, UpdateView
 from django.views.generic.edit import DeleteView
+from django.http import HttpResponseBadRequest, Http404
 
 # TODO when parsing inputs via our library, check lengths before inserting?
 
 from .models import *
 from .forms import PeriodForm, RevisionForm, SessionForm, EnterResultsForm
-from .utils import add_votings, get_groups_template
+from .utils import *
 
 
 def index(request):
@@ -58,6 +59,14 @@ class PeriodDetailView(DetailView):
         return context
 
 
+class PeriodDetailSuccess(PeriodDetailView):
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['success'] = True
+        return context
+
+
+
 def new_period(request):
     if request.method == 'GET':
         form = PeriodForm()
@@ -70,8 +79,13 @@ def new_period(request):
                 rev = VotersRevision.objects.create(period=period, note='')
                 for voter in form.cleaned_data['revision']:
                     Voter.objects.create(revision=rev, name=voter.name, weight=voter.weight)
-            return render(request, 'votings/success_period.html', {'period': period.name})
+            return redirect('period_detail_success', pk=period.id)
     return render(request, 'votings/new_period.html', {'form': form})
+
+
+def revision_success(request, pk):
+    rev = get_object_or_404(VotersRevision, pk=pk)
+    return render(request, 'votings/success_revision.html', {'period': rev.period.name})
 
 
 def new_revision(request):
@@ -83,23 +97,8 @@ def new_revision(request):
             rev = form.save()
             for voter in form.cleaned_data['voters']:
                 Voter.objects.create(revision=rev, name=voter.name, weight=voter.weight)
-            return render(request, 'votings/success_revision.html', {'period': rev.period.name})
+            return redirect('new_revision_success', pk=rev.id)
     return render(request, 'votings/new_revision.html', {'form': form})
-
-
-def new_session(request):
-    if request.method == 'GET':
-        form = SessionForm()
-    else:
-        form = SessionForm(request.POST)
-        if form.is_valid():
-            parsed_collection = form.cleaned_data['collection']
-            session = form.save(commit=False)
-            session.name = parsed_collection.name
-            session.save()
-            add_votings(parsed_collection, session)
-            return render(request, 'votings/success_session.html', {'voting_session': session})
-    return render(request, 'votings/new_session.html', {'form': form})
 
 
 class PeriodsList(ListView):
@@ -145,6 +144,28 @@ class SessionDetailView(DetailView):
         return context
 
 
+class SessionDetailSuccess(SessionDetailView):
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['success'] = True
+        return context
+
+
+def new_session(request):
+    if request.method == 'GET':
+        form = SessionForm()
+    else:
+        form = SessionForm(request.POST)
+        if form.is_valid():
+            parsed_collection = form.cleaned_data['collection']
+            session = form.save(commit=False)
+            session.name = parsed_collection.name
+            session.save()
+            add_votings(parsed_collection, session)
+            return redirect('new_session_success', pk=session.id)
+    return render(request, 'votings/new_session.html', {'form': form})
+
+
 def success_session_delete(request):
     return render(request, 'votings/success_session_delete.html')
 
@@ -183,11 +204,29 @@ def enter_results_view(request, pk):
     else:
         form = EnterResultsForm(request.POST, session=session)
         if form.is_valid():
+            voter = form.cleaned_data['voter']
+            # add results
+            errors = []
             for v_type, v_id, val in filter(lambda x: x[2] is not None, form.votings()):
                 if v_type == 'median':
-                    print('m')
+                    try:
+                        res = insert_median_vote(val, voter, v_id)
+                        if isinstance(res, HttpResponseBadRequest):
+                            errors.append(res)
+                    except Http404 as e:
+                        errors.append(e)
                 else:
-                    print('s')
+                    try:
+                        res = insert_schulze_vote(val, voter, v_id)
+                        if isinstance(res, HttpResponseBadRequest):
+                            errors.append(res)
+                    except Http404 as e:
+                        errors.append(e)
+            if errors:
+                errors_joined = '\n'.join(str(err) for err in errors)
+                error_txt = 'There were errors while adding some votes, please check the result carefully!\n\n' + errors_joined
+                return HttpResponseBadRequest(error_txt)
+            # TODO return
     return render(request, 'votings/enter_results.html', {'form': form})
 
 # TODO on success redirect, not render

@@ -29,6 +29,12 @@ SOFTWARE.
 {% block content %}
 <h2>{{ period.name }}</h2>
 
+{% if success %}
+    <div class="alert alert-success" role="alert">
+        Die Abstimmungsperiode "{{ period.name }}" wurde erfolgreich erstellt.
+    </div>
+{% endif %}
+
 <p>Zeitraum von {{ period.start }} bis {{ period.end }}</p>
 
 <div class="row">

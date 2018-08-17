@@ -50,8 +50,9 @@ class RevisionForm(forms.ModelForm):
 
 
 class SessionForm(forms.ModelForm):
+    # TODO sort revision
 
-    collection = VotingCollectionField(required=True)
+    collection = VotingCollectionField(required=True, label='Abstimmungen')
 
     class Meta:
         model = VotingCollection
@@ -59,7 +60,6 @@ class SessionForm(forms.ModelForm):
 
 
 class EnterResultsForm(forms.Form):
-    # TODO add some fields for groups as well?
 
     median_field_prefix = 'extra_median_'
     schulze_field_prefix = 'extra_schulze_'
@@ -73,7 +73,9 @@ class EnterResultsForm(forms.Form):
     def __init__(self, *args, **kwargs):
         session = kwargs.pop('session')
         last_voter_id = kwargs.pop('last_voter_id', None)
-        groups = get_groups(session) if session is not None else []
+        groups = []
+        if session is not None:
+            groups = get_groups(session)
         super().__init__(*args, **kwargs)
         voters_qs = Voter.objects.filter(revision=session.revision).order_by('name')
         self.fields['voter'].queryset = voters_qs
@@ -97,7 +99,8 @@ class EnterResultsForm(forms.Form):
                 break
         if next_voter_id is not None:
             self.fields['voter'].initial = next_voter_id
-        # TODO insert in field order
+        # insert in field order
+        # this was a todo but we should be fine, django uses ordered dict
         # TODO what happens when creating it with POST given? Will this here
         # then do something wrong?
         for group, voting_list in groups:

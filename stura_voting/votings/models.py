@@ -121,8 +121,6 @@ class SchulzeOption(models.Model):
 
 class MedianVote(models.Model):
     value = models.PositiveIntegerField('Value the voter voted for')
-    # TODO we should enforce that the voter here is allowed to vote here, but checking
-    # this on the DB level is really annoying
     voter = models.ForeignKey('Voter', on_delete=models.CASCADE, help_text='The voter of this vote')
     voting = models.ForeignKey('MedianVoting', on_delete=models.CASCADE, help_text='The voting in question')
 
@@ -137,5 +135,3 @@ class SchulzeVote(models.Model):
 
     class Meta:
         unique_together = ('voter', 'option',)
-
-
