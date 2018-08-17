@@ -228,5 +228,3 @@ def enter_results_view(request, pk):
                 return HttpResponseBadRequest(error_txt)
             # TODO return
     return render(request, 'votings/enter_results.html', {'form': form})
-
-# TODO on success redirect, not render
