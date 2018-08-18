@@ -107,31 +107,3 @@ class Votes(object):
                     res.append(GenericVotingRes(voter, None, None))
         return Votes(voting, res, num_casted_votes, voters)
 
-
-    @staticmethod
-    def foo():
-        # TODO fix everything
-        voting = get_instance(MedianVoting, voting)
-        # first get all casted votes
-        casted_votes = MedianVote.objects.filter(voting=voting)
-        # compute result, first all that did cast a vote
-        all_votes = [GenericVotingRes(vote.voter, vote.value, vote) for vote in casted_votes]
-        all_voters = Voter.objects.filter(revision=voting.group.collection.revision)
-        actually_casted_votes = len(all_votes)
-        # compute later, depends on what we do with all_voters
-        num_all_voters = None
-        if voting.count_all_votes:
-            # now get all voters for that period, all that haven't voted will be
-            # inserted to the result with value None
-            votes_casted_map = {vote.voter.id: vote.voter for vote in casted_votes}
-            # now add all voters that did not cast a vote with None
-            all_voters = list(all_voters)
-            for voter in all_voters:
-                if voter.id not in votes_casted_map:
-                    # did not cast a vote
-                    all_votes.append(GenericVotingRes(voter, None, None))
-            num_all_voters = len(all_voters)
-        else:
-            # no need to load all voters in memory, just use count
-            num_all_voters = all_voters.count()
-        return all_votes
