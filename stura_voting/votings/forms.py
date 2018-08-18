@@ -58,6 +58,10 @@ class SessionForm(forms.ModelForm):
         model = VotingCollection
         fields = ('time', 'revision')
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['revision'].queryset = self.fields['revision'].queryset.order_by('-period__start', '-created')
+
 
 class EnterResultsForm(forms.Form):
 
