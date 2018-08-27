@@ -4,4 +4,6 @@ django-bootstrap4
 pytz
 pdfkit
 stura_voting_utils
+schulze_voting
+median_voting
 python-dateutil

@@ -176,7 +176,6 @@ def add_votings(parsed_collection, collection_model):
                 assert False
 
 
-
 def get_groups(collection):
     # TODO use this method in get_groups_template, probably lots of duplication
     groups_model = voting_models.VotingGroup.objects.filter(collection=collection).order_by('group_num', 'name')
@@ -187,7 +186,8 @@ def get_groups(collection):
             voting_models.SchulzeVoting.objects.filter(group=group_model).order_by('voting_num', 'name'))
         median_votings = list(
             voting_models.MedianVoting.objects.filter(group=group_model).order_by('voting_num', 'name'))
-        all_votings = merge(schulze_votings, median_votings)
+        # TODO is this correct?
+        all_votings = merge(schulze_votings, median_votings, key=lambda v: v.voting_num)
         yield group_model, all_votings
 
 
@@ -204,7 +204,8 @@ def get_groups_template(collection):
         # and sort them according to the id
         schulze_votings = list(voting_models.SchulzeVoting.objects.filter(group=group_model).order_by('voting_num', 'name'))
         median_votings = list(voting_models.MedianVoting.objects.filter(group=group_model).order_by('voting_num', 'name'))
-        all_vottings = merge(schulze_votings, median_votings)
+        # TODO correct?
+        all_vottings = merge(schulze_votings, median_votings, key=lambda v: v.voting_num)
         for v in all_vottings:
             if isinstance(v, voting_models.SchulzeVoting):
                 group_list.append(('schulze', v))
