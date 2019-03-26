@@ -219,6 +219,7 @@ def enter_results_view(request, pk):
                     except Http404 as e:
                         errors.append(e)
                 else:
+                    assert v_type == 'schulze'
                     try:
                         res = insert_schulze_vote(val, voter, v_id)
                         if isinstance(res, HttpResponseBadRequest):
@@ -229,5 +230,7 @@ def enter_results_view(request, pk):
                 errors_joined = '\n'.join(str(err) for err in errors)
                 error_txt = 'There were errors while adding some votes, please check the result carefully!\n\n' + errors_joined
                 return HttpResponseBadRequest(error_txt)
-            # TODO return
+            # TODO return?
+            # TODO was tun, wenn schon Eintragungen existieren?
+            # Irgendwie noch nicht perfekt...
     return render(request, 'votings/enter_results.html', {'form': form})

@@ -249,6 +249,8 @@ def insert_schulze_vote(ranking, voter, voting):
     # TODO docs same wie oben
     voter = get_instance(voting_models.Voter, voter)
     voting = get_instance(voting_models.SchulzeVoting, voting)
+    if voter.revision != voting.group.collection.revision:
+        return HttpResponseBadRequest('Invalid voter for that voting (not in the correct revision)')
     options = list(voting_models.SchulzeOption.objects.filter(voting=voting).order_by('option_num'))
     if len(options) != len(ranking):
         return HttpResponseBadRequest('Invalid Schulze vote: Does not match number of options in voting')
