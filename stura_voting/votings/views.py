@@ -29,7 +29,7 @@ from django.http import HttpResponseBadRequest, Http404
 # TODO when parsing inputs via our library, check lengths before inserting?
 
 from .models import *
-from .forms import PeriodForm, RevisionForm, SessionForm, EnterResultsForm
+from .forms import PeriodForm, RevisionForm, SessionForm, EnterResultsForm, ResultsSingleVoterForm
 from .utils import *
 from .results import *
 
@@ -81,16 +81,20 @@ def enter_voterlist(request, pk):
     context = {'collection': collection, 'with_vote': with_vote, 'without_vote': without_vote}
     return render(request, 'votings/enter_voterlist.html', context)
 
-def enter_single_voter(request, coll, v):
+def enter_single_voter_view(request, coll, v):
     collection = get_object_or_404(VotingCollection, pk=coll)
     voter = get_object_or_404(Voter, pk=v)
+    context = {'collection': collection, 'voter': voter}
     if voter.revision != collection.revision:
         return HttpResponseBadRequest('Fooo')
     if request.method == 'GET':
-        pass
+        form = ResultsSingleVoterForm(collection=collection)
     else:
-        pass
-    return render(request, 'votings/enter_single.html', {})
+        form = ResultsSingleVoterForm(request.POST, collection=collection)
+        if form.is_valid():
+            print(form.cleaned_data)
+    context['form'] = form
+    return render(request, 'votings/enter_single.html', context)
 
 def new_period(request):
     if request.method == 'GET':
@@ -216,6 +220,7 @@ class SessionPrintView(DetailView):
         return context
 
 
+# TODO remove once net method is there
 def enter_results_view(request, pk):
     session = get_object_or_404(VotingCollection, pk=pk)
     if request.method == 'GET':

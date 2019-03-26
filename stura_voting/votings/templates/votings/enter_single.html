@@ -27,5 +27,10 @@ SOFTWARE.
 {% load bootstrap4 %}
 
 {% block content %}
-MUUUUH
+<h2>Abstimmungen von {{ voter.name }} für {{ collection.name }}</h2>
+<form role="form" method="post">
+    {% csrf_token %}
+    {% bootstrap_form form %}
+{% buttons submit='Eintragen' %}{% endbuttons %}
+</form>
 {% endblock %}

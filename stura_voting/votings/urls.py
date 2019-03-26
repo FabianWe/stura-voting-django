@@ -45,5 +45,5 @@ urlpatterns = [
     # TODO this can be removed once the new version is available
     path('session/<int:pk>/results/', views.enter_results_view, name='session_results'),
     path('session/<int:pk>/voters/', views.enter_voterlist, name='enter_voterslist'),
-    path('session/<int:coll>/voters/<int:v>/', views.enter_single_voter, name='enter_single_voter'),
+    path('session/<int:coll>/voters/<int:v>/', views.enter_single_voter_view, name='enter_single_voter'),
 ]
