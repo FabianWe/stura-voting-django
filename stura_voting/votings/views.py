@@ -234,3 +234,19 @@ def enter_results_view(request, pk):
             # TODO was tun, wenn schon Eintragungen existieren?
             # Irgendwie noch nicht perfekt...
     return render(request, 'votings/enter_results.html', {'form': form})
+
+
+def get_median_votes(collection, voter):
+    collection = get_instance(VotingCollection, collection)
+    voter = get_instance(Voter, voter)
+    return MedianVote.objects.filter(voting__group__collection=collection, voter=voter)
+
+# def votes_for_json(collection, voter):
+#     collection = get_instance(VotingCollection, collection)
+#     voter = get_instance(Voter, voter)
+#     # get all votes for the collection where voter has voted
+#     median_votes = MedianVote.objects.filter(voting__group__collection=collection)
+#     # TODO schulze
+#     res = dict()
+#     for vote in median_votes:
+#         id = EnterResultsForm.median_field_prefix + str(vote.id)
