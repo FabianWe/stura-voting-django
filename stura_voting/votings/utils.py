@@ -259,3 +259,30 @@ def insert_schulze_vote(ranking, voter, voting):
                                                  voter=voter,
                                                  option=option)
     return True
+
+
+def get_median_votes(collection, voter=None, **kwargs):
+    collection = get_instance(voting_models.VotingCollection, collection)
+    if voter is None:
+        return voting_models.MedianVote.objects.filter(voting__group__collection=collection, **kwargs)
+    else:
+        voter = get_instance(voting_models.Voter, voter)
+        return voting_models.MedianVote.objects.filter(voting__group__collection=collection, voter=voter, **kwargs)
+
+def get_schulze_votes(collection, voter=None, **kwargs):
+    collection = get_instance(voting_models.VotingCollection, collection)
+    if voter is None:
+        return voting_models.SchulzeVote.objects.filter(option__voting__group__collection=collection, **kwargs)
+    else:
+        voter = get_instance(voting_models.Voter, voter)
+        return voting_models.SchulzeVote.objects.filter(option__voting__group__collection=collection, voter=voter, **kwargs)
+
+def get_voters_with_vote(collection):
+    # returns all voters that casted a vote for any of the votes in the
+    # collection
+    # returns them by id as a set
+    all = get_median_votes(collection).values_list('voter__id', flat=True)
+    result = set(all)
+    all = get_schulze_votes(collection).values_list('voter__id', flat=True)
+    result.update(all)
+    return result

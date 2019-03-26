@@ -68,7 +68,18 @@ class PeriodDetailSuccess(PeriodDetailView):
 
 
 def enter_voterlist(request, pk):
-    return render(request, 'votings/enter_voterlist.html', {})
+    collection = get_object_or_404(VotingCollection, pk=pk)
+    with_vote_id = get_voters_with_vote(collection)
+    all_voters = Voter.objects.filter(revision=collection.revision).order_by('name')
+    with_vote = []
+    without_vote = []
+    for voter in all_voters:
+        if voter.id in with_vote_id:
+            with_vote.append(voter)
+        else:
+            without_vote.append(voter)
+    context = {'collection': collection, 'with_vote': with_vote, 'without_vote': without_vote}
+    return render(request, 'votings/enter_voterlist.html', context)
 
 def new_period(request):
     if request.method == 'GET':
@@ -131,7 +142,6 @@ class SessionUpdate(UpdateView):
 
     def get_success_url(self):
         return reverse('session_update', args=[self.object.id])
-
 
 class SessionDetailView(DetailView):
     model = VotingCollection
@@ -237,11 +247,6 @@ def enter_results_view(request, pk):
             # Irgendwie noch nicht perfekt...
     return render(request, 'votings/enter_results.html', {'form': form})
 
-
-def get_median_votes(collection, voter):
-    collection = get_instance(VotingCollection, collection)
-    voter = get_instance(Voter, voter)
-    return MedianVote.objects.filter(voting__group__collection=collection, voter=voter)
 
 # def votes_for_json(collection, voter):
 #     collection = get_instance(VotingCollection, collection)

@@ -27,5 +27,23 @@ SOFTWARE.
 {% load bootstrap4 %}
 
 {% block content %}
-Huhu du
+<h2>Abstimmungsberechtigte {{ collection.name }}</h2>
+<table class="table">
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Eingetragen</th>
+    </tr>
+  </thead>
+  {% for voter in with_vote %}
+  <tr>
+    <td>{{ voter.name }}</td>
+    <td><i class="fas fa-vote-yea" style="color:green"></i></td>
+  </tr>
+  {% endfor %}
+  {% for voter in without_vote %}
+    <td>{{ voter.name }}</td>
+    <td><i class="fas fa-vote-yea" style="color:red"></i></td>
+  {% endfor %}
+</table>
 {% endblock %}
