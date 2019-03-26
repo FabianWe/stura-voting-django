@@ -43,4 +43,5 @@ urlpatterns = [
     path('session/delete/<int:pk>/', views.SessionDelete.as_view(), name='session_delete'),
     path('session/<int:pk>/print/', views.SessionPrintView.as_view(), name='session_print'),
     path('session/<int:pk>/results/', views.enter_results_view, name='session_results'),
+    path('session/<int:pk>/voters/', views.enter_voterlist, name='enter_voterslist')
 ]
