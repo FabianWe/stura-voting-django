@@ -142,6 +142,7 @@ class SessionDetailView(DetailView):
         groups, option_map = get_groups_template(self.object)
         context['groups'] = groups
         context['option_map'] = option_map
+        # TODO remove
         print(CollectionRes.from_collection(self.object))
         return context
 
@@ -212,7 +213,7 @@ def enter_results_view(request, pk):
             for v_type, v_id, val in filter(lambda x: x[2] is not None, form.votings()):
                 if v_type == 'median':
                     try:
-                        res = insert_median_vote(val, voter, v_id)
+                        res = insert_median_vote(val[0], voter, v_id)
                         if isinstance(res, HttpResponseBadRequest):
                             errors.append(res)
                     except Http404 as e:

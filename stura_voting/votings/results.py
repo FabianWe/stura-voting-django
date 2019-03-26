@@ -36,10 +36,6 @@ class VoteConsistencyError(Exception):
         self.voting = voting
 
 
-class DuplicateError(Exception):
-    pass
-
-
 def voters_map(revision):
     voters = Voter.objects.filter(revision=revision)
     return {voter.id: voter for voter in voters}
@@ -110,7 +106,27 @@ class GroupWarning(object):
 
 
     def __str__(self):
-        return 'Group %s(id=%d) vor voting %s(id=%d) not found' % (self.group.name, self.group.id, self.voting.name, self.voting.id)
+        return 'Group %s(id=%d) for voting %s(id=%d) not found' %\
+               (self.group.name, self.group.id, self.voting.name, self.voting.id)
+
+
+class VotingWarning(object):
+    def __init__(self, voting):
+        self.voting = voting
+
+        def __str__(self):
+            return 'Voting %s(id=%d) not found' %\
+                   (self.voting.name, self.voting.id)
+
+
+class MedianVoteWarning(object):
+    def __init__(self, voting, value):
+        self.voting = voting
+        self.value = value
+
+    def __str__(self):
+        return 'Invalid median voting "%s" with id=%d in database: voting value is %d, got vote with %d' %\
+               (self.voting.name, self.voting.id, self.voting.value, self.value)
 
 
 class CollectionRes(object):
@@ -122,6 +138,7 @@ class CollectionRes(object):
     def from_collection(collection, voters=None, check_pedantic=True):
         # TODO test this stuff
         # TODO everything broken here :(
+        # TODO think about return type... make this more nice
         collection = get_instance(VotingCollection, collection)
         res = CollectionRes()
         # we want something like a sql left join, we'll use multiple queries...
@@ -156,18 +173,24 @@ class CollectionRes(object):
                 # fetch voting object from group
                 generic_voting = group_res.get_median(vote.voting.id)
                 if generic_voting is None:
-                    res.warnings.append('')
+                    res.warnings.append(VotingWarning(vote.voting))
+                else:
+                    if check_pedantic and (vote.value < 0 or vote.value > vote.voting.value):
+                        res.warnings.append(MedianVoteWarning(vote.voting, vote.value))
+                    else:
+                        generic_voting.votes[vote.voter.id] = GenericVote(vote.voter, vote.value, vote)
         # TODO correct??
-        schulze_votes = SchulzeVote.objects.filter(option__voting__group__collection=collection).order_by('voting__id',
+        schulze_votes = SchulzeVote.objects.filter(option__voting__group__collection=collection).order_by('option__voting__id',
                                                                                                           'voter__id',
                                                                                                           'option__option_num')
-        print(list(schulze_votes))
         # now all options should be nicely sorted... so we can just iterate over them
         # iterate over each voting
-        for voting, votes_for_voting in groupby(schulze_votes, lambda vote: vote.option.voting):
+        for voting, votes_of_voting in groupby(schulze_votes, lambda vote: vote.option.voting):
             # now for each vote of that voting iterate over each voter
-            for voter, votes_for_voter in groupby(votes_for_voting, lambda vote: vote.voter):
-                pass
+            for voter, votes_of_voter in groupby(votes_of_voting, lambda vote: vote.voter):
+                # we may use the values multiple times, so cast to list
+                votes_of_voter = list(votes_of_voter)
+                ranking = [vote.sorting_position for vote in votes_of_voter]
         return res
 
 

@@ -237,6 +237,7 @@ def insert_median_vote(value, voter, voting):
     # same for voter
     voter = get_instance(voting_models.Voter, voter)
     # now check if we got the correct revision
+    # TODO add this test at other places as well?
     if voter.revision != voting.group.collection.revision:
         return HttpResponseBadRequest('Invalid voter for that voting (not in the correct revision)')
     # everything correct, so now add it
