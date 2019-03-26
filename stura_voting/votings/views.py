@@ -81,6 +81,17 @@ def enter_voterlist(request, pk):
     context = {'collection': collection, 'with_vote': with_vote, 'without_vote': without_vote}
     return render(request, 'votings/enter_voterlist.html', context)
 
+def enter_single_voter(request, coll, v):
+    collection = get_object_or_404(VotingCollection, pk=coll)
+    voter = get_object_or_404(Voter, pk=v)
+    if voter.revision != collection.revision:
+        return HttpResponseBadRequest('Fooo')
+    if request.method == 'GET':
+        pass
+    else:
+        pass
+    return render(request, 'votings/enter_single.html', {})
+
 def new_period(request):
     if request.method == 'GET':
         form = PeriodForm()

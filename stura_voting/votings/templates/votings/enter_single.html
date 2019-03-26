@@ -27,23 +27,5 @@ SOFTWARE.
 {% load bootstrap4 %}
 
 {% block content %}
-<h2>Abstimmungsberechtigte {{ collection.name }}</h2>
-<table class="table">
-  <thead>
-    <tr>
-      <th>Name</th>
-      <th>Eingetragen</th>
-    </tr>
-  </thead>
-  {% for voter in with_vote %}
-  <tr>
-      <td><a href="{% url 'enter_single_voter' collection.id voter.id %}">{{ voter.name }}</a></td>
-    <td><i class="fas fa-vote-yea" style="color:green"></i></td>
-  </tr>
-  {% endfor %}
-  {% for voter in without_vote %}
-    <td><a href="{% url 'enter_single_voter' collection.id voter.id %}">{{ voter.name }}</a></td>
-    <td><i class="fas fa-vote-yea" style="color:red"></i></td>
-  {% endfor %}
-</table>
+MUUUUH
 {% endblock %}
