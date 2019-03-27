@@ -63,7 +63,11 @@ class CurrencyField(forms.CharField):
         if not cleaned:
             return None
         try:
-            val, currency = parse_currency(cleaned)
+            # Does not raise ParseException? should be changed?
+            parsed = parse_currency(cleaned)
+            if parsed is None:
+                raise forms.ValidationError('No valid currency')
+            val, currency = parsed
         except ParseException as e:
             raise forms.ValidationError('No valid currency: %s' % str(e))
         if val < 0 or val > self.max_value:

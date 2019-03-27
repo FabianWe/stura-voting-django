@@ -28,6 +28,21 @@ SOFTWARE.
 
 {% block content %}
 <h2>Abstimmungen von {{ voter.name }} für {{ collection.name }}</h2>
+
+{% if warnings %}
+  <div class="alert alert-danger" role="alert">
+    <h4><i class="fas fa-radiation-alt"></i> Warnung</h4>
+    Das Auswerten der bisherigen Eintragungen hat zu Warnungen geführt.
+    Bitte lies die folgenden Warnungen genaustens durch!
+    Es besteht die Gefahr, dass sonst etwas beim Auszählen schief läuft!
+    <ul>
+      {% for warning in warnings %}
+        <li>{{ warning }}</li>
+      {% endfor %}
+    </ul>
+  </div>
+{% endif %}
+
 <form role="form" method="post">
     {% csrf_token %}
     {% bootstrap_form form %}

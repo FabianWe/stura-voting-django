@@ -27,6 +27,9 @@ from .fields import *
 from .utils import get_groups
 from .results import *
 
+from stura_voting_utils.utils import output_currency
+
+
 
 class PeriodForm(forms.ModelForm):
 
@@ -74,9 +77,11 @@ class ResultsSingleVoterForm(forms.Form):
         last_voter_id = None
         if voter is not None:
             last_voter_id = voter.id
-        groups = []
-        if collection is not None:
-            groups = get_groups(collection)
+        # filled later, just make sure it exists whatever happens
+        self.warnings = []
+        #groups = []
+        #if collection is not None:
+        #    groups = get_groups(collection)
         super().__init__(*args, **kwargs)
         # not so efficient but works
         # What we do is:
@@ -94,34 +99,51 @@ class ResultsSingleVoterForm(forms.Form):
                     if (i + 1) < len(voters_list):
                         next_voter_id = voters_list[i + 1].id
                     break
-        # TODO remove, just for testing
-        #medians = median_votes_for_voter(collection, voter)
-        #schulzes = schulze_votes_for_voter(collection, voter)
-        #merge_voting_results(medians, schulzes)
+        median_result = median_votes_for_voter(collection, voter)
+        schulze_result = schulze_votes_for_voter(collection, voter)
+        all_results = merge_voting_results(median_result, schulze_result)
         # insert in field order
         # this was a todo but we should be fine, django uses ordered dict
         # TODO what happens when creating it with POST given? Will this here
         # then do something wrong?
-        for group, voting_list in groups:
+        for _, voting_list in all_results.by_group():
+            assert len(voting_list) > 0
+            group = voting_list[0].group
             group_field_name = self.label_field_prefix + str(group.id)
             self.fields[group_field_name] = forms.CharField(label='',
                                                             initial=str(group.name),
                                                             required=False,
                                                             disabled=True)
             for voting in voting_list:
+                voting_id = voting.id
                 if isinstance(voting, MedianVoting):
-                    field_name = self.median_field_prefix + str(voting.id)
+                    field_name = self.median_field_prefix + str(voting_id)
+                    currency = voting.currency
+                    if not currency:
+                        currency = None
+                    as_currency = output_currency(voting.value, currency)
                     self.fields[field_name] = CurrencyField(max_value=voting.value,
-                                                            label='Finanzantrag: ' + str(voting.name),
+                                                            label='Finanzantrag: %s (%s)' % (str(voting.name), as_currency),
                                                             required=False)
+                    # add initial value (if exists)
+                    if voting_id in median_result.votes:
+                        result = median_result.votes[voting_id]
+                        as_currency = output_currency(result.value, currency)
+                        self.fields[field_name].initial = as_currency
                 elif isinstance(voting, SchulzeVoting):
-                    field_name = self.schulze_field_prefix + str(voting.id)
-                    num_options = SchulzeOption.objects.filter(voting=voting).count()
+                    field_name = self.schulze_field_prefix + str(voting_id)
+                    num_options = len(schulze_result.voting_description[voting_id])
                     self.fields[field_name] = SchulzeVoteField(num_options=num_options,
-                                                               label='Abstimmung: ' + str(voting.name),
+                                                               label='Abstimmung: %s (%d)' % (str(voting.name), num_options),
                                                                required=False)
+                    if voting_id in schulze_result.votes:
+                        result = schulze_result.votes[voting_id]
+                        assert result
+                        ranking_str = ' '.join(str(vote.sorting_position) for vote in result)
+                        self.fields[field_name].initial = ranking_str
                 else:
                     assert False
+        self.warnings = all_results.warnings
 
     def votings(self):
         for name, value in self.cleaned_data.items():
@@ -207,6 +229,4 @@ class EnterResultsForm(forms.Form):
                 voting_id = int(name[len(self.schulze_field_prefix):])
                 yield 'schulze', voting_id, value
 
-
-# TODO aufpassen mit update und erzeugen
 # https://jacobian.org/writing/dynamic-form-generation/

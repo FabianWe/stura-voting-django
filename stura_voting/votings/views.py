@@ -98,6 +98,7 @@ def enter_single_voter_view(request, coll, v):
         if form.is_valid():
             print(form.cleaned_data)
     context['form'] = form
+    context['warnings'] = list(map(str, form.warnings))
     return render(request, 'votings/enter_single.html', context)
 
 def new_period(request):
