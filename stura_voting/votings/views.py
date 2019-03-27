@@ -35,6 +35,7 @@ from .forms import PeriodForm, RevisionForm, SessionForm, EnterResultsForm, Resu
 from .utils import *
 # from .results import *
 
+# TODO which views should be atomic
 
 def index(request):
     return render(request, 'votings/index.html')
