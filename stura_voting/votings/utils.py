@@ -150,11 +150,11 @@ def add_votings(parsed_collection, collection_model):
         model_group = voting_models.VotingGroup.objects.create(name=group.name,
                                                  collection=collection_model,
                                                  group_num=group_num)
-        for skel in group.get_votings():
+        for voting_num, skel in enumerate(group.get_votings()):
             if isinstance(skel, SchulzeVotingSkeleton):
                 schulze_voting = voting_models.SchulzeVoting.objects.create(
                     name=skel.name,
-                    voting_num=skel.id if skel.id is not None else 0,
+                    voting_num=voting_num,
                     group=model_group,
                 )
                 # add all options
@@ -169,7 +169,7 @@ def add_votings(parsed_collection, collection_model):
                     name=skel.name,
                     value=skel.value,
                     currency=skel.currency if skel.currency is not None else '€',
-                    voting_num=skel.id if skel.id is not None else 0,
+                    voting_num=voting_num,
                     group=model_group,
                 )
             else:

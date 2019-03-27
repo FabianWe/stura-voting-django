@@ -81,7 +81,7 @@ class VotingGroup(models.Model):
     group_num = models.PositiveIntegerField(help_text='Gruppen Nummer')
 
     class Meta:
-        unique_together = ('name', 'collection',)
+        unique_together = (('name', 'collection',), ('group_num', 'collection'),)
 
 
 class MedianVoting(models.Model):

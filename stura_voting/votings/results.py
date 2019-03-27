@@ -20,7 +20,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from collections import defaultdict, OrderedDict
+from collections import OrderedDict
+from itertools import groupby
+from heapq import merge
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils.translation import gettext as _
@@ -59,6 +61,14 @@ def get_voters_with_vote(collection):
     all = get_schulze_votes(collection).values_list('voter__id', flat=True)
     result.update(all)
     return result
+
+
+def QueryWarning(object):
+    def __init__(self, message):
+        self.message = message
+
+    def __str__(self):
+        return str(self.message)
 
 
 class MedianWarning(object):
@@ -136,6 +146,30 @@ class GenericVotingResult(object):
         # maps to value in median and list of SchulzeOption in schulze
         self.voting_description = dict()
 
+    def by_group(self):
+        for group_id, group in groupby(self.votings.values(), lambda voting: voting.group.id):
+            yield group_id, list(group)
+
+
+def merge_voting_results(median, schulze):
+    res = GenericVotingResult()
+    def key(e):
+        _, voting = e
+        return voting.group.group_num, voting.voting_num
+    merged_list = merge(median.votings.items(), schulze.votings.items(), key=key)
+    res.votings = OrderedDict(merged_list)
+    if len(res.votings) != len(median.votings) + len(schulze.votings):
+        warning = QueryWarning('Something went wrong, ids of the votings are probably not unique or a voting appears twice!')
+        res.warnings.append(warning)
+    res.votes.update(median.votes)
+    res.votes.update(schulze.votes)
+    res.warnings += median.warnings
+    res.warnings += schulze.warnings
+    res.voting_description.update(schulze.voting_description)
+    res.voting_description.update(median.voting_description)
+    return res
+
+
 def median_votes_for_voter(collection, voter):
     # could proabably be done in a single more efficient query
     votings_qs = (voting_models.MedianVoting.objects.filter(group__collection=collection)
@@ -165,8 +199,7 @@ def schulze_votes_for_voter(collection, voter):
     votings_qs = (voting_models.SchulzeVoting.objects.filter(group__collection=collection)
                   .order_by('group__group_num', 'voting_num'))
     # all options
-    options_qs = (voting_models.Opiton.objects.filter(voting__group__collection=collection)
-                  .select_related('option')
+    options_qs = (voting_models.SchulzeOption.objects.filter(voting__group__collection=collection)
                   .order_by('voting__id', 'option_num'))
     # all options voted for
     votes_qs = (voting_models.SchulzeVote.objects.filter(voter=voter, option__voting__group__collection=collection)

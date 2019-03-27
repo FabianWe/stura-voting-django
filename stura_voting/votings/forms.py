@@ -25,6 +25,7 @@ from django import forms
 from .models import *
 from .fields import *
 from .utils import get_groups
+from .results import *
 
 
 class PeriodForm(forms.ModelForm):
@@ -93,6 +94,10 @@ class ResultsSingleVoterForm(forms.Form):
                     if (i + 1) < len(voters_list):
                         next_voter_id = voters_list[i + 1].id
                     break
+        # TODO remove, just for testing
+        #medians = median_votes_for_voter(collection, voter)
+        #schulzes = schulze_votes_for_voter(collection, voter)
+        #merge_voting_results(medians, schulzes)
         # insert in field order
         # this was a todo but we should be fine, django uses ordered dict
         # TODO what happens when creating it with POST given? Will this here
