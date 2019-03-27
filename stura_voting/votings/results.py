@@ -28,6 +28,7 @@ from itertools import groupby
 from collections import OrderedDict
 from heapq import merge
 
+## TODO remove this file?
 
 class VoteConsistencyError(Exception):
     def __init__(self, message, voter, voting):
@@ -192,7 +193,6 @@ class CollectionRes(object):
                 votes_of_voter = list(votes_of_voter)
                 ranking = [vote.sorting_position for vote in votes_of_voter]
         return res
-
 
 
 class Votes(object):

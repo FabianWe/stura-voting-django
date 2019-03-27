@@ -59,7 +59,7 @@ SOFTWARE.
                 {% endwith %}
                 </p>
                 {% else %}
-                <p>Finanzantrag "{{ voting.name }}" über {{ voting.value|currency:voting.currency }}</p>
+                <p>Finanzantrag {{ voting.name }} über {{ voting.value|currency:voting.currency }}</p>
             {% endif %}
         {% endfor %}
     {% endfor %}

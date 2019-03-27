@@ -24,7 +24,7 @@ from django import forms
 
 from .models import *
 from .fields import *
-from .utils import get_groups
+from .utils import get_groups, median_votes_for_voter
 
 
 class PeriodForm(forms.ModelForm):
@@ -69,7 +69,10 @@ class ResultsSingleVoterForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         collection = kwargs.pop('collection')
-        last_voter_id = kwargs.pop('last_voter_id', None)
+        voter = kwargs.pop('voter', None)
+        last_voter_id = None
+        if voter is not None:
+            last_voter_id = voter.id
         groups = []
         if collection is not None:
             groups = get_groups(collection)
@@ -79,6 +82,7 @@ class ResultsSingleVoterForm(forms.Form):
         # Find the last user (if it exists) and then take the next user
         # for the next button
         # we store the next value in the variable next_user_id
+        # TODO wrong place
         next_voter_id = None
         if last_voter_id is not None:
             voters_qs = Voter.objects.filter(revision=collection.revision).order_by('name')

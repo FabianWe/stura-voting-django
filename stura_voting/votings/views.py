@@ -86,11 +86,12 @@ def enter_single_voter_view(request, coll, v):
     voter = get_object_or_404(Voter, pk=v)
     context = {'collection': collection, 'voter': voter}
     if voter.revision != collection.revision:
+        # TODO remove probably
         return HttpResponseBadRequest('Fooo')
     if request.method == 'GET':
-        form = ResultsSingleVoterForm(collection=collection)
+        form = ResultsSingleVoterForm(collection=collection, voter=voter)
     else:
-        form = ResultsSingleVoterForm(request.POST, collection=collection)
+        form = ResultsSingleVoterForm(request.POST, collection=collection, voter=voter)
         if form.is_valid():
             print(form.cleaned_data)
     context['form'] = form

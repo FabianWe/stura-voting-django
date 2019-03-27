@@ -22,6 +22,7 @@
 
 import datetime
 from heapq import merge
+from collections import defaultdict
 
 from dateutil import relativedelta
 
@@ -31,6 +32,7 @@ from django.conf import settings
 from django.shortcuts import get_object_or_404
 from django.http import HttpResponseBadRequest
 from django.core.exceptions import ObjectDoesNotExist
+from django.utils.translation import gettext as _
 
 # otherwise some really ugly import stuff
 from . import models as voting_models
@@ -290,17 +292,35 @@ def get_voters_with_vote(collection):
     return result
 
 
-def single_median_vote(voter, voting):
-    try:
-        return voting_models.MedianVote.objects.get(voter=voter, voting=voting)
-    except ObjectDoesNotExist:
-        return None
+class MedianWarning(object):
+    def __init__(self, voting, got):
+        self.voting = voting
+        self.got = got
+
+
+    def __str__(self):
+        return _('Warning for voting with id %{voting}d: Expected value between 0 and %{max}d but got value %{got}d' % {
+            'voting': self.voting.id,
+            'max': self.voting.value,
+            'got': self.got,
+        })
 
 
 class SchulzeWarning(object):
-    def __init__(self, description):
-        self.description = description
+    def __init__(self, message):
+        self.message = message
 
+    def __str__(self):
+        return str(self.message)
+
+def single_median_vote(voter, voting):
+    try:
+        res = voting_models.MedianVote.objects.get(voter=voter, voting=voting)
+        if res.value > voting.value:
+            return res, MedianWarning(voting, res.value)
+        return res, None
+    except ObjectDoesNotExist:
+        return None, None
 
 def single_schulze_vote(voter, voting, voting_options=None):
     if voting_options is None:
@@ -312,11 +332,75 @@ def single_schulze_vote(voter, voting, voting_options=None):
     # it's also possible that simply no votes exist...
     votes = list(votes)
     if not votes:
-        return None
+        return None, None
     # now match
     if len(votes) != len(voting_options):
-        return SchulzeWarning('Number options (%d) does not match number of votes (%d)' % (len(voting_options), len(votes)))
+        msg = _('Number of options %{options}d does not match number of votes %{votes}d for voting %{voting}d' % {
+            'options': len(voting_options),
+            'votes': len(votes),
+            'voting': voting.id,
+        })
+        return voting_options,votes, SchulzeWarning(msg)
+    # check if each option is correctly covered
     for vote, option in zip(votes, voting_options):
         if vote.option != option:
-            return SchulzeWarning('Invalid vote for option: Got vote for option %d instead of %d' % (vote.option.id, option.id))
-    return voting_options, votes
+            msg = _('Invalid vote for option for vote %{vote}d: Got vote for option %{option}d instead of %{for}d' % {
+                'vote': voting.id,
+                'option': vote.option.id,
+                'for': option.id,
+            })
+            return voting_options, votes, SchulzeWarning(msg)
+    return voting_options, votes, None
+
+
+def median_votes_for_voter(collection, voter):
+    qs = voting_models.MedianVote.objects.filter(voter=voter, voting__group__collection=collection)
+    # some sanity checks
+    res = dict()
+    warnings = []
+    for vote in qs:
+        res[vote.voting.id] = vote
+        if vote.value > vote.voting.value:
+            warning = MedianWarning(vote.voting, vote.value)
+            warnings.append(warning)
+    return res, warnings
+
+def schulze_votes_for_voter(collection, voter, voting_options=None):
+    qs = (voting_models.SchulzeVote.objects.filter(voter=voter, option__voting__group__collection=collection)
+          .select_related('option')
+          .order_by('voting__id', 'option__option_num'))
+    votes_dict = defaultdict(list)
+    for vote in qs:
+        votes_dict[vote.voting.id].append(vote)
+    # now fetch all options
+    options_qs = (voting_models.SchulzeOption.filter(voting__group__collection=collection)
+                  .select_related('voting')
+                  .order_by('option_num'))
+    votings_dict = defaultdict(list)
+    for option in options_qs:
+        votings_dict[option.voting.id].append(option)
+    # now check all votings
+    warnings = []
+    for voting_id, votes in votes_dict:
+        if voting_id not in votings_dict:
+            msg = _('Voting with id %{id}d is not a valid schulze voting, deleted / inserted something?')
+            warings.append(SchulzeWarning(msg))
+            continue
+        voting_options = votings_dict[voting_id]
+        if len(votes) != len(voting_options):
+            msg = _('Number of options %{options}d does not match number of votes %{votes}d for voting %{voting}d' % {
+                'options': len(voting_options),
+                'votes': len(votes),
+                'voting': voting_id,
+            })
+            warnings.append(SchulzeWarning(msg))
+            continue
+        for vote, option in zip(votes, voting_options):
+            if vote.option != option:
+                msg = _('Invalid vote for option for vote %{vote}d: Got vote for option %{option}d instead of %{for}d' % {
+                    'vote': voting_id,
+                    'option': vote.option.id,
+                    'for': option.id,
+                })
+                warnings.append(SchulzeWarning(msg))
+    return votings_dict, votes_dict, warnings
