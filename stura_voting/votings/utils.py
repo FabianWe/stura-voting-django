@@ -30,6 +30,7 @@ from django.utils import formats
 from django.conf import settings
 from django.shortcuts import get_object_or_404
 from django.http import HttpResponseBadRequest
+from django.core.exceptions import ObjectDoesNotExist
 
 # otherwise some really ugly import stuff
 from . import models as voting_models
@@ -286,3 +287,35 @@ def get_voters_with_vote(collection):
     all = get_schulze_votes(collection).values_list('voter__id', flat=True)
     result.update(all)
     return result
+
+
+def single_median_vote(voter, voting):
+    try:
+        return voting_models.MedianVote.objects.get(voter=voter, voting=voting)
+    except ObjectDoesNotExist:
+        return None
+
+
+class SchulzeWarning(object):
+    def __init__(self, description):
+        self.description = description
+
+
+def single_schulze_vote(voter, voting, voting_options=None):
+    if voting_options is None:
+        voting_options = voting_models.SchulzeOption.objects.filter(voting=voting).order_by('option_num')
+    # get all votes
+    votes = voting_models.SchulzeVote.objects.filter(voter=voter, option__voting=voting).order_by('option__option_num')
+    # now we must be able to match them, i.e. they must refer to exactly the same
+    # option elements
+    # it's also possible that simply no votes exist...
+    votes = list(votes)
+    if not votes:
+        return None
+    # now match
+    if len(votes) != len(voting_options):
+        return SchulzeWarning('Number options (%d) does not match number of votes (%d)' % (len(voting_options), len(votes)))
+    for vote, option in zip(votes, voting_options):
+        if vote.option != option:
+            return SchulzeWarning('Invalid vote for option: Got vote for option %d instead of %d' % (vote.option.id, option.id))
+    return voting_options, votes

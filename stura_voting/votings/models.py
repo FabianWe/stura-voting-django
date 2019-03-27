@@ -116,7 +116,7 @@ class SchulzeOption(models.Model):
     option_num = models.PositiveIntegerField(help_text='Optionsnummer innerhalb der Schulze Abstimmung')
 
     class Meta:
-        unique_together = ('option', 'voting',)
+        unique_together = (('option', 'voting',), ('voting', 'option_num'))
 
 
 class MedianVote(models.Model):
