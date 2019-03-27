@@ -31,7 +31,7 @@ from django.http import HttpResponseBadRequest, Http404
 from .models import *
 from .forms import PeriodForm, RevisionForm, SessionForm, EnterResultsForm, ResultsSingleVoterForm
 from .utils import *
-from .results import *
+# from .results import *
 
 
 def index(request):
@@ -169,8 +169,6 @@ class SessionDetailView(DetailView):
         groups, option_map = get_groups_template(self.object)
         context['groups'] = groups
         context['option_map'] = option_map
-        # TODO remove
-        print(CollectionRes.from_collection(self.object))
         return context
 
 

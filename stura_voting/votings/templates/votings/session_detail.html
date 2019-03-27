@@ -39,10 +39,10 @@ SOFTWARE.
     {% endif %}
 
     <p>
-        <a href="{% url 'session_update' object.id %}" class="btn btn-primary" role="button"><i class="fas fa-edit"></i> Bearbeiten</a>
-        <a href="{% url 'session_print' object.id %}" target="_blank" class="btn btn-primary" role="button"><i class="fas fa-print"></i> Druckansicht</a>
-        <a href="{% url 'enter_voterslist' object.id %}" class="btn btn-primary" role="button"><i class="fas fa-person-booth"></i> Abstimmungen Eintragen</a>
-        <a href="{% url 'session_delete' object.id %}" class="btn btn-danger" role="button"><i class="fas fa-trash"></i> Löschen</a>
+        <a href="{% url 'session_update' object.id %}" class="btn btn-primary" role="button"><i class="fas fa-edit fa-lg"></i> Bearbeiten</a>
+        <a href="{% url 'session_print' object.id %}" target="_blank" class="btn btn-primary" role="button"><i class="fas fa-print fa-lg"></i> Druckansicht</a>
+        <a href="{% url 'enter_voterslist' object.id %}" class="btn btn-primary" role="button"><i class="fas fa-person-booth fa-lg"></i> Abstimmungen Eintragen</a>
+        <a href="{% url 'session_delete' object.id %}" class="btn btn-danger" role="button"><i class="fas fa-trash fa-lg"></i> Löschen</a>
     </p>
     Sitzung vom {{ object.time }}
     {% for group_name, group_entries in groups %}

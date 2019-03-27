@@ -179,6 +179,7 @@ def add_votings(parsed_collection, collection_model):
 
 def get_groups(collection):
     # TODO use this method in get_groups_template, probably lots of duplication
+    # TODO one query with groupby should be better here
     groups_model = voting_models.VotingGroup.objects.filter(collection=collection).order_by('group_num', 'name')
     for group_model in groups_model:
         # now get all votings for both types
