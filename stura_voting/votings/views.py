@@ -20,11 +20,13 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from django.shortcuts import render, reverse, get_object_or_404, redirect
+from django.shortcuts import render, reverse, redirect
 from django.views.generic.detail import DetailView
 from django.views.generic import ListView, UpdateView
 from django.views.generic.edit import DeleteView
-from django.http import HttpResponseBadRequest, Http404
+from django.http import Http404
+
+from .results import get_voters_with_vote
 
 # TODO when parsing inputs via our library, check lengths before inserting?
 
@@ -261,14 +263,3 @@ def enter_results_view(request, pk):
             # TODO was tun, wenn schon Eintragungen existieren?
             # Irgendwie noch nicht perfekt...
     return render(request, 'votings/enter_results.html', {'form': form})
-
-
-# def votes_for_json(collection, voter):
-#     collection = get_instance(VotingCollection, collection)
-#     voter = get_instance(Voter, voter)
-#     # get all votes for the collection where voter has voted
-#     median_votes = MedianVote.objects.filter(voting__group__collection=collection)
-#     # TODO schulze
-#     res = dict()
-#     for vote in median_votes:
-#         id = EnterResultsForm.median_field_prefix + str(vote.id)

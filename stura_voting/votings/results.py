@@ -1,6 +1,6 @@
 # MIT License
 #
-# Copyright (c) 2018 Fabian Wenzelmann
+# Copyright (c) 2018, 2019 Fabian Wenzelmann
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -20,263 +20,157 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+from collections import defaultdict
+
+from django.core.exceptions import ObjectDoesNotExist
+from django.utils.translation import gettext as _
 
 from .utils import get_instance
-from .models import *
+from . import models as voting_models
 
-from itertools import groupby
-from collections import OrderedDict
-from heapq import merge
 
-## TODO remove this file?
+# TODO in subpackage (stura_voting_utils) specify requirements
+# (I know that this is not the right place for this TODO)
 
-class VoteConsistencyError(Exception):
-    def __init__(self, message, voter, voting):
-        super().__init__(message)
-        self.voter = voter
+def get_median_votes(collection, voter=None, **kwargs):
+    collection = get_instance(voting_models.VotingCollection, collection)
+    if voter is None:
+        return voting_models.MedianVote.objects.filter(voting__group__collection=collection, **kwargs)
+    else:
+        voter = get_instance(voting_models.Voter, voter)
+        return voting_models.MedianVote.objects.filter(voting__group__collection=collection, voter=voter, **kwargs)
+
+
+def get_schulze_votes(collection, voter=None, **kwargs):
+    collection = get_instance(voting_models.VotingCollection, collection)
+    if voter is None:
+        return voting_models.SchulzeVote.objects.filter(option__voting__group__collection=collection, **kwargs)
+    else:
+        voter = get_instance(voting_models.Voter, voter)
+        return voting_models.SchulzeVote.objects.filter(option__voting__group__collection=collection, voter=voter, **kwargs)
+
+
+def get_voters_with_vote(collection):
+    # returns all voters that casted a vote for any of the votes in the
+    # collection
+    # returns them by id as a set
+    all = get_median_votes(collection).values_list('voter__id', flat=True)
+    result = set(all)
+    all = get_schulze_votes(collection).values_list('voter__id', flat=True)
+    result.update(all)
+    return result
+
+
+class MedianWarning(object):
+    def __init__(self, voting, got):
         self.voting = voting
-
-
-def voters_map(revision):
-    voters = Voter.objects.filter(revision=revision)
-    return {voter.id: voter for voter in voters}
-
-
-class GenericVote(object):
-    def __init__(self, voter, value=None, inst=None):
-        self.voter = voter
-        self.value = value
-        self.inst = inst
-
-
-class GenericVoting(object):
-    def __init__(self, voting):
-        self.voting = voting
-        self.votes = {}
-
-
-class GroupRes(object):
-
-    median_prefix = 'median'
-    schulze_prefix = 'schulze'
-
-    def __init__(self, group):
-        self.group = group
-        self.results = OrderedDict()
-
-
-    def insert_median(self, voting):
-        self.results[self.median_prefix + str(voting.id)] = GenericVoting(voting)
-
-    def insert_schulze(self, voting):
-        self.results[self.schulze_prefix + str(voting.id)] = GenericVoting(voting)
-
-
-    def insert(self, voting):
-        if isinstance(voting, MedianVoting):
-            self.insert_median(voting)
-        elif isinstance(voting, SchulzeVoting):
-            self.insert_schulze(voting)
-        else:
-            # TODO raise value error?
-            assert False
-
-
-    def get_median(self, id, default=None):
-        return self.results.get(self.median_prefix + str(id), default)
-
-    def get_schulze(self, id, default=None):
-        return self.results.get(self.schulze_prefix + str(id), default)
-
-
-    def items(self):
-        for key, voting in self.results.items():
-            if key.startswith(self.median_prefix):
-                yield 'median', int(key[len(self.median_prefix):]), voting
-            elif key.startswith(self.schulze_prefix):
-                yield 'schulze', int(key[len(self.schulze_prefix):]), voting
-            else:
-                # TODO raise value error?
-                assert False
-
-
-class GroupWarning(object):
-    def __init__(self, group, voting):
-        self.group = group
-        self.voting = voting
+        self.got = got
 
 
     def __str__(self):
-        return 'Group %s(id=%d) for voting %s(id=%d) not found' %\
-               (self.group.name, self.group.id, self.voting.name, self.voting.id)
+        return _('Warning for voting with id %{voting}d: Expected value between 0 and %{max}d but got value %{got}d' % {
+            'voting': self.voting.id,
+            'max': self.voting.value,
+            'got': self.got,
+        })
 
 
-class VotingWarning(object):
-    def __init__(self, voting):
-        self.voting = voting
-
-        def __str__(self):
-            return 'Voting %s(id=%d) not found' %\
-                   (self.voting.name, self.voting.id)
-
-
-class MedianVoteWarning(object):
-    def __init__(self, voting, value):
-        self.voting = voting
-        self.value = value
+class SchulzeWarning(object):
+    def __init__(self, message):
+        self.message = message
 
     def __str__(self):
-        return 'Invalid median voting "%s" with id=%d in database: voting value is %d, got vote with %d' %\
-               (self.voting.name, self.voting.id, self.voting.value, self.value)
+        return str(self.message)
 
 
-class CollectionRes(object):
-    def __init__(self):
-        self.groups = OrderedDict()
-        self.warnings = []
+def single_median_vote(voter, voting):
+    try:
+        res = voting_models.MedianVote.objects.get(voter=voter, voting=voting)
+        if res.value > voting.value:
+            return res, MedianWarning(voting, res.value)
+        return res, None
+    except ObjectDoesNotExist:
+        return None, None
 
-    @staticmethod
-    def from_collection(collection, voters=None, check_pedantic=True):
-        # TODO test this stuff
-        # TODO everything broken here :(
-        # TODO think about return type... make this more nice
-        collection = get_instance(VotingCollection, collection)
-        res = CollectionRes()
-        # we want something like a sql left join, we'll use multiple queries...
-        # easier than writing complicated queries, not so efficient but should do
-        # that's because we want all groups, even those that don't have a voting
-        # and we want all votings, even those that don't have a result
-        groups = VotingGroup.objects.filter(collection=collection).order_by('group_num')
-        # now we have all groups, so find the votings for each group
-        for group in groups:
-            group_res = GroupRes(group)
-            res.groups[group.id] = group_res
-            # now find all votings for this group
-            median_votings = MedianVoting.objects.filter(group=group).order_by('voting_num')
-            schulze_votings = SchulzeVoting.objects.filter(group=group).order_by('voting_num')
-            # now both are sorted according to voting_num, merge results
-            all_votings = merge(median_votings, schulze_votings, key=lambda v: v.voting_num)
-            for voting in all_votings:
-                group_res.insert(voting)
-        # now we have all groups and all votings, now we gather the results
-        # first we need the voters
-        if voters is None:
-            voters = voters_map(collection.revision)
-        # now with two queries we get all results
-        # query for all median results
-        median_votes = MedianVote.objects.filter(voting__group__collection=collection).order_by('voting__id', 'value')
-        for vote in median_votes:
-            group_res = res.groups.get(vote.voting.group.id, None)
-            if group_res is None:
-                res.warnings.append(GroupWarning(vote.voting.group, vote.voting))
-            else:
-                # group found
-                # fetch voting object from group
-                generic_voting = group_res.get_median(vote.voting.id)
-                if generic_voting is None:
-                    res.warnings.append(VotingWarning(vote.voting))
-                else:
-                    if check_pedantic and (vote.value < 0 or vote.value > vote.voting.value):
-                        res.warnings.append(MedianVoteWarning(vote.voting, vote.value))
-                    else:
-                        generic_voting.votes[vote.voter.id] = GenericVote(vote.voter, vote.value, vote)
-        # TODO correct??
-        schulze_votes = SchulzeVote.objects.filter(option__voting__group__collection=collection).order_by('option__voting__id',
-                                                                                                          'voter__id',
-                                                                                                          'option__option_num')
-        # now all options should be nicely sorted... so we can just iterate over them
-        # iterate over each voting
-        for voting, votes_of_voting in groupby(schulze_votes, lambda vote: vote.option.voting):
-            # now for each vote of that voting iterate over each voter
-            for voter, votes_of_voter in groupby(votes_of_voting, lambda vote: vote.voter):
-                # we may use the values multiple times, so cast to list
-                votes_of_voter = list(votes_of_voter)
-                ranking = [vote.sorting_position for vote in votes_of_voter]
-        return res
+def single_schulze_vote(voter, voting, voting_options=None):
+    if voting_options is None:
+        voting_options = voting_models.SchulzeOption.objects.filter(voting=voting).order_by('option_num')
+    # get all votes
+    votes = voting_models.SchulzeVote.objects.filter(voter=voter, option__voting=voting).order_by('option__option_num')
+    # now we must be able to match them, i.e. they must refer to exactly the same
+    # option elements
+    # it's also possible that simply no votes exist...
+    votes = list(votes)
+    if not votes:
+        return None, None
+    # now match
+    if len(votes) != len(voting_options):
+        msg = _('Number of options %{options}d does not match number of votes %{votes}d for voting %{voting}d' % {
+            'options': len(voting_options),
+            'votes': len(votes),
+            'voting': voting.id,
+        })
+        return voting_options,votes, SchulzeWarning(msg)
+    # check if each option is correctly covered
+    for vote, option in zip(votes, voting_options):
+        if vote.option != option:
+            msg = _('Invalid vote for option for vote %{vote}d: Got vote for option %{option}d instead of %{for}d' % {
+                'vote': voting.id,
+                'option': vote.option.id,
+                'for': option.id,
+            })
+            return voting_options, votes, SchulzeWarning(msg)
+    return voting_options, votes, None
 
 
-class Votes(object):
-    def __init__(self, voting, votes, num_casted_votes, all_voters):
-        self.voting = voting
-        self.votes = votes
-        self.num_casted_votes = num_casted_votes
-        self.all_voters = all_voters
+def median_votes_for_voter(collection, voter):
+    qs = voting_models.MedianVote.objects.filter(voter=voter, voting__group__collection=collection)
+    # some sanity checks
+    res = dict()
+    warnings = []
+    for vote in qs:
+        res[vote.voting.id] = vote
+        if vote.value > vote.voting.value:
+            warning = MedianWarning(vote.voting, vote.value)
+            warnings.append(warning)
+    return res, warnings
 
-    @staticmethod
-    def from_median(voting, voters=None, check_pedantic=True):
-        # TODO read again and check...
-        voting = get_instance(MedianVoting, voting)
-        if voters is None:
-            voters = voters_map(voting.group.collection.revision)
-        # compute result, first all voters that did cast a voting
-        casted_votes = list(MedianVote.objects.filter(voting=voting))
-        num_casted_votes = len(casted_votes)
-        res = []
-        for vote in casted_votes:
-            if check_pedantic:
-                if vote.value < 0 or vote.value > voting.value:
-                    raise VoteConsistencyError('Found invalid vote for voting: Value is %d, expected value betweeen 0 and %d in voting %s(id=%d)' %
-                                               (vote.value, voting.value, voting.name, voting.voting_num),
-                                               vote.voter,
-                                               voting)
-            res.append(GenericVote(vote.voter, vote.value, vote))
-        # if all votes should be counted, even those who did not submit, compute
-        # them as well
-        if voting.count_all_votes:
-            casted_votes_set = {vote.voter.id for vote in casted_votes}
-            # iterate over all voters and compute those who didn't submit
-            for voter_id, voter in voters.items():
-                if voter_id not in casted_votes_set:
-                    # append to res
-                    res.append(GenericVote(voter, None, None))
-        return Votes(voting, res, num_casted_votes, voters)
-
-
-    @staticmethod
-    def from_schulze(voting, voters=None, check_pedantic=True):
-        # TODO doc: Raises ConsistencyError...
-        # TODO read again and check...
-        voting = get_instance(SchulzeVoting, voting)
-        if voters is None:
-            voters = voters_map(voting.group.collection.revision)
-        # if check pedantic is true check each voter for correct length
-        num_options = None
-        if check_pedantic:
-            num_options = SchulzeOption.objects.filter(voting=voting).count()
-        # compute result, first all voters that did cast a vote
-        # this gives us many entries for each voter, so we have to map them
-        # TODO is this order by correct?
-        casted_votes = SchulzeVote.objects.filter(option__voting=voting).order_by('voter__id', 'option__option_num')
-        # build groups according to the voter
-        votes_by_voter = groupby(casted_votes, lambda vote: vote.voter)
-        res = []
-        for voter, votes in votes_by_voter:
-            # we may use votes many times, so simply cast to a list
-            votes = list(votes)
-            # the vote positions are sorted according to the option they belong to, so
-            # simply transform to a list
-            ranking = [vote.sorting_position for vote in votes]
-            # if check pedantic is true check length
-            if check_pedantic and len(ranking) != num_options:
-                raise VoteConsistencyError('Found invalid votes for voting: Expected %d options, fond %d in voting %s(id=%d)' %
-                                           (num_options, len(ranking), voting.name, voting.voting_num),
-                                           voter, voting)
-                pass
-            else:
-                res.append(GenericVote(voter, ranking, votes))
-        num_casted_votes = len(res)
-        if voting.count_all_votes:
-            casted_votes_set = {vote.voter.id for vote in casted_votes}
-            # iterate over all voters and compute those who didn't submit
-            for voter_id, voter in voters.items():
-                if voter_id not in casted_votes_set:
-                    # append to res
-                    res.append(GenericVote(voter, None, None))
-        return Votes(voting, res, num_casted_votes, voters)
-
-
-    # TODO build a smarter way to access the database instead of calling
-    # from_median and from_schulze multiple times?
-
-    # TODO in subpackage (stura_voting_utils) specify requirements
-    # (I know that this is not the right place for this TODO)
+def schulze_votes_for_voter(collection, voter, voting_options=None):
+    qs = (voting_models.SchulzeVote.objects.filter(voter=voter, option__voting__group__collection=collection)
+          .select_related('option')
+          .order_by('voting__id', 'option__option_num'))
+    votes_dict = defaultdict(list)
+    for vote in qs:
+        votes_dict[vote.voting.id].append(vote)
+    # now fetch all options
+    options_qs = (voting_models.SchulzeOption.filter(voting__group__collection=collection)
+                  .select_related('voting')
+                  .order_by('option_num'))
+    votings_dict = defaultdict(list)
+    for option in options_qs:
+        votings_dict[option.voting.id].append(option)
+    # now check all votings
+    warnings = []
+    for voting_id, votes in votes_dict:
+        if voting_id not in votings_dict:
+            msg = _('Voting with id %{id}d is not a valid schulze voting, deleted / inserted something?')
+            warnings.append(SchulzeWarning(msg))
+            continue
+        voting_options = votings_dict[voting_id]
+        if len(votes) != len(voting_options):
+            msg = _('Number of options %{options}d does not match number of votes %{votes}d for voting %{voting}d' % {
+                'options': len(voting_options),
+                'votes': len(votes),
+                'voting': voting_id,
+            })
+            warnings.append(SchulzeWarning(msg))
+            continue
+        for vote, option in zip(votes, voting_options):
+            if vote.option != option:
+                msg = _('Invalid vote for option for vote %{vote}d: Got vote for option %{option}d instead of %{for}d' % {
+                    'vote': voting_id,
+                    'option': vote.option.id,
+                    'for': option.id,
+                })
+                warnings.append(SchulzeWarning(msg))
+    return votings_dict, votes_dict, warnings

@@ -24,7 +24,7 @@ from django import forms
 
 from .models import *
 from .fields import *
-from .utils import get_groups, median_votes_for_voter
+from .utils import get_groups
 
 
 class PeriodForm(forms.ModelForm):
