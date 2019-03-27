@@ -25,6 +25,7 @@ from django.views.generic.detail import DetailView
 from django.views.generic import ListView, UpdateView
 from django.views.generic.edit import DeleteView
 from django.http import Http404
+from django.db import transaction
 
 from .results import get_voters_with_vote
 
@@ -84,6 +85,7 @@ def enter_voterlist(request, pk):
     context = {'collection': collection, 'with_vote': with_vote, 'without_vote': without_vote}
     return render(request, 'votings/enter_voterlist.html', context)
 
+@transaction.atomic
 def enter_single_voter_view(request, coll, v):
     collection = get_object_or_404(VotingCollection, pk=coll)
     voter = get_object_or_404(Voter, pk=v)
@@ -101,6 +103,7 @@ def enter_single_voter_view(request, coll, v):
     context['warnings'] = list(map(str, form.warnings))
     return render(request, 'votings/enter_single.html', context)
 
+@transaction.atomic
 def new_period(request):
     if request.method == 'GET':
         form = PeriodForm()
@@ -121,7 +124,7 @@ def revision_success(request, pk):
     rev = get_object_or_404(VotersRevision, pk=pk)
     return render(request, 'votings/success_revision.html', {'period': rev.period.name})
 
-
+@transaction.atomic
 def new_revision(request):
     if request.method == 'GET':
         form = RevisionForm()
@@ -184,6 +187,7 @@ class SessionDetailSuccess(SessionDetailView):
         return context
 
 
+@transaction.atomic
 def new_session(request):
     if request.method == 'GET':
         form = SessionForm()
