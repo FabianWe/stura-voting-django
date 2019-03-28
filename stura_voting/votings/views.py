@@ -62,14 +62,14 @@ def new_period(request):
                 for voter in form.cleaned_data['revision']:
                     Voter.objects.create(revision=rev, name=voter.name, weight=voter.weight)
             return redirect('period_detail_success', pk=period.id)
-    return render(request, 'votings/new_period.html', {'form': form})
+    return render(request, 'votings/period/new_period.html', {'form': form})
 
 
 class PeriodDetailView(DetailView):
     model = Period
 
     context_object_name = 'period'
-    template_name = 'votings/period_detail.html'
+    template_name = 'votings/period/period_detail.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -84,7 +84,7 @@ class PeriodDetailView(DetailView):
 class PeriodUpdateView(UpdateView):
     model = Period
     fields = ('start', 'end')
-    template_name = 'votings/update_period.html'
+    template_name = 'votings/period/update_period.html'
 
     def get_success_url(self):
         return reverse('period_detail', args=[self.object.id])
@@ -108,7 +108,7 @@ def enter_voterlist(request, pk):
         else:
             without_vote.append(voter)
     context = {'collection': collection, 'with_vote': with_vote, 'without_vote': without_vote}
-    return render(request, 'votings/enter_voterlist.html', context)
+    return render(request, 'votings/session/enter_voterlist.html', context)
 
 @transaction.atomic
 def enter_single_voter_view(request, coll, v):
@@ -134,7 +134,7 @@ def enter_single_voter_view(request, coll, v):
     # our methods might change the contents of schulze and median warnings, thus
     # the merged result does not contain all warnings, we merge them here again
     context['warnings'] = list(map(str, form.median_result.warnings + form.schulze_result.warnings))
-    return render(request, 'votings/enter_single.html', context)
+    return render(request, 'votings/session/enter_single.html', context)
 
 def __handle_enter_median(result, v_id, val, voter):
     # result: GenericVotingResult for meidan votes only
@@ -251,7 +251,7 @@ def __handle_enter_schulze(result, v_id, val, voter):
 
 def revision_success(request, pk):
     rev = get_object_or_404(VotersRevision, pk=pk)
-    return render(request, 'votings/success_revision.html', {'period': rev.period.name})
+    return render(request, 'votings/revision/success_revision.html', {'period': rev.period.name})
 
 @transaction.atomic
 def new_revision(request):
@@ -264,11 +264,11 @@ def new_revision(request):
             for voter in form.cleaned_data['voters']:
                 Voter.objects.create(revision=rev, name=voter.name, weight=voter.weight)
             return redirect('new_revision_success', pk=rev.id)
-    return render(request, 'votings/new_revision.html', {'form': form})
+    return render(request, 'votings/revision/new_revision.html', {'form': form})
 
 
 class PeriodsList(ListView):
-    template_name = 'votings/all_periods.html'
+    template_name = 'votings/period/all_periods.html'
     model = Period
     context_object_name = 'periods'
 
@@ -277,8 +277,8 @@ class PeriodsList(ListView):
         return res.order_by('-start', '-created')
 
 
-class CollectionsList(ListView):
-    template_name = 'votings/all_collections.html'
+class SessionsList(ListView):
+    template_name = 'votings/session/all_sessions.html'
     model = VotingCollection
     context_object_name = 'collections'
 
@@ -290,7 +290,7 @@ class CollectionsList(ListView):
 class SessionUpdate(UpdateView):
     model = VotingCollection
     fields = ('name', 'time', 'revision')
-    template_name = 'votings/update_session.html'
+    template_name = 'votings/session/update_session.html'
 
     def get_success_url(self):
         return reverse('session_update', args=[self.object.id])
@@ -299,7 +299,7 @@ class SessionDetailView(DetailView):
     model = VotingCollection
 
     context_object_name = 'voting_session'
-    template_name = 'votings/session_detail.html'
+    template_name = 'votings/session/session_detail.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -329,24 +329,24 @@ def new_session(request):
             session.save()
             add_votings(parsed_collection, session)
             return redirect('new_session_success', pk=session.id)
-    return render(request, 'votings/new_session.html', {'form': form})
+    return render(request, 'votings/session/new_session.html', {'form': form})
 
 
 def success_session_delete(request):
-    return render(request, 'votings/success_session_delete.html')
+    return render(request, 'votings/session/success_session_delete.html')
 
 
 class SessionDelete(DeleteView):
     model = VotingCollection
     success_url = 'session_delete_success'
-    template_name = 'votings/session_confirm_delete.html'
+    template_name = 'votings/session/session_confirm_delete.html'
 
 
 class SessionPrintView(DetailView):
     model = VotingCollection
 
     context_object_name = 'voting_session'
-    template_name = 'votings/session_print.html'
+    template_name = 'votings/session/session_print.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
