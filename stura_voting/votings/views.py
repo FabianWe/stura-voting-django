@@ -27,7 +27,7 @@ from django.views.generic.edit import DeleteView
 from django.http import Http404
 from django.db import transaction
 
-from .results import get_voters_with_vote
+from .results import *
 
 # TODO when parsing inputs via our library, check lengths before inserting?
 
@@ -37,6 +37,7 @@ from .utils import *
 # from .results import *
 
 # TODO which views should be atomic
+# also see select_for_update
 
 def index(request):
     return render(request, 'votings/index.html')
@@ -98,10 +99,46 @@ def enter_single_voter_view(request, coll, v):
     else:
         form = ResultsSingleVoterForm(request.POST, collection=collection, voter=voter)
         if form.is_valid():
-            print(form.cleaned_data)
+            for v_type, v_id, val in form.votings():
+                if v_type == 'median':
+                    __handle_enter_median(form.median_result, v_id, val, voter)
+                elif v_type == 'schulze':
+                    pass
+                else:
+                    assert False
     context['form'] = form
-    context['warnings'] = list(map(str, form.warnings))
+    context['warnings'] = list(map(str, form.results.warnings))
     return render(request, 'votings/enter_single.html', context)
+
+def __handle_enter_median(result, v_id, val, voter):
+    # result: GenericVotingResult for meidan votes only
+    # v_id id of the voting
+    # val: None or tuple (value, currency)
+    # first lookup voting and ensure it exists and is a median voting
+    if v_id not in result.votings:
+        msg = _('Median voting with id %(voting)d does not exist, not saved' % {
+            'voting': v_id,
+        })
+        waring = QueryWarning(msg)
+        result.warnings.append(warning)
+        return
+    voting = result.votings[v_id]
+    # if val is None (no entry and result exists: delete it)
+    if val is None:
+        # delete if exists, otherwise keep as it is
+        if v_id in result.votes:
+            # just delete the single entry
+            result.votes[v_id].delete()
+    else:
+        # update or insert
+        if v_id in result.votes:
+            entry = result.votes[v_id]
+            # update
+            entry.value = val[0]
+            entry.save(update_fields=['value'])
+        else:
+            # insert
+            MedianVote.objects.create(value=val[0], voter=voter, voting=voting)
 
 @transaction.atomic
 def new_period(request):

@@ -77,8 +77,6 @@ class ResultsSingleVoterForm(forms.Form):
         last_voter_id = None
         if voter is not None:
             last_voter_id = voter.id
-        # filled later, just make sure it exists whatever happens
-        self.warnings = []
         #groups = []
         #if collection is not None:
         #    groups = get_groups(collection)
@@ -102,6 +100,9 @@ class ResultsSingleVoterForm(forms.Form):
         median_result = median_votes_for_voter(collection, voter)
         schulze_result = schulze_votes_for_voter(collection, voter)
         all_results = merge_voting_results(median_result, schulze_result)
+        self.results = all_results
+        self.median_result = median_result
+        self.schulze_result = schulze_result
         # insert in field order
         # this was a todo but we should be fine, django uses ordered dict
         # TODO what happens when creating it with POST given? Will this here
@@ -143,7 +144,6 @@ class ResultsSingleVoterForm(forms.Form):
                         self.fields[field_name].initial = ranking_str
                 else:
                     assert False
-        self.warnings = all_results.warnings
 
     def votings(self):
         for name, value in self.cleaned_data.items():

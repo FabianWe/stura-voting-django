@@ -227,7 +227,7 @@ def get_instance(klass, obj, *args, **kwargs):
         obj = get_object_or_404(klass, pk=obj, *args, **kwargs)
     return obj
 
-
+# TODO remove once new result single view is finished
 def insert_median_vote(value, voter, voting):
     # TODO for the docs:
     # voting / voter can be int for id or voting
@@ -245,7 +245,7 @@ def insert_median_vote(value, voter, voting):
     voting_models.MedianVote.objects.create(value=value, voter=voter, voting=voting)
     return True
 
-
+# TODO remove once new result single view is finished
 def insert_schulze_vote(ranking, voter, voting):
     # TODO docs same wie oben
     voter = get_instance(voting_models.Voter, voter)

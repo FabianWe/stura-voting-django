@@ -175,6 +175,7 @@ def median_votes_for_voter(collection, voter):
     votings_qs = (voting_models.MedianVoting.objects.filter(group__collection=collection)
                  .order_by('group__group_num', 'voting_num'))
     votes_qs = (voting_models.MedianVote.objects
+                .select_for_update()
                 .filter(voter=voter, voting__group__collection=collection)
                 .select_related('voting'))
 
@@ -203,6 +204,7 @@ def schulze_votes_for_voter(collection, voter):
                   .order_by('voting__id', 'option_num'))
     # all options voted for
     votes_qs = (voting_models.SchulzeVote.objects.filter(voter=voter, option__voting__group__collection=collection)
+                .select_for_update()
                 .select_related('option')
                 .order_by('option__voting__id', 'option__option_num'))
     res = GenericVotingResult()
