@@ -93,47 +93,6 @@ class SchulzeWarning(object):
         return str(self.message)
 
 
-def single_median_vote(voter, voting):
-    try:
-        res = voting_models.MedianVote.objects.get(voter=voter, voting=voting)
-        if res.value > voting.value:
-            return res, MedianWarning(voting, res.value)
-        return res, None
-    except ObjectDoesNotExist:
-        return None, None
-
-
-def single_schulze_vote(voter, voting, voting_options=None):
-    if voting_options is None:
-        voting_options = voting_models.SchulzeOption.objects.filter(voting=voting).order_by('option_num')
-    # get all votes
-    votes = voting_models.SchulzeVote.objects.filter(voter=voter, option__voting=voting).order_by('option__option_num')
-    # now we must be able to match them, i.e. they must refer to exactly the same
-    # option elements
-    # it's also possible that simply no votes exist...
-    votes = list(votes)
-    if not votes:
-        return None, None
-    # now match
-    if len(votes) != len(voting_options):
-        msg = _('Number of options %(options)d does not match number of votes %(votes)d for voting %(voting)d' % {
-            'options': len(voting_options),
-            'votes': len(votes),
-            'voting': voting.id,
-        })
-        return voting_options,votes, SchulzeWarning(msg)
-    # check if each option is correctly covered
-    for vote, option in zip(votes, voting_options):
-        if vote.option != option:
-            msg = _('Invalid vote for option for vote %(vote)d: Got vote for option %(option)d instead of %(for)d' % {
-                'vote': voting.id,
-                'option': vote.option.id,
-                'for': option.id,
-            })
-            return voting_options, votes, SchulzeWarning(msg)
-    return voting_options, votes, None
-
-
 class GenericVotingResult(object):
     def __init__(self):
         # all votings, sorted according to group and then voting_num
