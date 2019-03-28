@@ -103,18 +103,20 @@ def enter_single_voter_view(request, coll, v):
                 if v_type == 'median':
                     __handle_enter_median(form.median_result, v_id, val, voter)
                 elif v_type == 'schulze':
-                    pass
+                    __handle_enter_schulze(form.schulze_result, v_id, val, voter)
                 else:
                     assert False
     context['form'] = form
-    context['warnings'] = list(map(str, form.results.warnings))
+    # our methods might change the contents of schulze and median warnings, thus
+    # the merged result does not contain all warnings, we merge them here again
+    context['warnings'] = list(map(str, form.median_result.warnings + form.schulze_result.warnings))
     return render(request, 'votings/enter_single.html', context)
 
 def __handle_enter_median(result, v_id, val, voter):
     # result: GenericVotingResult for meidan votes only
     # v_id id of the voting
     # val: None or tuple (value, currency)
-    # first lookup voting and ensure it exists and is a median voting
+    # first lookup voting and ensure it exists
     if v_id not in result.votings:
         msg = _('Median voting with id %(voting)d does not exist, not saved' % {
             'voting': v_id,
@@ -139,6 +141,89 @@ def __handle_enter_median(result, v_id, val, voter):
         else:
             # insert
             MedianVote.objects.create(value=val[0], voter=voter, voting=voting)
+
+def __handle_enter_schulze(result, v_id, val, voter):
+    # result: GenericVotingResult for meidan votes only
+    # v_id id of the voting
+    # val: None or list of ints (the ranking)
+    # in this code we do some sanity checks, just to be absolutely sure everything
+    # is correct
+    # first lookup voting and ensure it exists
+    if v_id not in result.votings:
+        msg = _('Schulze voting with id %(voting)d does not exist, not saved' % {
+            'voting': v_id,
+        })
+        waring = QueryWarning(msg)
+        result.warnings.append(warning)
+        return
+    # if val is None (no entry and result exists: delete it)
+    if val is None:
+        # delete all entries if exists, otherwise keep as it is
+        if v_id in result.votes:
+            votes = result.votes[v_id]
+            for vote in votes:
+                vote.delete()
+    else:
+        # update or insert
+        if v_id not in result.voting_description:
+            msg = _('Schulze voting with id %(voting)d has no options, not saved' % {
+                'voting': v_id,
+            })
+            warning = QueryWarning(msg)
+            result.warnings.append(warning)
+            return
+        voting_options = result.voting_description[v_id]
+        if len(val) != len(voting_options):
+            msg = _('Invalid schulze result. Internal error? Result for voting %(voting)d not saved' % {
+                'voting': v_id
+            })
+            warning = QueryWarning(msg)
+            result.warnings.append(waring)
+            return
+        if v_id in result.votes:
+            # update
+            current_votes = result.votes[v_id]
+            # again, some sanity checks here...
+            # before we only added warnings, but even options with warnings
+            # got inserted. So now we prevent an update / insertion if something
+            # is wrong
+            if len(current_votes) != len(voting_options):
+                msg = _('Number of options %(options)d does not match number of votes %(votes)d for voting %(voting)d. Not saved' % {
+                    'options': len(voting_options),
+                    'votes': len(current_votes),
+                    'voting': v_id,
+                })
+                warning = QueryWarning(msg)
+                result.warnings.append(warning)
+                return
+            # another sanity check, again
+            for vote, option in zip(current_votes, voting_options):
+                if vote.option != option:
+                    # if this happens: The existing entries are invalid, we delete all of them
+                    # then when create a warning and return
+                    for vote in current_votes:
+                        vote.delete()
+                    msg = _('Invalid vote for option for vote %(vote)d: Got vote for option %(option)d instead of %(for)d. Existing entries were deleted!' % {
+                        'vote': v_id,
+                        'option': vote.option.id,
+                        'for': option.id,
+                        })
+                    warning = QueryWarning(msg)
+                    result.warnings.append(warning)
+                    return
+            # sanity checks passed, now we can update all existing votes
+            # finally, everything ok, insert
+            # we also know that len(current_votes) == len(val)
+            for vote, new_pos in zip(current_votes, val):
+                vote.sorting_position = new_pos
+                vote.save(update_fields=['sorting_position'])
+        else:
+            # we know that len(val) == len(voting_options, so insert)
+            for option, ranking_pos in zip(voting_options, val):
+                SchulzeVote.objects.create(sorting_position= ranking_pos,
+                                           voter=voter,
+                                           option=option)
+
 
 @transaction.atomic
 def new_period(request):

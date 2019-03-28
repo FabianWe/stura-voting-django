@@ -244,7 +244,7 @@ def schulze_votes_for_voter(collection, voter):
         else:
             res.votes[voting_id] = [schulze_vote]
     # now perform sanity checks
-    for voting_id, votes in res.votes:
+    for voting_id, votes in res.votes.items():
         if voting_id not in res.voting_description:
             msg = _('Vote with id %(vote)d has no description' % {'vote': voting_id})
             res.warnings.append(msg)
@@ -259,11 +259,12 @@ def schulze_votes_for_voter(collection, voter):
             res.warnings.append(SchulzeWarning(msg))
             continue
         for vote, option in zip(votes, voting_options):
-            msg = _('Invalid vote for option for vote %(vote)d: Got vote for option %(option)d instead of %(for)d' % {
-                'vote': voting_id,
-                'option': vote.option.id,
-                'for': option.id,
-            })
-            res.warnings.append(SchulzeWarning(msg))
-            # no continue here, evaluation works fine but probably something is wrong
+            if vote.option != option:
+                msg = _('Invalid vote for option for vote %(vote)d: Got vote for option %(option)d instead of %(for)d' % {
+                    'vote': voting_id,
+                    'option': vote.option.id,
+                    'for': option.id,
+                    })
+                res.warnings.append(SchulzeWarning(msg))
+                # no continue here, evaluation works fine but probably something is wrong
     return res
