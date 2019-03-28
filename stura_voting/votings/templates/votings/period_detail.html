@@ -36,6 +36,11 @@ SOFTWARE.
     </div>
 {% endif %}
 
+<p>
+    <a href="{% url 'period_update' object.id %}" class="btn btn-primary" role="button"><i class="fas fa-edit fa-lg"></i> Bearbeiten</a>
+    <!-- <a href="{% url 'session_delete' object.id %}" class="btn btn-danger" role="button"><i class="fas fa-trash fa-lg"></i> Löschen</a> -->
+</p>
+
 <p>Zeitraum von {{ period.start }} bis {{ period.end }}</p>
 
 <div class="row">

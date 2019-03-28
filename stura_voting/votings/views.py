@@ -34,7 +34,6 @@ from .results import *
 from .models import *
 from .forms import *
 from .utils import *
-# from .results import *
 
 # TODO which views should be atomic
 # also see select_for_update
@@ -47,6 +46,23 @@ def archive_index(request):
     return render(request, 'votings/archive.html',
              {'periods': Period.objects.order_by('-start', '-created')[:10],
               'collections': VotingCollection.objects.order_by('-time')[:10]})
+
+
+@transaction.atomic
+def new_period(request):
+    if request.method == 'GET':
+        form = PeriodForm()
+    else:
+        form = PeriodForm(request.POST)
+        if form.is_valid():
+            period = form.save()
+            if form.cleaned_data['revision']:
+                # create a first revision
+                rev = VotersRevision.objects.create(period=period, note='')
+                for voter in form.cleaned_data['revision']:
+                    Voter.objects.create(revision=rev, name=voter.name, weight=voter.weight)
+            return redirect('period_detail_success', pk=period.id)
+    return render(request, 'votings/new_period.html', {'form': form})
 
 
 class PeriodDetailView(DetailView):
@@ -65,13 +81,13 @@ class PeriodDetailView(DetailView):
         return context
 
 
-# class PeriodUpdateView(UpdateView):
-#     model = Period
-#     fields = ('start', 'end')
-#     template_name = 'votings/update_session.html'
-#
-#     def get_success_url(self):
-#         return reverse('session_update', args=[self.object.id])
+class PeriodUpdateView(UpdateView):
+    model = Period
+    fields = ('start', 'end')
+    template_name = 'votings/update_period.html'
+
+    def get_success_url(self):
+        return reverse('period_detail', args=[self.object.id])
 
 class PeriodDetailSuccess(PeriodDetailView):
     def get_context_data(self, **kwargs):
@@ -231,23 +247,6 @@ def __handle_enter_schulze(result, v_id, val, voter):
                 SchulzeVote.objects.create(sorting_position= ranking_pos,
                                            voter=voter,
                                            option=option)
-
-
-@transaction.atomic
-def new_period(request):
-    if request.method == 'GET':
-        form = PeriodForm()
-    else:
-        form = PeriodForm(request.POST)
-        if form.is_valid():
-            period = form.save()
-            if form.cleaned_data['revision']:
-                # create a first revision
-                rev = VotersRevision.objects.create(period=period, note='')
-                for voter in form.cleaned_data['revision']:
-                    Voter.objects.create(revision=rev, name=voter.name, weight=voter.weight)
-            return redirect('period_detail_success', pk=period.id)
-    return render(request, 'votings/new_period.html', {'form': form})
 
 
 def revision_success(request, pk):
