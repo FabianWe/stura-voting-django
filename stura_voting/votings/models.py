@@ -1,6 +1,6 @@
 # MIT License
 #
-# Copyright (c) 2018 Fabian Wenzelmann
+# Copyright (c) 2018, 2019 Fabian Wenzelmann
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal

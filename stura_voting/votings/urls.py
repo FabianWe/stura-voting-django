@@ -42,8 +42,6 @@ urlpatterns = [
     path('session/delete/success/', views.success_session_delete, name='session_delete_success'),
     path('session/delete/<int:pk>/', views.SessionDelete.as_view(), name='session_delete'),
     path('session/<int:pk>/print/', views.SessionPrintView.as_view(), name='session_print'),
-    # TODO this can be removed once the new version is available
-    path('session/<int:pk>/results/', views.enter_results_view, name='session_results'),
     path('session/<int:pk>/voters/', views.enter_voterlist, name='enter_voterslist'),
     path('session/<int:coll>/voters/<int:v>/', views.enter_single_voter_view, name='enter_single_voter'),
 ]

@@ -24,12 +24,9 @@ from django import forms
 
 from .models import *
 from .fields import *
-from .utils import get_groups
 from .results import *
 
 from stura_voting_utils.utils import output_currency
-
-
 
 class PeriodForm(forms.ModelForm):
 
@@ -77,9 +74,6 @@ class ResultsSingleVoterForm(forms.Form):
         last_voter_id = None
         if voter is not None:
             last_voter_id = voter.id
-        #groups = []
-        #if collection is not None:
-        #    groups = get_groups(collection)
         super().__init__(*args, **kwargs)
         # not so efficient but works
         # What we do is:
@@ -154,79 +148,5 @@ class ResultsSingleVoterForm(forms.Form):
                 voting_id = int(name[len(self.schulze_field_prefix):])
                 yield 'schulze', voting_id, value
 
-# TODO remove once new method is there
-class EnterResultsForm(forms.Form):
-
-    median_field_prefix = 'extra_median_'
-    schulze_field_prefix = 'extra_schulze_'
-    label_field_prefix = 'group_label_'
-
-    # I think None is not the best way, but okay
-    voter = forms.ModelChoiceField(None)
-
-    voter.widget.attrs.update({'class': 'custom-select', 'size': '7'})
-
-    def __init__(self, *args, **kwargs):
-        session = kwargs.pop('session')
-        last_voter_id = kwargs.pop('last_voter_id', None)
-        groups = []
-        if session is not None:
-            groups = get_groups(session)
-        super().__init__(*args, **kwargs)
-        voters_qs = Voter.objects.filter(revision=session.revision).order_by('name')
-        self.fields['voter'].queryset = voters_qs
-        voters_list = list(voters_qs)
-        # not so efficient but works
-        # What we do is:
-        # Find the last user (if it exists) and then take the next user
-        # as the initial value in the select field
-        # we store the next value in the variable next_user_id
-        next_voter_id = None
-        if last_voter_id is None:
-            # no last user provided, so use the first one
-            if voters_list:
-                next_voter_id = voters_list[0].id
-        else:
-            # list is sorted according to name, not id, so just search
-            for i, voter in enumerate(voters_list):
-                if voter.id == last_voter_id:
-                    if (i + 1) < len(voters_list):
-                        next_voter_id = voters_list[i + 1].id
-                    break
-        if next_voter_id is not None:
-            self.fields['voter'].initial = next_voter_id
-        # insert in field order
-        # this was a todo but we should be fine, django uses ordered dict
-        # TODO what happens when creating it with POST given? Will this here
-        # then do something wrong?
-        for group, voting_list in groups:
-            group_field_name = self.label_field_prefix + str(group.id)
-            self.fields[group_field_name] = forms.CharField(label='',
-                                                            initial=str(group.name),
-                                                            required=False,
-                                                            disabled=True)
-            for voting in voting_list:
-                if isinstance(voting, MedianVoting):
-                    field_name = self.median_field_prefix + str(voting.id)
-                    self.fields[field_name] = CurrencyField(max_value=voting.value,
-                                                            label='Finanzantrag: ' + str(voting.name),
-                                                            required=False)
-                elif isinstance(voting, SchulzeVoting):
-                    field_name = self.schulze_field_prefix + str(voting.id)
-                    num_options = SchulzeOption.objects.filter(voting=voting).count()
-                    self.fields[field_name] = SchulzeVoteField(num_options=num_options,
-                                                               label='Abstimmung: ' + str(voting.name),
-                                                               required=False)
-                else:
-                    assert False
-
-    def votings(self):
-        for name, value in self.cleaned_data.items():
-            if name.startswith(self.median_field_prefix):
-                voting_id = int(name[len(self.median_field_prefix):])
-                yield 'median', voting_id, value
-            elif name.startswith(self.schulze_field_prefix):
-                voting_id = int(name[len(self.schulze_field_prefix):])
-                yield 'schulze', voting_id, value
 
 # https://jacobian.org/writing/dynamic-form-generation/

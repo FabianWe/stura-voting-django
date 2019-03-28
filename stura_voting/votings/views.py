@@ -32,7 +32,7 @@ from .results import *
 # TODO when parsing inputs via our library, check lengths before inserting?
 
 from .models import *
-from .forms import PeriodForm, RevisionForm, SessionForm, EnterResultsForm, ResultsSingleVoterForm
+from .forms import *
 from .utils import *
 # from .results import *
 
@@ -64,6 +64,14 @@ class PeriodDetailView(DetailView):
         context['collections'] = collections
         return context
 
+
+# class PeriodUpdateView(UpdateView):
+#     model = Period
+#     fields = ('start', 'end')
+#     template_name = 'votings/update_session.html'
+#
+#     def get_success_url(self):
+#         return reverse('session_update', args=[self.object.id])
 
 class PeriodDetailSuccess(PeriodDetailView):
     def get_context_data(self, **kwargs):
@@ -347,47 +355,3 @@ class SessionPrintView(DetailView):
         context['groups'] = groups
         context['option_map'] = option_map
         return context
-
-
-# TODO remove once net method is there
-def enter_results_view(request, pk):
-    session = get_object_or_404(VotingCollection, pk=pk)
-    if request.method == 'GET':
-        last_voter_id = request.GET.get('last_voter', None)
-        if last_voter_id is not None:
-            try:
-                last_voter_id = int(last_voter_id)
-            except ValueError:
-                # we don't care about an error
-                pass
-        form = EnterResultsForm(session=session, last_voter_id=last_voter_id)
-    else:
-        form = EnterResultsForm(request.POST, session=session)
-        if form.is_valid():
-            voter = form.cleaned_data['voter']
-            # add results
-            errors = []
-            for v_type, v_id, val in filter(lambda x: x[2] is not None, form.votings()):
-                if v_type == 'median':
-                    try:
-                        res = insert_median_vote(val[0], voter, v_id)
-                        if isinstance(res, HttpResponseBadRequest):
-                            errors.append(res)
-                    except Http404 as e:
-                        errors.append(e)
-                else:
-                    assert v_type == 'schulze'
-                    try:
-                        res = insert_schulze_vote(val, voter, v_id)
-                        if isinstance(res, HttpResponseBadRequest):
-                            errors.append(res)
-                    except Http404 as e:
-                        errors.append(e)
-            if errors:
-                errors_joined = '\n'.join(str(err) for err in errors)
-                error_txt = 'There were errors while adding some votes, please check the result carefully!\n\n' + errors_joined
-                return HttpResponseBadRequest(error_txt)
-            # TODO return?
-            # TODO was tun, wenn schon Eintragungen existieren?
-            # Irgendwie noch nicht perfekt...
-    return render(request, 'votings/enter_results.html', {'form': form})
