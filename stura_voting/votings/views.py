@@ -303,9 +303,10 @@ class SessionDetailView(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        groups, option_map = get_groups_template(self.object)
+        groups, option_map, warnings = get_groups_template(self.object)
         context['groups'] = groups
         context['option_map'] = option_map
+        context['warnings'] = list(map(str, warnings))
         return context
 
 

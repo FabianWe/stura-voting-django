@@ -38,6 +38,20 @@ SOFTWARE.
     </div>
     {% endif %}
 
+    {% if warnings %}
+      <div class="alert alert-danger" role="alert">
+        <h4><i class="fas fa-radiation-alt"></i> Warnung</h4>
+        Es gibt Warnungen für diese Sitzung.
+        Bitte lies die folgenden Warnungen genaustens durch!
+        Es besteht die Gefahr, dass sonst etwas beim Auszählen schief läuft!
+        <ul>
+          {% for warning in warnings %}
+            <li>{{ warning }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+    {% endif %}
+
     <p>
         <a href="{% url 'session_update' object.id %}" class="btn btn-primary" role="button"><i class="fas fa-edit fa-lg"></i> Bearbeiten</a>
         <a href="{% url 'session_print' object.id %}" target="_blank" class="btn btn-primary" role="button"><i class="fas fa-print fa-lg"></i> Druckansicht</a>
