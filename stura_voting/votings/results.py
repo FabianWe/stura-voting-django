@@ -27,7 +27,7 @@ from heapq import merge
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils.translation import gettext as _
 
-from .utils import get_instance
+from . import utils
 from . import models as voting_models
 
 
@@ -35,20 +35,20 @@ from . import models as voting_models
 # (I know that this is not the right place for this TODO)
 
 def get_median_votes(collection, voter=None, **kwargs):
-    collection = get_instance(voting_models.VotingCollection, collection)
+    collection = utils.get_instance(voting_models.VotingCollection, collection)
     if voter is None:
         return voting_models.MedianVote.objects.filter(voting__group__collection=collection, **kwargs)
     else:
-        voter = get_instance(voting_models.Voter, voter)
+        voter = utils.get_instance(voting_models.Voter, voter)
         return voting_models.MedianVote.objects.filter(voting__group__collection=collection, voter=voter, **kwargs)
 
 
 def get_schulze_votes(collection, voter=None, **kwargs):
-    collection = get_instance(voting_models.VotingCollection, collection)
+    collection = utils.get_instance(voting_models.VotingCollection, collection)
     if voter is None:
         return voting_models.SchulzeVote.objects.filter(option__voting__group__collection=collection, **kwargs)
     else:
-        voter = get_instance(voting_models.Voter, voter)
+        voter = utils.get_instance(voting_models.Voter, voter)
         return voting_models.SchulzeVote.objects.filter(option__voting__group__collection=collection, voter=voter, **kwargs)
 
 
@@ -106,8 +106,42 @@ class GenericVotingResult(object):
         self.voting_description = dict()
 
     def by_group(self):
-        for group_id, group in groupby(self.votings.values(), lambda voting: voting.group.id):
-            yield group_id, list(group)
+        for group_instance, group in groupby(self.votings.values(), lambda voting: voting.group):
+            yield group_instance, list(group)
+
+    def for_overview_template(self):
+        # returns groups, option_map where
+        # groups is a list of (group_name, group_list)
+        # where group_name is the name of the group (string)
+        # group_list is a list containing
+        # (type, Voting)
+        # where type is either 'median' or 'schulze' and voting is an instace of
+        # the voting (model)
+        #
+        # option_map is a mapping from each schulze_voting id to a list of its
+        # options as string
+        groups = []
+        option_map = dict()
+        for group, votings in self.by_group():
+            group_list = []
+            for v in votings:
+                if isinstance(v, voting_models.MedianVoting):
+                    group_list.append(('median', v))
+                elif isinstance(v, voting_models.SchulzeVoting):
+                    group_list.append(('schulze', v))
+                    v_id = v.id
+                    if v_id not in self.voting_description:
+                        msg = _('No options for schulze voting %(voting)d' % {'voting': v_id})
+                        warning = QueryWarning(msg)
+                        self.warnings.append(warning)
+                        option_map[v_id] = []
+                    else:
+                        options = self.voting_description[v_id]
+                        option_map[v_id] = [o.option for o in options]
+                else:
+                    assert False
+            groups.append((group.name, group_list))
+        return groups, option_map
 
 
 def merge_voting_results(median, schulze):
@@ -126,6 +160,45 @@ def merge_voting_results(median, schulze):
     res.warnings += schulze.warnings
     res.voting_description.update(schulze.voting_description)
     res.voting_description.update(median.voting_description)
+    return res
+
+
+def median_votings(collection):
+    votings_qs = (voting_models.MedianVoting.objects.filter(group__collection=collection)
+                 .order_by('group__group_num', 'voting_num'))
+    res = GenericVotingResult()
+    for voting in votings_qs:
+        voting_id = voting.id
+        res.votings[voting_id] = voting
+        res.voting_description[voting_id] = voting.value
+    return res
+
+
+def schulze_votings(collection):
+    votings_qs = (voting_models.SchulzeVoting.objects.filter(group__collection=collection)
+                  .order_by('group__group_num', 'voting_num'))
+    # all options
+    options_qs = (voting_models.SchulzeOption.objects.filter(voting__group__collection=collection)
+                  .order_by('voting__id', 'option_num'))
+    res = GenericVotingResult()
+    # fetch all schulze votings
+    for voting in votings_qs:
+        res.votings[voting.id] = voting
+    # group options according to votings
+    for option in options_qs:
+        voting_id = option.voting.id
+        # just to be sure, should not happen
+        if voting_id not in res.votings:
+            msg = _('Found option with id %(option)d for voting %(voting)d, but voting does not exist' %{
+                'option': option.id,
+                'voting': voting_id,
+            })
+            res.warnings.append(SchulzeWarning(msg))
+            continue
+        if voting_id in res.voting_description:
+            res.voting_description[voting_id].append(option)
+        else:
+            res.voting_description[voting_id] = [option]
     return res
 
 
