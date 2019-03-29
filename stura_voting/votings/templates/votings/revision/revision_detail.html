@@ -1,0 +1,58 @@
+{% extends 'votings/base.html' %}
+
+{% comment %}
+MIT License
+
+Copyright (c) 2019 Fabian Wenzelmann
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+{% endcomment %}
+
+{% load bootstrap4 %}
+
+{% block content %}
+    <h2>Revision vom {{ object.created }} für {{ object.period.name }}</h2>
+
+    <!-- <p>
+        <a href="{% url 'session_update' object.id %}" class="btn btn-primary" role="button"><i class="fas fa-edit fa-lg"></i> Bearbeiten</a>
+        <a href="{% url 'session_print' object.id %}" target="_blank" class="btn btn-primary" role="button"><i class="fas fa-print fa-lg"></i> Druckansicht</a>
+        <a href="{% url 'enter_voterslist' object.id %}" class="btn btn-primary" role="button"><i class="fas fa-person-booth fa-lg"></i> Abstimmungen Eintragen</a>
+        <a href="{% url 'session_delete' object.id %}" class="btn btn-danger" role="button"><i class="fas fa-trash fa-lg"></i> Löschen</a>
+    </p> -->
+
+    <p>
+      Diese Revision gehört zur Abstimmuntsperiode <a href="{% url 'period_detail' object.period.id %}">{{ object.period.name }}</a>.
+      Es gibt insgesamt {{ voters|length }} Abstimmungsberechtigte.
+    </p>
+
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Gewicht</th>
+        </tr>
+      </thead>
+      {% for voter in voters %}
+        <tr>
+          <td>{{ voter.name }}</td>
+          <td>{{ voter.weight }}</td>
+        </tr>
+      {% endfor %}
+    </table>
+{% endblock %}

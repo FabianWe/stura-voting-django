@@ -30,6 +30,7 @@ urlpatterns = [
     path('period/new', views.new_period, name='new_period'),
     path('revision/new', views.new_revision, name='new_revision'),
     path('revision/<int:pk>/success/', views.revision_success, name='new_revision_success'),
+    path('revision/<int:pk>/', views.RevisionDetailView.as_view(), name='revision_detail'),
     path('archive', views.archive_index, name='archive_index'),
     path('period/<int:pk>/edit/', views.PeriodUpdateView.as_view(), name='period_update'),
     path('period/<int:pk>/', views.PeriodDetailView.as_view(), name='period_detail'),

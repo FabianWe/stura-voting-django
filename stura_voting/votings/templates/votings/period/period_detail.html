@@ -65,7 +65,7 @@ SOFTWARE.
         </thead>
         {% for rev in revisions %}
           <tr>
-            <td>Revison vom {{ rev.created }}</td>
+            <td><a href="{% url 'revision_detail' rev.id %}">Revision vom {{ rev.created }}</a></td>
           </tr>
         {% endfor %}
       </table>

@@ -251,7 +251,7 @@ def __handle_enter_schulze(result, v_id, val, voter):
 
 def revision_success(request, pk):
     rev = get_object_or_404(VotersRevision, pk=pk)
-    return render(request, 'votings/revision/success_revision.html', {'period': rev.period.name})
+    return render(request, 'votings/revision/success_revision.html', {'revision': rev})
 
 @transaction.atomic
 def new_revision(request):
@@ -275,6 +275,18 @@ class PeriodsList(ListView):
     def get_queryset(self):
         res = super().get_queryset()
         return res.order_by('-start', '-created')
+
+
+class RevisionDetailView(DetailView):
+    model = VotersRevision
+
+    template_name = 'votings/revision/revision_detail.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        voters = Voter.objects.filter(revision=self.object).order_by('name')
+        context['voters'] = list(voters)
+        return context
 
 
 class SessionsList(ListView):
