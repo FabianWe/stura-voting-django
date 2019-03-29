@@ -63,6 +63,17 @@ class SessionForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields['revision'].queryset = self.fields['revision'].queryset.order_by('-period__start', '-created')
 
+
+class RevisionUpdateForm(forms.Form):
+    voters = VotersRevisionField(required=True)
+
+    def __init__(self, *args, **kwargs):
+        voters = kwargs.pop('voters')
+        super().__init__(*args, **kwargs)
+        voters_text = '\n'.join('* %s: %d' % (voter.name, voter.weight) for voter in voters)
+        self.fields['voters'].initial = voters_text
+
+
 class ResultsSingleVoterForm(forms.Form):
     median_field_prefix = 'extra_median_'
     schulze_field_prefix = 'extra_schulze_'

@@ -110,6 +110,7 @@ def enter_voterlist(request, pk):
     context = {'collection': collection, 'with_vote': with_vote, 'without_vote': without_vote}
     return render(request, 'votings/session/enter_voterlist.html', context)
 
+
 @transaction.atomic
 def enter_single_voter_view(request, coll, v):
     collection = get_object_or_404(VotingCollection, pk=coll)
@@ -135,6 +136,7 @@ def enter_single_voter_view(request, coll, v):
     # the merged result does not contain all warnings, we merge them here again
     context['warnings'] = list(map(str, form.median_result.warnings + form.schulze_result.warnings))
     return render(request, 'votings/session/enter_single.html', context)
+
 
 def __handle_enter_median(result, v_id, val, voter):
     # result: GenericVotingResult for meidan votes only
@@ -165,6 +167,7 @@ def __handle_enter_median(result, v_id, val, voter):
         else:
             # insert
             MedianVote.objects.create(value=val[0], voter=voter, voting=voting)
+
 
 def __handle_enter_schulze(result, v_id, val, voter):
     # result: GenericVotingResult for meidan votes only
@@ -253,6 +256,7 @@ def revision_success(request, pk):
     rev = get_object_or_404(VotersRevision, pk=pk)
     return render(request, 'votings/revision/success_revision.html', {'revision': rev})
 
+
 @transaction.atomic
 def new_revision(request):
     if request.method == 'GET':
@@ -287,6 +291,24 @@ class RevisionDetailView(DetailView):
         voters = Voter.objects.filter(revision=self.object).order_by('name')
         context['voters'] = list(voters)
         return context
+
+
+@transaction.atomic
+def update_revision_view(request, pk):
+    revision = get_object_or_404(VotersRevision, pk=pk)
+    voters = Voter.objects.filter(revision=revision).order_by('name')
+    num_sessions = None
+    if request.method == 'GET':
+        form = RevisionUpdateForm(voters=voters)
+    else:
+        form = RevisionUpdateForm(request.POST, voters=voters)
+        print(form.cleaned_data)
+    num_sessions = VotingCollection.objects.filter(revision=revision).count()
+    return render(request, 'votings/revision/revision_update.html', {
+        'revision': revision,
+        'form': form,
+        'voters': voters,
+        'num_sessions': num_sessions})
 
 
 class SessionsList(ListView):
