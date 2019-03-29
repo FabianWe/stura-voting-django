@@ -25,7 +25,7 @@ from itertools import groupby
 from heapq import merge
 
 from django.core.exceptions import ObjectDoesNotExist
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext
 
 from . import utils
 from . import models as voting_models
@@ -78,7 +78,7 @@ class MedianWarning(object):
 
 
     def __str__(self):
-        return _('Warning for voting with id %(voting)d: Expected value between 0 and %(max)d but got value %(got)d' % {
+        return gettext('Warning for voting with id %(voting)d: Expected value between 0 and %(max)d but got value %(got)d' % {
             'voting': self.voting.id,
             'max': self.voting.value,
             'got': self.got,
@@ -131,7 +131,7 @@ class GenericVotingResult(object):
                     group_list.append(('schulze', v))
                     v_id = v.id
                     if v_id not in self.voting_description:
-                        msg = _('No options for schulze voting %(voting)d' % {'voting': v_id})
+                        msg = gettext('No options for schulze voting %(voting)d' % {'voting': v_id})
                         warning = QueryWarning(msg)
                         self.warnings.append(warning)
                         option_map[v_id] = []
@@ -189,7 +189,7 @@ def schulze_votings(collection):
         voting_id = option.voting.id
         # just to be sure, should not happen
         if voting_id not in res.votings:
-            msg = _('Found option with id %(option)d for voting %(voting)d, but voting does not exist' %{
+            msg = gettext('Found option with id %(option)d for voting %(voting)d, but voting does not exist' %{
                 'option': option.id,
                 'voting': voting_id,
             })
@@ -249,7 +249,7 @@ def schulze_votes_for_voter(collection, voter):
         voting_id = option.voting.id
         # just to be sure, should not happen
         if voting_id not in res.votings:
-            msg = _('Found option with id %(option)d for voting %(voting)d, but voting does not exist' %{
+            msg = gettext('Found option with id %(option)d for voting %(voting)d, but voting does not exist' %{
                 'option': option.id,
                 'voting': voting_id,
             })
@@ -264,7 +264,7 @@ def schulze_votes_for_voter(collection, voter):
         voting_id = schulze_vote.option.voting.id
         # just to be sure
         if voting_id not in res.votings:
-            msg = _('Found a vote with id %(vote)d for schulze option with id %(option)d for voting %(voting)d, but voting does not exist' % {
+            msg = gettext('Found a vote with id %(vote)d for schulze option with id %(option)d for voting %(voting)d, but voting does not exist' % {
                 'vote': schulze_vote.id,
                 'option': schulze_vote.option.id,
                 'voting': voting_id,
@@ -278,12 +278,12 @@ def schulze_votes_for_voter(collection, voter):
     # now perform sanity checks
     for voting_id, votes in res.votes.items():
         if voting_id not in res.voting_description:
-            msg = _('Vote with id %(vote)d has no description' % {'vote': voting_id})
+            msg = gettext('Vote with id %(vote)d has no description' % {'vote': voting_id})
             res.warnings.append(msg)
             continue
         voting_options = res.voting_description[voting_id]
         if len(votes) != len(voting_options):
-            msg = _('Number of options %(options)d does not match number of votes %(votes)d for voting %(voting)d' % {
+            msg = gettext('Number of options %(options)d does not match number of votes %(votes)d for voting %(voting)d' % {
                 'options': len(voting_options),
                 'votes': len(votes),
                 'voting': voting_id,
@@ -292,7 +292,7 @@ def schulze_votes_for_voter(collection, voter):
             continue
         for vote, option in zip(votes, voting_options):
             if vote.option != option:
-                msg = _('Invalid vote for option for vote %(vote)d: Got vote for option %(option)d instead of %(for)d' % {
+                msg = gettext('Invalid vote for option for vote %(vote)d: Got vote for option %(option)d instead of %(for)d' % {
                     'vote': voting_id,
                     'option': vote.option.id,
                     'for': option.id,
