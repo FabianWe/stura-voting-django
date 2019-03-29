@@ -82,26 +82,7 @@ class ResultsSingleVoterForm(forms.Form):
     def __init__(self, *args, **kwargs):
         collection = kwargs.pop('collection')
         voter = kwargs.pop('voter', None)
-        last_voter_id = None
-        if voter is not None:
-            last_voter_id = voter.id
         super().__init__(*args, **kwargs)
-        # not so efficient but works
-        # What we do is:
-        # Find the last user (if it exists) and then take the next user
-        # for the next button
-        # we store the next value in the variable next_user_id
-        # TODO wrong place
-        next_voter_id = None
-        if last_voter_id is not None:
-            voters_qs = Voter.objects.filter(revision=collection.revision).order_by('name')
-            voters_list = list(voters_qs)
-            # list is sorted according to name, not id, so just search
-            for i, voter in enumerate(voters_list):
-                if voter.id == last_voter_id:
-                    if (i + 1) < len(voters_list):
-                        next_voter_id = voters_list[i + 1].id
-                    break
         median_result = median_votes_for_voter(collection, voter)
         schulze_result = schulze_votes_for_voter(collection, voter)
         all_results = merge_voting_results(median_result, schulze_result)

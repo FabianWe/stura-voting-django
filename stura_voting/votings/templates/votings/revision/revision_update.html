@@ -46,9 +46,8 @@ SOFTWARE.
       </p>
     </div>
 
-
     <p>
-      Diese Revision gehört zur Abstimmuntsperiode <a href="{% url 'period_detail' revision.period.id %}">{{ object.period.name }}</a>.
+      Diese Revision gehört zur Abstimmuntsperiode <a href="{% url 'period_detail' revision.period.id %}">{{ revision.period.name }}</a>.
       Es gibt insgesamt {{ voters|length }} Abstimmungsberechtigte.
     </p>
 

@@ -1,4 +1,4 @@
-{% extends 'votings/base.html' %}
+{% extends 'votings/success.html' %}
 
 {% comment %}
 MIT License
@@ -26,31 +26,21 @@ SOFTWARE.
 
 {% load bootstrap4 %}
 
-{% block content %}
-    <h2>Revision vom {{ object.created }} für {{ object.period.name }}</h2>
+{% block success %}
+Die Revision für die Abstimmungsperiode "{{ revision.period.name }}" wurde erfolgreich bearbeitet.
 
-    <p>
-        <a href="{% url 'revision_update' object.id %}" class="btn btn-primary" role="button"><i class="fas fa-edit fa-lg"></i> Bearbeiten</a>
-        <!-- <a href="{% url 'session_delete' object.id %}" class="btn btn-danger" role="button"><i class="fas fa-trash fa-lg"></i> Löschen</a> -->
-    </p>
+{% if update_summary %}
+  Folgende Änderungen wurden durchgeführt:
+  <ul>
+    {% for entry in update_summary %}
+      <li>{{ entry }}</li>
+    {% endfor %}
+  </ul>
+  {% else %}
+    <p>Es wurden keine Änderungen durchgeführt.</p>
+{% endif %}
 
-    <p>
-      Diese Revision gehört zur Abstimmuntsperiode <a href="{% url 'period_detail' object.period.id %}">{{ object.period.name }}</a>.
-      Es gibt insgesamt {{ voters|length }} Abstimmungsberechtigte.
-    </p>
-
-    <table class="table">
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Gewicht</th>
-        </tr>
-      </thead>
-      {% for voter in voters %}
-        <tr>
-          <td>{{ voter.name }}</td>
-          <td>{{ voter.weight }}</td>
-        </tr>
-      {% endfor %}
-    </table>
+<p>
+  <a href="{% url 'revision_detail' revision.id %}">Revision anzeigen.</a>
+</p>
 {% endblock %}

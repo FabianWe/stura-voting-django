@@ -26,6 +26,7 @@ from django.views.generic import ListView, UpdateView
 from django.views.generic.edit import DeleteView
 from django.http import Http404
 from django.db import transaction
+from django.utils.translation import gettext
 
 from .results import *
 
@@ -162,8 +163,9 @@ def __handle_enter_median(result, v_id, val, voter):
         if v_id in result.votes:
             entry = result.votes[v_id]
             # update
-            entry.value = val[0]
-            entry.save(update_fields=['value'])
+            if entry.value != val[0]:
+                entry.value = val[0]
+                entry.save(update_fields=['value'])
         else:
             # insert
             MedianVote.objects.create(value=val[0], voter=voter, voting=voting)
@@ -242,8 +244,9 @@ def __handle_enter_schulze(result, v_id, val, voter):
             # finally, everything ok, insert
             # we also know that len(current_votes) == len(val)
             for vote, new_pos in zip(current_votes, val):
-                vote.sorting_position = new_pos
-                vote.save(update_fields=['sorting_position'])
+                if vote.sorting_position != new_pos:
+                    vote.sorting_position = new_pos
+                    vote.save(update_fields=['sorting_position'])
         else:
             # we know that len(val) == len(voting_options, so insert)
             for option, ranking_pos in zip(voting_options, val):
@@ -296,19 +299,70 @@ class RevisionDetailView(DetailView):
 @transaction.atomic
 def update_revision_view(request, pk):
     revision = get_object_or_404(VotersRevision, pk=pk)
-    voters = Voter.objects.filter(revision=revision).order_by('name')
-    num_sessions = None
+    voters = Voter.objects.filter(revision=revision).order_by('name').select_for_update()
     if request.method == 'GET':
         form = RevisionUpdateForm(voters=voters)
     else:
         form = RevisionUpdateForm(request.POST, voters=voters)
-        print(form.cleaned_data)
+        if form.is_valid():
+            transmitted_voters = form.cleaned_data['voters']
+            update_summary = __update_voters(voters, transmitted_voters, revision)
+            # render success template and show information about what happend
+            context = {'revision': revision, 'update_summary': update_summary}
+            return render(request, 'votings/revision/revision_update_success.html', context)
     num_sessions = VotingCollection.objects.filter(revision=revision).count()
     return render(request, 'votings/revision/revision_update.html', {
         'revision': revision,
         'form': form,
         'voters': voters,
         'num_sessions': num_sessions})
+
+
+def __update_voters(old_voters, new_voters, revision):
+    summary = []
+    # old_voters: instances of all voters in revision, from database
+    # new_voters: parsed from the input, so WeightedVoter objects (from stura-voting-utils)
+    # we transform both to dicts, this makes updates easier
+    old, new = dict(), dict()
+    for v in old_voters:
+        old[v.name] = v
+    for v in new_voters:
+        new[v.name] = v
+    # iterate over all new voters
+    # either we have a new entry or we update an existing one
+    for new_voter_name, new_voter in new.items():
+        if new_voter_name in old:
+            old_voter = old[new_voter_name]
+            if new_voter.weight != old_voter.weight:
+                # update
+                entry = gettext('Changed weight for %(voter)s from %(old)d to %(new)d' % {
+                    'voter': new_voter_name,
+                    'old': old_voter.weight,
+                    'new': new_voter.weight,
+                })
+                summary.append(entry)
+                old_voter.weight = new_voter.weight
+                old_voter.save(update_fields=['weight'])
+        else:
+            # insert
+            entry = gettext('Inserted new voter %(voter)s with weigth %(weight)d' % {
+                'voter': new_voter_name,
+                'weight': new_voter.weight,
+            })
+            summary.append(entry)
+            Voter.objects.create(revision=revision, name=new_voter_name, weight=new_voter.weight)
+    # now iterate over all old entries.
+    # the entries not in the new list can be deleted
+    # we could probably just delete with a single query with name__in = ...
+    # but because we already locked the db... I'm not sure if this works as we
+    # would like, so each one gets a single delete
+    for old_voter_name, old_voter in old.items():
+        if old_voter_name not in new:
+            # delete
+            entry = gettext('Delete voter %(voter)s' % {'voter': old_voter_name})
+            summary.append(entry)
+            old_voter.delete()
+    return summary
 
 
 class SessionsList(ListView):
