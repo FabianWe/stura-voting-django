@@ -291,6 +291,22 @@ class RevisionDetailView(DetailView):
         context['voters'] = list(voters)
         return context
 
+class RevisionDeleteView(DeleteView):
+    model = VotersRevision
+    success_url = reverse_lazy('revision_delete_success')
+    template_name = 'votings/revision/revision_confirm_delete.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        num_sessions = VotingCollection.objects.filter(revision=self.object).count()
+        context['num_sessions'] = num_sessions
+        return context
+
+
+def revision_delete_success_view(request):
+    return render(request, 'votings/revision/revision_success_delete.html')
+
+
 @transaction.atomic
 def update_revision_view(request, pk):
     revision = get_object_or_404(VotersRevision, pk=pk)
