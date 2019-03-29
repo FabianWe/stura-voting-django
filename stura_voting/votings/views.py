@@ -306,6 +306,23 @@ class RevisionDeleteView(DeleteView):
 def revision_delete_success_view(request):
     return render(request, 'votings/revision/revision_success_delete.html')
 
+class PeriodDeleteView(DeleteView):
+    model = Period
+    success_url = reverse_lazy('period_delete_success')
+    template_name = 'votings/period/period_confirm_delete.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        num_revisions = VotersRevision.objects.filter(period=self.object).count()
+        context['num_revisions'] = num_revisions
+        num_sessions = VotingCollection.objects.filter(revision__period=self.object).count()
+        context['num_sessions'] = num_sessions
+        return context
+
+
+def period_delete_success_view(request):
+    return render(request, 'votings/period/period_success_delete.html')
+
 
 @transaction.atomic
 def update_revision_view(request, pk):

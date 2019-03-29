@@ -22,19 +22,26 @@ limitations under the License.
 <div class="alert alert-warning" role="alert">
   <h4><i class="fas fa-exclamation-triangle"></i> Hinweis</h4>
   <p>
-  Revisionen sollten nur im äußersten Notfall gelöscht werden!
-  Es werden alle Abstimmungsberechtigten aus dieser Revision gelöscht und alle
+  Abstimmungsperioden sollten nur im äußersten Notfall gelöscht werden!
+  Es werden alle Revisionen aus dieser Periode gelöscht und alle
   damit assoziierten <b>Sitzungen</b>!
-  Der einzige Zeitpunkt an dem eine Revision gelöscht werden sollte ist direkt nach dem Erstellen (wenn es noch keine
+  Der einzige Zeitpunkt an dem eine Periode gelöscht werden sollte ist direkt nach dem Erstellen (wenn es noch keine
   Abstimmung gibt).
   </p>
-  <p>
+    <p>
+    {% if num_revisions %}
+      <b>Es werden insgesamt {{ num_revisions }} Revisionen ebenfalls gelöscht.</b>
+    {% else %}
+      Es wurden keine Revisionen innerhalb der Periode gefunden.
+    {% endif %}
+    </p>
+    <p>
     {% if num_sessions %}
       <b>Es werden insgesamt {{ num_sessions }} Sitzungen ebenfalls gelöscht.</b>
     {% else %}
       Es wurden keine Sitzungen mit dieser Revision gefunden.
     {% endif %}
-  </p>
+    </p>
 </div>
     <form role="form" method="post">
       {% csrf_token %}
