@@ -147,7 +147,7 @@ STATIC_URL = '/static/'
 BOOTSTRAP4 = {
     # TODO not possible with the current version on pypi...
     # included by hand
-    'include_jquery': True,
+    'include_jquery': False,
     # it seems that otherwise we can't include jquery before bootstrap...
     # so this is commented out, seems to work without it though
     #'javascript_in_head': True,

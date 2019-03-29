@@ -35,6 +35,9 @@ from .utils import *
 def index(request):
     return render(request, 'votings/index.html')
 
+def copyright_view(request):
+    return render(request, 'votings/copyright.html')
+
 
 def archive_index(request):
     return render(request, 'votings/archive.html',

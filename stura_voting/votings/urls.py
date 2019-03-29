@@ -19,6 +19,7 @@ from . import views
 urlpatterns = [
     # TODO singular / plural?
     path('', views.index, name='index'),
+    path('copyright/', views.copyright_view, name='copyright'),
     path('period/new', views.new_period, name='new_period'),
     path('revision/new', views.new_revision, name='new_revision'),
     path('revision/<int:pk>/success/', views.revision_success, name='new_revision_success'),
