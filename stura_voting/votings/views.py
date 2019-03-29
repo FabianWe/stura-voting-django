@@ -27,6 +27,7 @@ from django.views.generic.edit import DeleteView
 from django.http import Http404
 from django.db import transaction
 from django.utils.translation import gettext
+from django.urls import reverse_lazy
 
 from .results import *
 
@@ -427,7 +428,7 @@ def success_session_delete(request):
 
 class SessionDelete(DeleteView):
     model = VotingCollection
-    success_url = 'session_delete_success'
+    success_url = reverse_lazy('session_delete_success')
     template_name = 'votings/session/session_confirm_delete.html'
 
 

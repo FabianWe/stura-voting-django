@@ -28,9 +28,11 @@ SOFTWARE.
 
 {% block content %}
     <form role="form" method="post">
-        Bist du dir sicher, dass du die Sitzung "{{ object.name }}" löschen möchtest?
-        Dies löscht auch alle Abstimmungen und alle getätigten abgegebenen Stimmen.
-
-        <div class="form-group"><button class="btn btn-danger" type="submit"><i class="fas fa-trash"></i> Löschen bestätigen</button></div>
+      {% csrf_token %}
+      <p>
+      Bist du dir sicher, dass du die Sitzung "{{ object.name }}" löschen möchtest?
+      Dies löscht auch alle Abstimmungen und alle getätigten abgegebenen Stimmen.
+      </p>
+      <div class="form-group"><button class="btn btn-danger" type="submit"><i class="fas fa-trash"></i> Löschen bestätigen</button></div>
     </form>
 {% endblock %}
