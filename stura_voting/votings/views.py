@@ -296,7 +296,6 @@ class RevisionDetailView(DetailView):
         context['voters'] = list(voters)
         return context
 
-
 @transaction.atomic
 def update_revision_view(request, pk):
     revision = get_object_or_404(VotersRevision, pk=pk)
