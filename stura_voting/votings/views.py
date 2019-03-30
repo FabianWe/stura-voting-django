@@ -45,6 +45,21 @@ def archive_index(request):
               'collections': VotingCollection.objects.order_by('-time')[:10]})
 
 
+# class GroupDetailView(DetailView):
+#     model = VotingGroup
+#
+#     context_object_name = 'group'
+#     template_name = 'votings/period/period_detail.html'
+#
+#     def get_context_data(self, **kwargs):
+#         context = super().get_context_data(**kwargs)
+#         period = context['period']
+#         revs = VotersRevision.objects.filter(period=period).order_by('-period__start', '-period__created', '-created')
+#         context['revisions'] = revs
+#         collections = VotingCollection.objects.filter(revision__period=period).order_by('-time')
+#         context['collections'] = collections
+#         return context
+
 @transaction.atomic
 def new_period(request):
     if request.method == 'GET':

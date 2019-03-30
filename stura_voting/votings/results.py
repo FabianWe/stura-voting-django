@@ -155,9 +155,24 @@ def merge_voting_results(median, schulze):
     return res
 
 
-def median_votings(collection):
-    votings_qs = (voting_models.MedianVoting.objects.filter(group__collection=collection)
-                 .order_by('group__group_num', 'voting_num'))
+def median_votings(**kwargs):
+    # usage: provide a query for votings like votings_qs = ...
+    # or provide collection=VotingCollection(...) for all votings in a certain collection
+    # or provide group=VotingGroup(...) for all votings in a certain group
+    votings_qs = None
+    if 'votings_qs' in kwargs:
+        votings_qs = kwargs['votings_qs']
+    elif 'collection' in kwargs:
+        collection = kwargs['collection']
+        votings_qs = (voting_models.MedianVoting.objects.filter(group__collection=collection)
+                     .order_by('group__group_num', 'voting_num'))
+    elif 'group' in kwargs:
+        group = kwargs['group']
+        votings_qs = (voting_models.MedianVoting.objects.filter(group=group)
+                     .order_by('voting_num'))
+    else:
+        raise TypeError('Missing queryset / filter')
+
     res = GenericVotingResult()
     for voting in votings_qs:
         voting_id = voting.id
@@ -166,12 +181,36 @@ def median_votings(collection):
     return res
 
 
-def schulze_votings(collection):
-    votings_qs = (voting_models.SchulzeVoting.objects.filter(group__collection=collection)
-                  .order_by('group__group_num', 'voting_num'))
-    # all options
-    options_qs = (voting_models.SchulzeOption.objects.filter(voting__group__collection=collection)
-                  .order_by('voting__id', 'option_num'))
+def schulze_votings(**kwargs):
+    # usage: provide a query for votings like votings_qs = ...
+    # and options_qs = ...
+    # or provide collection=VotingCollection(...) for all votings in a certain collection
+    # or provide group=VotingGroup(...) for all votings in a certain group
+    votings_qs, options_qs = None, None
+    if 'votings_qs' in kwargs:
+        votings_qs = kwargs['votings_qs']
+    elif 'collection' in kwargs:
+         collection = kwargs['collection']
+         votings_qs = (voting_models.SchulzeVoting.objects.filter(group__collection=collection)
+                       .order_by('group__group_num', 'voting_num'))
+    elif 'group' in kwargs:
+        group = kwargs['group']
+        votings_qs = (voting_models.SchulzeVoting.objects.filter(group=group)
+                      .order_by('voting_num'))
+    else:
+        raise TypeError('Missing queryset / filter')
+
+    if 'options_qs' in kwargs:
+        options_qs = kwargs['options_qs']
+    elif 'collection' in kwargs:
+        collection = kwargs['collection']
+        options_qs = (voting_models.SchulzeOption.objects.filter(voting__group__collection=collection)
+                      .order_by('voting__id', 'option_num'))
+    elif 'group' in kwargs:
+        group = kwargs['group']
+        options_qs = (voting_models.SchulzeOption.objects.filter(voting__group=group)
+                      .order_by('voting__id', 'option_num'))
+
     res = GenericVotingResult()
     # fetch all schulze votings
     for voting in votings_qs:
