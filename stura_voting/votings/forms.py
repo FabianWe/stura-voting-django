@@ -94,9 +94,7 @@ class ResultsSingleVoterForm(DynamicVotingsListForm):
         # this was a todo but we should be fine, django uses ordered dict
         # TODO what happens when creating it with POST given? Will this here
         # then do something wrong?
-        for _, voting_list in all_results.by_group():
-            assert len(voting_list) > 0
-            group = voting_list[0].group
+        for group, voting_list in all_results.by_group():
             group_field_name = self.label_field_prefix + str(group.id)
             self.fields[group_field_name] = forms.CharField(label='',
                                                             initial=str(group.name),
