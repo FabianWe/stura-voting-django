@@ -137,6 +137,8 @@ class GenericVotingResult(object):
 
 
 def merge_voting_results(median, schulze):
+    # TODO why should ids be unique? something seems wrong here...
+    # I mean id=42 could appear in both, median and schulze?
     res = GenericVotingResult()
     def key(e):
         _, voting = e

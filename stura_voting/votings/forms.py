@@ -66,7 +66,16 @@ class RevisionUpdateForm(forms.Form):
         self.fields['voters'].initial = voters_text
 
 
-class ResultsSingleVoterForm(forms.Form):
+class DynamicVotingsListForm(forms.Form):
+    median_field_prefix = 'extra_median_'
+    schulze_field_prefix = 'extra_schulze_'
+    label_field_prefix = 'group_label_'
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+
+class ResultsSingleVoterForm(DynamicVotingsListForm):
     median_field_prefix = 'extra_median_'
     schulze_field_prefix = 'extra_schulze_'
     label_field_prefix = 'group_label_'
