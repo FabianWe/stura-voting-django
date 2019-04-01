@@ -125,6 +125,53 @@ class CombinedVotingResult(object):
         self.warnings = median.warnings + schulze.warnings
 
 
+    def combined_votings(self):
+        def key(e):
+            return voting.group.group_num, voting.voting_num
+        merged_list = merge(self.median.votings.values(), self.schulze.votings.values(), key=key)
+        yield from merged_list
+
+
+    def by_group(self):
+        for group_instance, group in groupby(self.combined_votings(), lambda voting: voting.group):
+            yield group_instance, list(group)
+
+
+    def for_overview_template(self):
+        # returns groups, option_map where
+        # groups is a list of (group, group_list)
+        # where group is the group instance
+        # group_list is a list containing
+        # (type, Voting)
+        # where type is either 'median' or 'schulze' and voting is an instace of
+        # the voting (model)
+        #
+        # option_map is a mapping from each schulze_voting id to a list of its
+        # options as string
+        groups = []
+        option_map = dict()
+        for group, votings in self.by_group():
+            group_list = []
+            for v in votings:
+                if isinstance(v, voting_models.MedianVoting):
+                    group_list.append(('median', v))
+                elif isinstance(v, voting_models.SchulzeVoting):
+                    group_list.append(('schulze', v))
+                    v_id = v.id
+                    if v_id not in self.schulze.voting_description:
+                        msg = gettext('No options for schulze voting %(voting)d' % {'voting': v_id})
+                        warning = QueryWarning(msg)
+                        self.warnings.append(warning)
+                        option_map[v_id] = []
+                    else:
+                        options = self.schulze.voting_description[v_id]
+                        option_map[v_id] = [o.option for o in options]
+                else:
+                    assert False
+            groups.append((group, group_list))
+        return groups, option_map
+
+
 class GenericVotingResult(object):
     def __init__(self):
         # all votings, sorted according to group and then voting_num
