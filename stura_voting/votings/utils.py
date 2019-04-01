@@ -174,7 +174,7 @@ def get_groups_template(collection):
     # also returns the warnings for the session
     median_votings = results.median_votings(collection=collection)
     schulze_votings = results.schulze_votings(collection=collection)
-    merged = results.merge_voting_results(median_votings, schulze_votings)
+    merged = results.CombinedVotingResult(median_votings, schulze_votings)
     groups, option_map = merged.for_overview_template()
     return groups, option_map, merged.warnings
 

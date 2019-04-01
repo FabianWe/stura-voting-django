@@ -127,7 +127,7 @@ class CombinedVotingResult(object):
 
     def combined_votings(self):
         def key(e):
-            return voting.group.group_num, voting.voting_num
+            return e.group.group_num, e.voting_num
         merged_list = merge(self.median.votings.values(), self.schulze.votings.values(), key=key)
         yield from merged_list
 
@@ -221,27 +221,6 @@ class GenericVotingResult(object):
                     assert False
             groups.append((group, group_list))
         return groups, option_map
-
-
-def merge_voting_results(median, schulze):
-    # TODO why should ids be unique? something seems wrong here...
-    # I mean id=42 could appear in both, median and schulze?
-    res = GenericVotingResult()
-    def key(e):
-        _, voting = e
-        return voting.group.group_num, voting.voting_num
-    merged_list = merge(median.votings.items(), schulze.votings.items(), key=key)
-    res.votings = OrderedDict(merged_list)
-    if len(res.votings) != len(median.votings) + len(schulze.votings):
-        warning = QueryWarning('Something went wrong, ids of the votings are probably not unique or a voting appears twice!')
-        res.warnings.append(warning)
-    res.votes.update(median.votes)
-    res.votes.update(schulze.votes)
-    res.warnings += median.warnings
-    res.warnings += schulze.warnings
-    res.voting_description.update(schulze.voting_description)
-    res.voting_description.update(median.voting_description)
-    return res
 
 
 def median_votings(**kwargs):

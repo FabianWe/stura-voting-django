@@ -84,16 +84,13 @@ class ResultsSingleVoterForm(DynamicVotingsListForm):
         collection = kwargs.pop('collection')
         voter = kwargs.pop('voter', None)
         super().__init__(*args, **kwargs)
+        # TODO add check according to same revision and so on?
         median_result = median_votes_for_voter(collection, voter)
         schulze_result = schulze_votes_for_voter(collection, voter)
-        all_results = merge_voting_results(median_result, schulze_result)
+        all_results = CombinedVotingResult(median_result, schulze_result)
         self.results = all_results
         self.median_result = median_result
         self.schulze_result = schulze_result
-        # insert in field order
-        # this was a todo but we should be fine, django uses ordered dict
-        # TODO what happens when creating it with POST given? Will this here
-        # then do something wrong?
         for group, voting_list in all_results.by_group():
             group_field_name = self.label_field_prefix + str(group.id)
             self.fields[group_field_name] = forms.CharField(label='',
