@@ -45,20 +45,19 @@ def archive_index(request):
               'collections': VotingCollection.objects.order_by('-time')[:10]})
 
 
-# class GroupDetailView(DetailView):
-#     model = VotingGroup
-#
-#     context_object_name = 'group'
-#     template_name = 'votings/period/period_detail.html'
-#
-#     def get_context_data(self, **kwargs):
-#         context = super().get_context_data(**kwargs)
-#         period = context['period']
-#         revs = VotersRevision.objects.filter(period=period).order_by('-period__start', '-period__created', '-created')
-#         context['revisions'] = revs
-#         collections = VotingCollection.objects.filter(revision__period=period).order_by('-time')
-#         context['collections'] = collections
-#         return context
+@transaction.atomic
+def edit_group_view(request, pk):
+    group = get_object_or_404(VotingGroup, pk=pk)
+    context = {'group': group}
+    median_votings = results.median_votings(group=group)
+    schulze_votings = results.schulze_votings(group=group)
+    merged = results.merge_voting_results(median_votings, schulze_votings)
+    context['median_votings'] = median_votings
+    context['schulze_votings'] = schulze_votings
+    context['votings'] = merged
+    # TODO use a form.
+    return render(request, 'votings/group/group_detail.html', context)
+
 
 @transaction.atomic
 def new_period(request):
@@ -420,7 +419,7 @@ class SessionsList(ListView):
 
 class SessionUpdate(UpdateView):
     model = VotingCollection
-    fields = ('name', 'time', 'revision')
+    fields = ('name', 'time')
     template_name = 'votings/session/update_session.html'
 
     def get_success_url(self):

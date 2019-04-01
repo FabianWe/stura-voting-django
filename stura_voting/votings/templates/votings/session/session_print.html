@@ -38,8 +38,8 @@ limitations under the License.
         TODO Hinweise zufügen
     {% endcomment %}
 
-    {% for group_name, group_entries in groups %}
-        <h3>{{ group_name }}</h3>
+    {% for group, group_entries in groups %}
+        <h3>{{ group.name }}</h3>
         {% for voting_type, voting in group_entries %}
             {% if voting_type == "schulze" %}
                 <table class="table table-bordered">

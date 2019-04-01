@@ -103,8 +103,8 @@ class GenericVotingResult(object):
 
     def for_overview_template(self):
         # returns groups, option_map where
-        # groups is a list of (group_name, group_list)
-        # where group_name is the name of the group (string)
+        # groups is a list of (group, group_list)
+        # where group is the group instance
         # group_list is a list containing
         # (type, Voting)
         # where type is either 'median' or 'schulze' and voting is an instace of
@@ -132,7 +132,7 @@ class GenericVotingResult(object):
                         option_map[v_id] = [o.option for o in options]
                 else:
                     assert False
-            groups.append((group.name, group_list))
+            groups.append((group, group_list))
         return groups, option_map
 
 

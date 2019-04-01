@@ -19,25 +19,12 @@ limitations under the License.
 {% load bootstrap4 %}
 
 {% block content %}
-<h2>Abstimmungsberechtigte {{ collection.name }}</h2>
-<table class="table">
-  <thead>
-    <tr>
-      <th>Name</th>
-      <th>Eingetragen</th>
-    </tr>
-  </thead>
-  {% for voter in with_vote %}
-  <tr>
-    <td><a href="{% url 'enter_single_voter' collection.id voter.id %}">{{ voter.name }}</a></td>
-    <td><i class="fas fa-vote-yea" style="color:green"></i></td>
-  </tr>
-  {% endfor %}
-  {% for voter in without_vote %}
-  <tr>
-    <td><a href="{% url 'enter_single_voter' collection.id voter.id %}">{{ voter.name }}</a></td>
-    <td><i class="fas fa-vote-yea" style="color:red"></i></td>
-  </tr>
-  {% endfor %}
-</table>
+    <h2>Abstimmungsgruppe {{ group.name }} für {{ group.collection.name }}</h2>
+
+    {% comment %}
+    <p>
+        <a href="{% url 'revision_update' object.id %}" class="btn btn-primary" role="button"><i class="fas fa-edit fa-lg"></i> Bearbeiten</a>
+        <a href="{% url 'revision_delete' object.id %}" class="btn btn-danger" role="button"><i class="fas fa-trash fa-lg"></i> Löschen</a>
+    </p>
+    {% endcomment %}
 {% endblock %}

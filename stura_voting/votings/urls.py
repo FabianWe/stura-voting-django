@@ -44,4 +44,5 @@ urlpatterns = [
     path('session/<int:pk>/print/', views.SessionPrintView.as_view(), name='session_print'),
     path('session/<int:pk>/voters/', views.enter_voterlist, name='enter_voterslist'),
     path('session/<int:coll>/voters/<int:v>/', views.enter_single_voter_view, name='enter_single_voter'),
+    path('group/<int:pk>/edit/', views.edit_group_view, name='group_update'),
 ]
