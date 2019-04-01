@@ -86,6 +86,40 @@ class SchulzeWarning(object):
 
 
 class GenericVotingResult(object):
+
+    median_prefix = 'median_'
+    schulze_prefix = 'schulze_'
+
+    @staticmethod
+    def median_key(id):
+        return GenericVotingResult.median_prefix + str(id)
+
+
+    @staticmethod
+    def schulze_key(id):
+        return GenericVotingResult.schulze_prefix + str(id)
+
+
+    @staticmethod
+    def parse_median_key(s):
+        return int(s[len(GenericVotingResult.median_prefix):])
+
+
+    @staticmethod
+    def parse_schulze_key(s):
+        return int(s[len(GenericVotingResult.schulze_prefix):])
+
+
+    @staticmethod
+    def parse_key(s):
+        if s.startswith(GenericVotingResult.median_prefix):
+            return 'median', GenericVotingResult.parse_median_key(s)
+        elif s.startswith(GenericVotingResult.schulze_prefix):
+            return 'schulze', GenericVotingResult.parse_schulze_key(s)
+        else:
+            return None
+
+
     def __init__(self):
         # all votings, sorted according to group and then voting_num
         self.votings = OrderedDict()
