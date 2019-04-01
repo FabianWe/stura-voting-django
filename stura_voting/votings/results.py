@@ -85,8 +85,7 @@ class SchulzeWarning(object):
         return str(self.message)
 
 
-class GenericVotingResult(object):
-
+class CombinedVotingResult(object):
     median_prefix = 'median_'
     schulze_prefix = 'schulze_'
 
@@ -119,7 +118,13 @@ class GenericVotingResult(object):
         else:
             return None
 
+    
+    def __init__(self, median, schulze):
+        self.median = median
+        self.schulze = schulze
 
+
+class GenericVotingResult(object):
     def __init__(self):
         # all votings, sorted according to group and then voting_num
         self.votings = OrderedDict()
