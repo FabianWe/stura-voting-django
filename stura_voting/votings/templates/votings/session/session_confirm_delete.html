@@ -19,12 +19,17 @@ limitations under the License.
 {% load bootstrap4 %}
 
 {% block content %}
+
+<div class="alert alert-warning" role="alert">
+  <h4><i class="fas fa-exclamation-triangle"></i> Hinweis</h4>
+  <p>
+  Bist du dir sicher, dass du die Sitzung "{{ object.name }}" löschen möchtest?
+  Dies löscht auch alle Abstimmungen und alle abgegebenen Stimmen!
+  </p>
+</div>
+
     <form role="form" method="post">
       {% csrf_token %}
-      <p>
-      Bist du dir sicher, dass du die Sitzung "{{ object.name }}" löschen möchtest?
-      Dies löscht auch alle Abstimmungen und alle getätigten abgegebenen Stimmen.
-      </p>
       <div class="form-group"><button class="btn btn-danger" type="submit"><i class="fas fa-trash"></i> Löschen bestätigen</button></div>
     </form>
 {% endblock %}
