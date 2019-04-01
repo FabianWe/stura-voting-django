@@ -150,7 +150,7 @@ def enter_single_voter_view(request, coll, v):
 
 
 def __handle_enter_median(result, v_id, val, voter):
-    # result: GenericVotingResult for meidan votes only
+    # result: GenericVotingResult for median votes only
     # v_id id of the voting
     # val: None or tuple (value, currency)
     # first lookup voting and ensure it exists
@@ -182,7 +182,7 @@ def __handle_enter_median(result, v_id, val, voter):
 
 
 def __handle_enter_schulze(result, v_id, val, voter):
-    # result: GenericVotingResult for meidan votes only
+    # result: GenericVotingResult for schulze votes only
     # v_id id of the voting
     # val: None or list of ints (the ranking)
     # in this code we do some sanity checks, just to be absolutely sure everything
