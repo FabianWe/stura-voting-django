@@ -118,10 +118,11 @@ class CombinedVotingResult(object):
         else:
             return None
 
-    
+
     def __init__(self, median, schulze):
         self.median = median
         self.schulze = schulze
+        self.warnings = median.warnings + schulze.warnings
 
 
 class GenericVotingResult(object):
