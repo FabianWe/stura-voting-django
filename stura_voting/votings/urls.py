@@ -49,4 +49,5 @@ urlpatterns = [
     path('median/<int:pk>/edit/', views.MedianUpdateView.as_view(), name='median_update'),
     path('schulze/<int:pk>/delete/', views.SchulzeVotingDeleteView.as_view(), name='schulze_delete'),
     path('schulze/<int:pk>/edit/', views.SchulzeUpdateView.as_view(), name='schulze_update'),
+    path('votes/votes_list/<int:pk>/', views.session_votes_list, name='votes_list'),
 ]

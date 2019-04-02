@@ -31,6 +31,8 @@ from .models import *
 from .forms import *
 from .utils import *
 
+from .median import median_for_evaluation
+
 # TODO which views should be atomic
 # also see select_for_update
 
@@ -552,6 +554,13 @@ class SessionDelete(DeleteView):
     success_url = reverse_lazy('session_delete_success')
     template_name = 'votings/session/session_confirm_delete.html'
 
+@transaction.atomic
+def session_votes_list(request, pk):
+    collection = get_object_or_404(VotingCollection, pk=pk)
+    # get all votings + results
+    median = median_for_evaluation(collection)
+
+    return render(request, 'votings/votes/votes_list.html')
 
 class SessionPrintView(DetailView):
     model = VotingCollection
