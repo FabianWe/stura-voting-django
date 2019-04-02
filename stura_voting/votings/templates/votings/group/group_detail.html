@@ -44,13 +44,13 @@ limitations under the License.
           <td>Finanzantrag</td>
           <td>{{ voting.name }}</td>
           <td>
-            <a href="{% url 'median_delete' voting.id %}" class="btn btn-danger" role="button"><i class="fas fa-trash"></i></a>
+            <a href="{% url 'median_delete' voting.id %}" class="btn btn-danger" role="button"><i class="fas fa-eraser"></i></a>
           </td>
         {% else %}
           <td>Schulze-Abstimmung</td>
           <td>{{ voting.name }}</td>
           <td>
-            <a href="{% url 'schulze_delete' voting.id %}" class="btn btn-danger" role="button"><i class="fas fa-trash"></i></a>
+            <a href="{% url 'schulze_delete' voting.id %}" class="btn btn-danger" role="button"><i class="fas fa-eraser"></i></a>
           </td>
         {% endif %}
         </tr>
