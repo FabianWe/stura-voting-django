@@ -67,7 +67,10 @@ limitations under the License.
                 {% endwith %}
                 </p>
                 {% else %}
-                <p>Finanzantrag {{ voting.name }} über {{ voting.value|currency:voting.currency }}</p>
+                <p>Finanzantrag
+                <a href="{% url 'median_update' voting.id %}">{{ voting.name }}</a>
+                über {{ voting.value|currency:voting.currency }}
+              </p>
             {% endif %}
         {% endfor %}
     {% endfor %}

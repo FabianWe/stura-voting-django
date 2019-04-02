@@ -119,6 +119,16 @@ class SchulzeVotingDeleteView(VotingDeleteView):
         return context
 
 
+class MedianUpdateView(UpdateView):
+    model = MedianVoting
+    fields = ('name', 'majority', 'absolute_majority')
+
+    context_object_name = 'voting'
+    template_name = 'votings/voting/median_update.html'
+
+    def get_success_url(self):
+        return reverse('session_detail', args=[self.object.group.collection.id])
+
 @transaction.atomic
 def new_period(request):
     if request.method == 'GET':
