@@ -35,6 +35,7 @@ limitations under the License.
         <tr>
           <th>Type</th>
           <th>Abstimmung</th>
+          <th>Foooo</th>
         </tr>
       </thead>
       {% for voting_type, voting in votings_list %}
@@ -42,9 +43,15 @@ limitations under the License.
         {% if voting_type == "median" %}
           <td>Finanzantrag</td>
           <td>{{ voting.name }}</td>
+          <td>
+            <a href="{% url 'median_delete' voting.id %}" class="btn btn-danger" role="button"><i class="fas fa-trash"></i></a>
+          </td>
         {% else %}
           <td>Schulze-Abstimmung</td>
           <td>{{ voting.name }}</td>
+          <td>
+            <a href="{% url 'schulze_delete' voting.id %}" class="btn btn-danger" role="button"><i class="fas fa-trash"></i></a>
+          </td>
         {% endif %}
         </tr>
       {% endfor %}

@@ -85,6 +85,38 @@ def edit_group_view(request, pk):
     return render(request, 'votings/group/group_detail.html', context)
 
 
+class VotingDeleteView(DeleteView):
+    # success_url = reverse_lazy('revision_delete_success')
+    template_name = 'votings/session/voting_confirm_delete.html'
+
+    def get_success_url(self):
+        return reverse('session_detail', args=[self.object.group.collection.id])
+
+
+class MedianVotingDeleteView(VotingDeleteView):
+    model = MedianVoting
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        num_voters = MedianVote.objects.filter(voting=self.object).count()
+        context['num_voters'] = num_voters
+        return context
+
+
+class SchulzeVotingDeleteView(VotingDeleteView):
+    model = SchulzeVoting
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        num_voters = (SchulzeVote.objects.filter(option__voting=self.object)
+                        .values_list('voter__id', flat=True)
+                        .distinct()
+                        .count())
+        # without values_list sqlite does not work
+        context['num_voters'] = num_voters
+        return context
+
+
 @transaction.atomic
 def new_period(request):
     if request.method == 'GET':
