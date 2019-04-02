@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from decimal import Decimal
+
 from django.shortcuts import render, reverse, redirect
 from django.views.generic.detail import DetailView
 from django.views.generic import ListView, UpdateView
@@ -360,7 +362,7 @@ class RevisionDetailView(DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         voters = Voter.objects.filter(revision=self.object).order_by('name')
-        context['voters'] = list(voters)
+        context['voters'] = voters
         return context
 
 class RevisionDeleteView(DeleteView):
