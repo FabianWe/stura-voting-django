@@ -137,4 +137,26 @@ class ResultsSingleVoterForm(DynamicVotingsListForm):
                 yield 'schulze', voting_id, value
 
 
+class UpdateGroupForm(forms.Form):
+    order = GroupOrderField(num_votings=-1,
+                            label='Anordnung: Positionsnummer für jede Abstimmung (muss eindeutig sein)',
+                            required=False)
+
+    def __init__(self, *args, **kwargs):
+        num_votings = None
+        current_order = None
+        if 'num_votings' in kwargs:
+            num_votings = kwargs.pop('num_votings')
+        elif 'current_order' in kwargs:
+            current_order = kwargs.pop('current_order')
+            num_votings = len(current_order)
+        else:
+            raise ValueError('Requires num_votings or current_order')
+        super().__init__(*args, **kwargs)
+        self.fields['order'].num_votings = num_votings
+        if current_order is not None:
+            self.fields['order'].initial = ' '.join(map(str, current_order))
+
+
+
 # https://jacobian.org/writing/dynamic-form-generation/

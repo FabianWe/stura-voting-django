@@ -85,6 +85,57 @@ class SchulzeWarning(object):
         return str(self.message)
 
 
+class GenericVotingResult(object):
+    def __init__(self):
+        # all votings, sorted according to group and then voting_num
+        self.votings = OrderedDict()
+        # mapping voting_id to actual vote
+        self.votes = dict()
+        # contains all warnings from fetching the result
+        self.warnings = []
+        # maps votings -> entry "voting is about"
+        # maps to value in median and list of SchulzeOption in schulze
+        self.voting_description = dict()
+
+    def by_group(self):
+        for group_instance, group in groupby(self.votings.values(), lambda voting: voting.group):
+            yield group_instance, list(group)
+
+    def for_overview_template(self):
+        # returns groups, option_map where
+        # groups is a list of (group, group_list)
+        # where group is the group instance
+        # group_list is a list containing
+        # (type, Voting)
+        # where type is either 'median' or 'schulze' and voting is an instace of
+        # the voting (model)
+        #
+        # option_map is a mapping from each schulze_voting id to a list of its
+        # options as string
+        groups = []
+        option_map = dict()
+        for group, votings in self.by_group():
+            group_list = []
+            for v in votings:
+                if isinstance(v, voting_models.MedianVoting):
+                    group_list.append(('median', v))
+                elif isinstance(v, voting_models.SchulzeVoting):
+                    group_list.append(('schulze', v))
+                    v_id = v.id
+                    if v_id not in self.voting_description:
+                        msg = gettext('No options for schulze voting %(voting)d' % {'voting': v_id})
+                        warning = QueryWarning(msg)
+                        self.warnings.append(warning)
+                        option_map[v_id] = []
+                    else:
+                        options = self.voting_description[v_id]
+                        option_map[v_id] = [o.option for o in options]
+                else:
+                    assert False
+            groups.append((group, group_list))
+        return groups, option_map
+
+
 class CombinedVotingResult(object):
     median_prefix = 'median_'
     schulze_prefix = 'schulze_'
@@ -172,58 +223,7 @@ class CombinedVotingResult(object):
         return groups, option_map
 
 
-class GenericVotingResult(object):
-    def __init__(self):
-        # all votings, sorted according to group and then voting_num
-        self.votings = OrderedDict()
-        # mapping voting_id to actual vote
-        self.votes = dict()
-        # contains all warnings from fetching the result
-        self.warnings = []
-        # maps votings -> entry "voting is about"
-        # maps to value in median and list of SchulzeOption in schulze
-        self.voting_description = dict()
-
-    def by_group(self):
-        for group_instance, group in groupby(self.votings.values(), lambda voting: voting.group):
-            yield group_instance, list(group)
-
-    def for_overview_template(self):
-        # returns groups, option_map where
-        # groups is a list of (group, group_list)
-        # where group is the group instance
-        # group_list is a list containing
-        # (type, Voting)
-        # where type is either 'median' or 'schulze' and voting is an instace of
-        # the voting (model)
-        #
-        # option_map is a mapping from each schulze_voting id to a list of its
-        # options as string
-        groups = []
-        option_map = dict()
-        for group, votings in self.by_group():
-            group_list = []
-            for v in votings:
-                if isinstance(v, voting_models.MedianVoting):
-                    group_list.append(('median', v))
-                elif isinstance(v, voting_models.SchulzeVoting):
-                    group_list.append(('schulze', v))
-                    v_id = v.id
-                    if v_id not in self.voting_description:
-                        msg = gettext('No options for schulze voting %(voting)d' % {'voting': v_id})
-                        warning = QueryWarning(msg)
-                        self.warnings.append(warning)
-                        option_map[v_id] = []
-                    else:
-                        options = self.voting_description[v_id]
-                        option_map[v_id] = [o.option for o in options]
-                else:
-                    assert False
-            groups.append((group, group_list))
-        return groups, option_map
-
-
-def median_votings(**kwargs):
+def median_votings(select_for_update=False, **kwargs):
     # usage: provide a query for votings like votings_qs = ...
     # or provide collection=VotingCollection(...) for all votings in a certain collection
     # or provide group=VotingGroup(...) for all votings in a certain group
@@ -241,6 +241,9 @@ def median_votings(**kwargs):
     else:
         raise TypeError('Missing queryset / filter')
 
+    if select_for_update:
+        votings_qs = votings_qs.select_for_update()
+
     res = GenericVotingResult()
     for voting in votings_qs:
         voting_id = voting.id
@@ -249,7 +252,7 @@ def median_votings(**kwargs):
     return res
 
 
-def schulze_votings(**kwargs):
+def schulze_votings(select_for_update=False, **kwargs):
     # usage: provide a query for votings like votings_qs = ...
     # and options_qs = ...
     # or provide collection=VotingCollection(...) for all votings in a certain collection
@@ -279,6 +282,10 @@ def schulze_votings(**kwargs):
         options_qs = (voting_models.SchulzeOption.objects.filter(voting__group=group)
                       .order_by('voting__id', 'option_num'))
 
+    if select_for_update:
+        votings_qs = votings_qs.select_for_update()
+        options_qs = options_qs.select_for_update()
+
     res = GenericVotingResult()
     # fetch all schulze votings
     for voting in votings_qs:
@@ -301,6 +308,7 @@ def schulze_votings(**kwargs):
     return res
 
 
+# TODO add select_for_update?
 def median_votes_for_voter(collection, voter):
     # could proabably be done in a single more efficient query
     votings_qs = (voting_models.MedianVoting.objects.filter(group__collection=collection)

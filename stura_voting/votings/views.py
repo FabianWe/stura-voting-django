@@ -49,13 +49,39 @@ def archive_index(request):
 def edit_group_view(request, pk):
     group = get_object_or_404(VotingGroup, pk=pk)
     context = {'group': group}
-    median_votings = results.median_votings(group=group)
-    schulze_votings = results.schulze_votings(group=group)
-    merged = results.merge_voting_results(median_votings, schulze_votings)
+    median_votings = results.median_votings(group=group, select_for_update=True)
+    schulze_votings = results.schulze_votings(group=group, select_for_update=True)
+    merged = results.CombinedVotingResult(median_votings, schulze_votings)
     context['median_votings'] = median_votings
     context['schulze_votings'] = schulze_votings
     context['votings'] = merged
-    # TODO use a form.
+    votings = list(merged.combined_votings())
+    num_votings = len(votings)
+    if request.method == 'GET':
+        # store current order
+        current_order = []
+        for voting in votings:
+            current_order.append(voting.voting_num)
+        form = UpdateGroupForm(current_order=current_order)
+    else:
+        form = UpdateGroupForm(request.POST, num_votings=num_votings)
+        if form.is_valid():
+            new_order = form.cleaned_data['order']
+            if new_order:
+                assert len(new_order) == num_votings
+                for voting, new_pos in zip(votings, new_order):
+                    if voting.voting_num != new_pos:
+                        voting.voting_num = new_pos
+                        voting.save(update_fields=['voting_num'])
+            return redirect('group_update', pk=pk)
+    context['form'] = form
+    groups, _ = list(merged.for_overview_template())
+    if len(groups) == 0:
+        context['votings_list'] = []
+    elif len(groups) == 1:
+        context['votings_list'] = groups[0][1]
+    else:
+        assert False
     return render(request, 'votings/group/group_detail.html', context)
 
 

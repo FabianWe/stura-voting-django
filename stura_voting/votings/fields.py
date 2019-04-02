@@ -99,3 +99,33 @@ class SchulzeVoteField(forms.CharField):
         if len(ranking) != self.num_options:
             raise forms.ValidationError('Invalid Schulze vote: Does not match number of options in voting')
         return ranking
+
+class GroupOrderField(forms.CharField):
+    def __init__(self, **kwargs):
+        num_votings = kwargs.pop('num_votings')
+        self.num_votings = num_votings
+        super().__init__(**kwargs)
+
+    def clean(self, value):
+        cleaned = super().clean(value)
+        cleaned = cleaned.strip()
+        if not cleaned:
+            return cleaned
+        split = cleaned.split(' ')
+        order = []
+        for s in split:
+            s = s.strip()
+            if not s:
+                continue
+            try:
+                val = int(s)
+                if val < 0:
+                    raise forms.ValidationError('Invalid group position: Must be a postive integer')
+                order.append(val)
+            except ValueError as e:
+                raise forms.ValidationError('Invalid group position: Must be list of integers: %s' % str(e))
+        if len(order) != self.num_votings:
+            raise forms.ValidationError('Invalid group position: Does not match number of votings')
+        if len(order) != len(set(order)):
+            raise forms.ValidationError('Invalid group position: Positions must be unique')
+        return order

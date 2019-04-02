@@ -27,4 +27,31 @@ limitations under the License.
         <a href="{% url 'revision_delete' object.id %}" class="btn btn-danger" role="button"><i class="fas fa-trash fa-lg"></i> Löschen</a>
     </p>
     {% endcomment %}
+    <p>
+      <a href="{% url 'session_detail' group.collection.id %}" class="btn btn-primary" role="button"><i class="fas fa-poll-h fa-lg"></i> Zurück zur Sitzung</a>
+    </p>
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Abstimmung</th>
+        </tr>
+      </thead>
+      {% for voting_type, voting in votings_list %}
+        <tr>
+        {% if voting_type == "median" %}
+          <td>Finanzantrag</td>
+          <td>{{ voting.name }}</td>
+        {% else %}
+          <td>Schulze-Abstimmung</td>
+          <td>{{ voting.name }}</td>
+        {% endif %}
+        </tr>
+      {% endfor %}
+    </table>
+    <form role="form" method="post">
+        {% csrf_token %}
+        {% bootstrap_form form %}
+        {% buttons submit='Speichern' %}{% endbuttons %}
+    </form>
 {% endblock %}
