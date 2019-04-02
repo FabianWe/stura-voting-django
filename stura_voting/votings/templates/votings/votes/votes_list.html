@@ -20,13 +20,81 @@ limitations under the License.
 
 {% load currency %}
 {% load hash %}
+{% load static %}
 
 {% block content %}
     {% block bootstrap4_navbar %}
     {% endblock %}
     {% block title %}
     {% endblock %}
-    <table class="table borderless">
+    <h2>Abstimmungsliste für {{ collection.name }}</h2>
+      <table id="overview" class="table table-bordered table-hover">
+        <thead>
+          <tr>
+            <th class="all">Abstimmung</th>
+            {% for voter in voters %}
+              <th class="all">{{ voter.name }}</th>
+            {% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+        {% for group, group_list in groups %}
+          {% for v_type, v, results in group_list %}
+            <tr>
+              <td>{{ v.name }}</td>
+              {% for voter in voters %}
+                {% with voter_result=results|hash:voter.id %}
+                  {% if voter_result %}
+                      {% if v_type == "median" %}
+                        <td>{{ voter_result.value|currency:v.currency }}</td>
+                      {% else %}
+                        <td>
+                          {% for vote in voter_result %}
+                            {{ vote.sorting_position }}
+                          {% endfor %}
+                        </td>
+                      {% endif %}
+                  {% else %}
+                      <td>/</td>
+                  {% endif %}
+                {% endwith %}
+              {% endfor %}
+            </tr>
+          {% endfor %}
+        {% endfor %}
+        </tbody>
+      </table>
 
-    </table>
+      <input type="hidden" readonly id="session_name_field" value="{{ collection.name }}">
+{% endblock %}
+
+{% block additional_static %}
+  {{ block.super }}
+  <script crossorigin="anonymous" src="https://cdn.datatables.net/1.10.19/js/dataTables.bootstrap4.min.js"></script>
+  <link crossorigin="anonymous" href="https://cdn.datatables.net/1.10.19/css/dataTables.bootstrap4.min.css" rel="stylesheet"> -->
+  <script src="{% static 'votings/datatables/datatables.min.js' %}"></script>
+  <link href="{% static 'votings/datatables/datatables.min.css' %}" rel="stylesheet">
+
+  <script>
+  $(document).ready(function() {
+    var session_name = $("#session_name_field").val();
+    var table = $("#overview").DataTable({
+      responsive: true,
+      paging: false,
+      ordering: false,
+      // not supported write now, looks not nice... use browser pring
+      // dom: 'Bfrtip',
+      // buttons: [
+      //       {
+      //           extend: 'pdfHtml5',
+      //           orientation: 'landscape',
+      //           pageSize: 'A4',
+      //           filename: 'abstimmungsuebersicht',
+      //           title: 'Abgegebene Stimmen ' + session_name,
+      //       }
+      //   ],
+    });
+    new $.fn.dataTable.FixedHeader( table );
+  } );
+  </script>
 {% endblock %}

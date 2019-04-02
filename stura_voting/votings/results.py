@@ -135,6 +135,15 @@ class GenericVotingResult(object):
             groups.append((group, group_list))
         return groups, option_map
 
+    def fill_missing_voters(self, voters_list):
+        for vote_id in self.votings:
+            if vote_id not in self.votes:
+                self.votes[vote_id] = dict()
+            votes = self.votes[vote_id]
+            for voter in voters_list:
+                if voter.id not in votes:
+                    votes[voter.id] = None
+
 
 class CombinedVotingResult(object):
     median_prefix = 'median_'
@@ -174,6 +183,14 @@ class CombinedVotingResult(object):
         self.median = median
         self.schulze = schulze
         self.warnings = median.warnings + schulze.warnings
+
+
+    def get_schulze_vote(self, voting_id):
+        return self.schulze.votes[voting_id]
+
+
+    def get_median_vote(self, voting_id):
+        return self.median.votes[voting_id]
 
 
     def combined_votings(self):
@@ -407,3 +424,20 @@ def schulze_votes_for_voter(collection, voter):
                 res.warnings.append(SchulzeWarning(msg))
                 # no continue here, evaluation works fine but probably something is wrong
     return res
+
+def for_votes_list_template(voting_result):
+    # assumes missing entries have be filled with fill_missing_voters
+    groups = []
+    for group, votings in voting_result.by_group():
+        group_list = []
+        for v in votings:
+            if isinstance(v, voting_models.MedianVoting):
+                v_res = voting_result.get_median_vote(v.id)
+                group_list.append(('median', v, v_res))
+            elif isinstance(v, voting_models.SchulzeVoting):
+                v_res = voting_result.get_schulze_vote(v.id)
+                group_list.append(('schulze', v, v_res))
+            else:
+                assert False
+        groups.append((group, group_list))
+    return groups

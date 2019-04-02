@@ -32,6 +32,7 @@ from .forms import *
 from .utils import *
 
 from .median import median_for_evaluation
+from .schulze import schulze_for_evaluation
 
 # TODO which views should be atomic
 # also see select_for_update
@@ -557,10 +558,22 @@ class SessionDelete(DeleteView):
 @transaction.atomic
 def session_votes_list(request, pk):
     collection = get_object_or_404(VotingCollection, pk=pk)
+    all_voters = Voter.objects.filter(revision=collection.revision).order_by('name')
+
     # get all votings + results
     median = median_for_evaluation(collection)
+    # fill missing votes with None
+    median.fill_missing_voters(all_voters)
+    schulze = schulze_for_evaluation(collection)
+    schulze.fill_missing_voters(all_voters)
 
-    return render(request, 'votings/votes/votes_list.html')
+    merged = CombinedVotingResult(median, schulze)
+
+    group_data = for_votes_list_template(merged)
+
+    context = {'groups': group_data, 'voters': all_voters, 'collection': collection}
+
+    return render(request, 'votings/votes/votes_list.html', context)
 
 class SessionPrintView(DetailView):
     model = VotingCollection

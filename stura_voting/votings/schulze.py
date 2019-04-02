@@ -31,7 +31,7 @@ def schulze_for_evaluation(collection):
     # for this...
 
     # sanity checks are postponed until later to keep the code clearer
-    for voting, votes_for_voting in groupby(votes_qs, lambda vote: vote.voting):
+    for voting, votes_for_voting in groupby(votes_qs, lambda vote: vote.option.voting):
         voter_mapping = dict()
         for voter, votes_for_voter in groupby(votes_for_voting, lambda vote: vote.voter):
             votes_list = list(votes_for_voter)
