@@ -57,7 +57,8 @@ limitations under the License.
         <h3>{{ group.name }} <a href="{% url 'group_update' group.id %}" title="Gruppe bearbeiten"><i class="fas fa-clipboard-list"></i></a></h3>
         {% for voting_type, voting in group_entries %}
             {% if voting_type == "schulze" %}
-                <p>Abstimmung {{ voting.name }}
+                <p>
+                  Abstimmung <a href="{% url 'schulze_update' voting.id %}">{{ voting.name }}</a>
                 {% with options=option_map|hash:voting.id %}
                     <ul>
                         {% for option in options %}

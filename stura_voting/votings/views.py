@@ -129,6 +129,16 @@ class MedianUpdateView(UpdateView):
     def get_success_url(self):
         return reverse('session_detail', args=[self.object.group.collection.id])
 
+class SchulzeUpdateView(UpdateView):
+    model = SchulzeVoting
+    fields = ('name', 'majority', 'absolute_majority')
+
+    context_object_name = 'voting'
+    template_name = 'votings/voting/schulze_update.html'
+
+    def get_success_url(self):
+        return reverse('session_detail', args=[self.object.group.collection.id])
+
 @transaction.atomic
 def new_period(request):
     if request.method == 'GET':
