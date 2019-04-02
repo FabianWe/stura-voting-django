@@ -399,8 +399,8 @@ def schulze_votes_for_voter(collection, voter):
             continue
         for vote, option in zip(votes, voting_options):
             if vote.option != option:
-                msg = gettext('Invalid vote for option for vote %(vote)d: Got vote for option %(option)d instead of %(for)d' % {
-                    'vote': voting_id,
+                msg = gettext('Invalid vote for option for voting %(voting)d: Got vote for option %(option)d instead of %(for)d' % {
+                    'voting': voting_id,
                     'option': vote.option.id,
                     'for': option.id,
                     })

@@ -82,7 +82,7 @@ class ResultsSingleVoterForm(DynamicVotingsListForm):
 
     def __init__(self, *args, **kwargs):
         collection = kwargs.pop('collection')
-        voter = kwargs.pop('voter', None)
+        voter = kwargs.pop('voter')
         super().__init__(*args, **kwargs)
         # TODO add check according to same revision and so on?
         median_result = median_votes_for_voter(collection, voter)
