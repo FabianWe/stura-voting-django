@@ -28,51 +28,51 @@ limitations under the License.
     {% block title %}
     {% endblock %}
     <h2>Abstimmungsliste für {{ collection.name }}</h2>
-      <table id="overview" class="table table-bordered table-hover">
-        <thead>
-          <tr>
-            <th class="all">Abstimmung</th>
-            {% for voter in voters %}
-              <th class="all">{{ voter.name }}</th>
+    <table id="overview" class="table table-bordered table-hover">
+      <thead>
+        <tr>
+          <th class="all align-baseline">Gruppe</th>
+          {% for _, group_list in groups %}
+            {% for _, v, _ in group_list %}
+              <th class="all align-baseline">{{ v.name }}</th>
             {% endfor %}
-          </tr>
-        </thead>
-        <tbody>
-        {% for group, group_list in groups %}
-          {% for v_type, v, results in group_list %}
-            <tr>
-              <td>{{ v.name }}</td>
-              {% for voter in voters %}
-                {% with voter_result=results|hash:voter.id %}
-                  {% if voter_result %}
-                      {% if v_type == "median" %}
-                        <td>{{ voter_result.value|currency:v.currency }}</td>
-                      {% else %}
-                        <td>
-                          {% for vote in voter_result %}
-                            {{ vote.sorting_position }}
-                          {% endfor %}
-                        </td>
-                      {% endif %}
-                  {% else %}
-                      <td>/</td>
-                  {% endif %}
-                {% endwith %}
-              {% endfor %}
-            </tr>
           {% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for voter in voters %}
+          <tr>
+          <td>{{ voter.name }}</td>
+          {% for group, group_list in groups %}
+            {% for v_type, v, results in group_list %}
+              {% with voter_result=results|hash:voter.id %}
+                {% if voter_result %}
+                    {% if v_type == "median" %}
+                      <td>{{ voter_result.value|currency:v.currency }}</td>
+                    {% else %}
+                      <td>
+                        {% for vote in voter_result %}
+                          {{ vote.sorting_position }}
+                        {% endfor %}
+                      </td>
+                    {% endif %}
+                {% else %}
+                    <td>/</td>
+                {% endif %}
+              {% endwith %}
+            {% endfor %}
+          {% endfor %}
+          </tr>
         {% endfor %}
-        </tbody>
-      </table>
+      </tbody>
+    </table>
 
       <input type="hidden" readonly id="session_name_field" value="{{ collection.name }}">
 {% endblock %}
 
 {% block additional_static %}
   {{ block.super }}
-  <script crossorigin="anonymous" src="https://cdn.datatables.net/1.10.19/js/dataTables.bootstrap4.min.js"></script>
-  <link crossorigin="anonymous" href="https://cdn.datatables.net/1.10.19/css/dataTables.bootstrap4.min.css" rel="stylesheet"> -->
-  <script src="{% static 'votings/datatables/datatables.min.js' %}"></script>
+  <script src="{% static 'votings/datatables/datatables.js' %}"></script>
   <link href="{% static 'votings/datatables/datatables.min.css' %}" rel="stylesheet">
 
   <script>
