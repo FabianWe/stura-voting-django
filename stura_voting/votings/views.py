@@ -571,7 +571,9 @@ def session_votes_list(request, pk):
 
     group_data = for_votes_list_template(merged)
 
-    context = {'groups': group_data, 'voters': all_voters, 'collection': collection}
+    warnings = list(map(str, merged.warnings))
+    context = {'groups': group_data, 'voters': all_voters,
+        'collection': collection, 'warnings': warnings}
 
     return render(request, 'votings/votes/votes_list.html', context)
 
