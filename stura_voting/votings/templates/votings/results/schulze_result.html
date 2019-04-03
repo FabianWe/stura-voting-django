@@ -1,0 +1,84 @@
+{% comment %}
+Copyright 2018 - 2019 Fabian Wenzelmann
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+{% endcomment %}
+
+{% load bootstrap4 %}
+{% load hash %}
+{% load lindex %}
+
+{% comment %}
+Sorry for the ugly with line...
+{% endcomment %}
+{% with v_id=v.id s_result=schulze_results|hash:v.id schulze_inst=schulze_instances|hash:v.id options=schulze_votings.voting_description|hash:v.id num_no=schulze_num_no|hash:v.id percent_no=schulze_percent_no|hash:v.id %}
+  <p>
+    <h4>Abstimmung {{ v.name }}</h4>
+    {% if v.absolute_majority %}
+      <p>
+        Abstimmung mit absoluter Mehrheit. Abstimmungsberechtigte Gruppen
+        die nicht explizit abgestimmt haben wurden mit einer Stimme für
+        Nein eingefügt.
+      </p>
+    {% endif %}
+    <ol>
+      {% for option in options %}
+        <li>{{ option.option }}</li>
+      {% endfor %}
+    </ol>
+    <p>
+      Bei einer
+      {% if v.majority == "50" %}
+        50% Mehrheit
+      {% elif v.majority == "2/3" %}
+        <sup>2</sup>&frasl;<sub>3</sub> Mehrheit
+      {% else %}
+        <b>Unbekanntes Quorum</b>
+      {% endif %}
+      von {{ schulze_inst.weight_sum }} Stimmen beträgt das Quorum
+      {{ schulze_inst.majority }} Stimmen.
+    </p>
+    <table class="table table-bordered">
+      <thead>
+        <tr>
+          <td>Gruppe</td>
+          <td>Option</td>
+          <td>Stimmen vor Nein</td>
+          <td>Prozent vor Nein</td>
+        </tr>
+      </thead>
+      <tbody>
+        {% for schulze_group in s_result.candidate_wins %}
+          {% with group_num=forloop.counter %}
+              {% comment %}
+              Only in first entry for this group: add <td> with rowspan
+              {% endcomment %}
+              {% for opt in schulze_group %}
+                <tr>
+                  {% if forloop.counter == 1 %}
+                    <td rowspan="{{ schulze_group|length }}" class="align-middle">{{ group_num }}</td>
+                  {% endif %}
+
+                  {% with option_desc=options|lindex:opt %}
+                    <td>{{ option_desc.option }}</td>
+                  {% endwith %}
+                  <td>{{ num_no|lindex:opt }}</td>
+                  <td>{{ percent_no|lindex:opt|floatformat:2 }}</td>
+                </tr>
+              {% endfor %}
+          {% endwith %}
+        {% endfor %}
+      </tbody>
+    </table>
+  </p>
+{% endwith %}

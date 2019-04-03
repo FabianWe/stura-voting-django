@@ -1,0 +1,64 @@
+{% comment %}
+Copyright 2018 - 2019 Fabian Wenzelmann
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+{% endcomment %}
+
+{% load bootstrap4 %}
+{% load hash %}
+{% load currency %}
+
+{% with v_id=v.id m_result=median_results|hash:v.id median_inst=median_instances|hash:v.id %}
+  <p>
+    <h4>Finanzantrag {{ v.name }}</h4>
+    {% if v.absolute_majority %}
+      <p>
+        Abstimmung mit absoluter Mehrheit. Abstimmungsberechtigte Gruppen
+        die nicht explizit abgestimmt haben wurden mit einem Wert von
+        {{ 0|currency:v.currency }} eingefügt.
+      </p>
+    {% endif %}
+    <table class="table table-bordered">
+      <thead>
+        <tr>
+          <td>Beantragt</td>
+          <td>Abgestimmt</td>
+          <td>Stimmen gesamt (Σ)</td>
+          <td>Quorum
+            {% if v.majority == "50" %}
+              (50% der Stimmen)
+            {% elif v.majority == "2/3" %}
+              ( <sup>2</sup>&frasl;<sub>3</sub> der Stimmen)
+            {% else %}
+              Unbekanntes Quorum
+            {% endif %}
+          </td>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>{{ v.value|currency:v.currency }}</td>
+          <td>
+            {% if m_result is None %}
+              Kein Wert abgestimmt
+            {% else %}
+              {{ m_result|currency:v.currency }}
+            {% endif %}
+          </td>
+          <td>{{ median_inst.weight_sum }}</td>
+          <td>{{ median_inst.majority }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </p>
+{% endwith %}
