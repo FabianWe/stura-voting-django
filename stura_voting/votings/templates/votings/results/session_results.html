@@ -55,8 +55,10 @@ limitations under the License.
                     <td>Quorum
                       {% if v.majority == "50" %}
                         (50% der Stimmen)
-                      {% else %}
+                      {% elif v.majority == "2/3" %}
                         ( <sup>2</sup>&frasl;<sub>3</sub> der Stimmen)
+                      {% else %}
+                        Unbekanntes Quorum
                       {% endif %}
                     </td>
                   </tr>
@@ -86,6 +88,16 @@ limitations under the License.
           {% with v_id=v.id s_result=schulze_results|hash:v.id schulze_inst=schulze_instances|hash:v.id options=schulze_votings.voting_description|hash:v.id num_no=schulze_num_no|hash:v.id percent_no=schulze_percent_no|hash:v.id %}
             <p>
               <h4>Abstimmung {{ v.name }}</h4>
+              Bei einer
+              {% if v.majority == "50" %}
+                50% Mehrheit
+              {% elif v.majority == "2/3" %}
+                <sup>2</sup>&frasl;<sub>3</sub> Mehrheit
+              {% else %}
+                <b>Unbekanntes Quorum</b>
+              {% endif %}
+              von {{ schulze_inst.weight_sum }} Stimmen beträgt das Quorum
+              {{ schulze_inst.majority }} Stimmen.
               <table class="table table-bordered">
                 <thead>
                   <tr>
@@ -103,7 +115,10 @@ limitations under the License.
                         {% endcomment %}
                         {% for opt in schulze_group %}
                           <tr>
-                            <td>{{ group_num }}</td>
+                            {% if forloop.counter == 1 %}
+                              <td rowspan="{{ schulze_group|length }}" class="align-middle">{{ group_num }}</td>
+                            {% endif %}
+
                             {% with option_desc=options|lindex:opt %}
                               <td>{{ option_desc.option }}</td>
                             {% endwith %}
