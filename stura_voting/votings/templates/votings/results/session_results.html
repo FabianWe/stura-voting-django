@@ -46,6 +46,13 @@ limitations under the License.
           {% with v_id=v.id m_result=median_results|hash:v.id median_inst=median_instances|hash:v.id %}
             <p>
               <h4>Finanzantrag {{ v.name }}</h4>
+              {% if v.absolute_majority %}
+                <p>
+                  Abstimmung mit absoluter Mehrheit. Abstimmungsberechtigte Gruppen
+                  die nicht explizit abgestimmt haben wurden mit einem Wert von
+                  {{ 0|currency:v.currency }} eingefügt.
+                </p>
+              {% endif %}
               <table class="table table-bordered">
                 <thead>
                   <tr>
@@ -88,16 +95,30 @@ limitations under the License.
           {% with v_id=v.id s_result=schulze_results|hash:v.id schulze_inst=schulze_instances|hash:v.id options=schulze_votings.voting_description|hash:v.id num_no=schulze_num_no|hash:v.id percent_no=schulze_percent_no|hash:v.id %}
             <p>
               <h4>Abstimmung {{ v.name }}</h4>
-              Bei einer
-              {% if v.majority == "50" %}
-                50% Mehrheit
-              {% elif v.majority == "2/3" %}
-                <sup>2</sup>&frasl;<sub>3</sub> Mehrheit
-              {% else %}
-                <b>Unbekanntes Quorum</b>
+              {% if v.absolute_majority %}
+                <p>
+                  Abstimmung mit absoluter Mehrheit. Abstimmungsberechtigte Gruppen
+                  die nicht explizit abgestimmt haben wurden mit einer Stimme für
+                  Nein eingefügt.
+                </p>
               {% endif %}
-              von {{ schulze_inst.weight_sum }} Stimmen beträgt das Quorum
-              {{ schulze_inst.majority }} Stimmen.
+              <ol>
+                {% for option in options %}
+                  <li>{{ option.option }}</li>
+                {% endfor %}
+              </ol>
+              <p>
+                Bei einer
+                {% if v.majority == "50" %}
+                  50% Mehrheit
+                {% elif v.majority == "2/3" %}
+                  <sup>2</sup>&frasl;<sub>3</sub> Mehrheit
+                {% else %}
+                  <b>Unbekanntes Quorum</b>
+                {% endif %}
+                von {{ schulze_inst.weight_sum }} Stimmen beträgt das Quorum
+                {{ schulze_inst.majority }} Stimmen.
+              </p>
               <table class="table table-bordered">
                 <thead>
                   <tr>
@@ -123,7 +144,7 @@ limitations under the License.
                               <td>{{ option_desc.option }}</td>
                             {% endwith %}
                             <td>{{ num_no|lindex:opt }}</td>
-                            <td>{{ percent_no|lindex:opt }}</td>
+                            <td>{{ percent_no|lindex:opt|floatformat:2 }}</td>
                           </tr>
                         {% endfor %}
                     {% endwith %}
@@ -132,7 +153,9 @@ limitations under the License.
               </table>
             </p>
           {% endwith %}
-          {% endif %}
+        {% endif %}
+      <!-- group entries -->
       {% endfor %}
+    <!-- groups -->
     {% endfor %}
 {% endblock %}
