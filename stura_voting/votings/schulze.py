@@ -38,6 +38,8 @@ def schulze_for_evaluation(collection):
             voter_mapping[voter.id] = votes_list
         all_votings.votes[voting.id] = voter_mapping
     # now for the sanity checks
+    # we might need to remove votings if they're invalid
+    votings_to_remove = set()
     for voting_id, voter_mapping in all_votings.votes.items():
         # first assert that voting exists
         # again, this should really not happen ;)
@@ -49,6 +51,13 @@ def schulze_for_evaluation(collection):
             continue
         voting = all_votings.votings[voting_id]
         options = all_votings.voting_description[voting_id]
+        if not options:
+            msg = gettext('Invalid schulze voting %(voting_name)s: No options given. Not including in result' % {
+                'voting_name': voting.name,
+            })
+            all_votings.warnings.append(QueryWarning(msg))
+            votings_to_remove.add(voting_id)
+            continue
         voters_to_remove = set()
         for voter_id, votes_for_voter in voter_mapping.items():
             if len(options) != len(votes_for_voter):
@@ -77,6 +86,13 @@ def schulze_for_evaluation(collection):
         # now remove all voters that had invalid votes
         for remove in voters_to_remove:
             del voter_mapping[remove]
+    # first we remove all votings marked in votings_to_remove
+    # we delete that votings as well as all votes for it
+    for remove in votings_to_remove:
+        if remove in all_votings.votings:
+            del all_votings.votings[remove]
+        if remove in all_votings.votes:
+            del all_votings.votes[remove]
     # because we removed voters a voter_mapping could have become empty:
     # we clear that data
     votings_to_remove = set()

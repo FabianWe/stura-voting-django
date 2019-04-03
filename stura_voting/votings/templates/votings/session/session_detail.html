@@ -50,6 +50,10 @@ limitations under the License.
       <a href="{% url 'votes_list' object.id %}" target="_blank" class="btn btn-primary" role="button"><i class="fas fa-table fa-lg"></i> Abstimmungsliste</a>
     </p>
     <p>
+      <a href="{% url 'session_results' object.id %}" title="Auswertungsergebnisse anzeigen" class="btn btn-primary" role="button"><i class="fas fa-chart-pie fa-lg"></i> Auswerten</a>
+      <a href="{% url 'session_results_detailed' object.id %}" title="Auswertungsergebnisse und Abstimmungsübersicht anzeigen" class="btn btn-primary" role="button"><i class="fas fa-list-ol fa-lg"></i> Detaillierte Auswertung</a>
+    </p>
+    <p>
       <a href="{% url 'session_update' object.id %}" class="btn btn-primary" role="button"><i class="fas fa-edit fa-lg"></i> Bearbeiten</a>
       <a href="{% url 'session_delete' object.id %}" class="btn btn-danger" role="button"><i class="fas fa-trash fa-lg"></i> Löschen</a>
     </p>
