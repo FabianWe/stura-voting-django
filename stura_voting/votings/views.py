@@ -15,6 +15,8 @@
 from decimal import Decimal
 from collections import OrderedDict
 
+from schulze_voting import evaluate_schulze
+
 from django.shortcuts import render, reverse, redirect
 from django.views.generic.detail import DetailView
 from django.views.generic import ListView, UpdateView
@@ -613,12 +615,49 @@ def session_results_generalized_view(request, pk, show_votes):
             voters_map)
         schulze_instances[schulze_v_id] = instance
 
+    median_results = dict()
+    for median_id, gen_instance in median_instances.items():
+        median_results[median_id] = gen_instance.instance.median(votes_required=gen_instance.majority)
+
+    schulze_results = dict()
+    # also map to list of how many voters (weights) ranked an option before no
+    schulze_num_no = dict()
+    schulze_percent_no = dict()
+    for schulze_id, gen_instance in schulze_instances.items():
+        schulze_votes = gen_instance.instance
+        n = len(schulze.voting_description[schulze_id])
+        s_res = evaluate_schulze(schulze_votes, n)
+        schulze_results[schulze_id] = s_res
+        num, percent = __votes_before_no(s_res, gen_instance.weight_sum)
+        schulze_num_no[schulze_id] = num
+        schulze_percent_no[schulze_id] = percent
+
+    group_data = for_votes_list_template(merged)
+
     warnings = list(map(str, merged.warnings))
     context = {'show_votes': show_votes, 'voters': all_voters,
-        'collection': collection, 'warnings': warnings}
+        'collection': collection, 'warnings': warnings,
+        'median_results': median_results, 'schulze_results': schulze_results,
+        'groups': group_data, 'median_instances': median_instances,
+        'schulze_instances': schulze_instances,
+        'median_votings': median, 'schulze_votings': schulze,
+        'schulze_num_no': schulze_num_no,
+        'schulze_percent_no': schulze_percent_no}
 
     return render(request, 'votings/results/session_results.html', context)
 
+def __votes_before_no(schulze_res, weight_sum):
+    num = []
+    percent = []
+    for i in range(len(schulze_res.d)):
+        entry = schulze_res.d[i][-1]
+        num.append(entry)
+        if weight_sum:
+            percent.append((entry / weight_sum) * 100.0)
+        else:
+            percent.append(0.0)
+
+    return num, percent
 
 @transaction.atomic
 def session_results_view(request, pk):

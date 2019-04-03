@@ -98,4 +98,5 @@ def single_median_statistics(voting, votes, voters_map):
     median_votes.extend(additional_votes)
     res.instance = mv.MedianStatistics(median_votes, is_sorted=True)
     res.weight_sum = weight_sum
+    res.majority = compute_majority(voting.majority, weight_sum)
     return res

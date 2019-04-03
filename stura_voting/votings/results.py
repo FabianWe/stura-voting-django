@@ -446,9 +446,11 @@ class GenericVotingInstance(object):
     # fields: instance, MedianStatistics for median
     # or list of list of schulze_voting.SchulzeVote for schulze
     # votes: maps voter_id to an instance of median_voting.MedianVote or
+    # majority: required votes (int)
     # an instance of schulze_voting.SchulzeVote
     # weight_sum: sum of weights used
     def __init__(self):
         self.instance = None
         self.votes = dict()
-        self.weight_sum = -1
+        self.weight_sum = None
+        self.majority = None

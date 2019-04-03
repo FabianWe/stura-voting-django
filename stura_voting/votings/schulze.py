@@ -138,4 +138,5 @@ def single_schulze_instance(voting, votes, options, voters_map):
             res.votes[voter_id]= v
     res.instance = schulze_votes
     res.weight_sum = weight_sum
+    res.majority = compute_majority(voting.majority, weight_sum)
     return res

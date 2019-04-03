@@ -14,13 +14,10 @@
 
 from django import template
 
-from stura_voting_utils.utils import output_currency
-
 register = template.Library()
 
 @register.filter
-def hash(d, key):
-    # was empty list before because we used it in a very special place...
-    # we use it more often know and therefor use None as default.
-    # should work fine?
-    return d.get(key, None)
+def lindex(l, i):
+    if i < len(l):
+        return l[i]
+    return None
