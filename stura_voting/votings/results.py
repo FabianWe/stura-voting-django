@@ -441,3 +441,14 @@ def for_votes_list_template(voting_result):
                 assert False
         groups.append((group, group_list))
     return groups
+
+class GenericVotingInstance(object):
+    # fields: instance, MedianStatistics for median
+    # or list of list of schulze_voting.SchulzeVote for schulze
+    # votes: maps voter_id to an instance of median_voting.MedianVote or
+    # an instance of schulze_voting.SchulzeVote
+    # weight_sum: sum of weights used
+    def __init__(self):
+        self.instance = None
+        self.votes = dict()
+        self.weight_sum = -1

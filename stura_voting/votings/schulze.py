@@ -17,6 +17,8 @@ from itertools import groupby
 from .results import *
 from .models import *
 
+import schulze_voting as sv
+
 def schulze_for_evaluation(collection):
     # TODO check revisions or is this not required?
     all_votings = schulze_votings(collection=collection)
@@ -107,14 +109,33 @@ def schulze_for_evaluation(collection):
 def single_schulze_instance(voting, votes, options, voters_map):
     # TODO how to check if we have at least two options?
     # voting: SchulzeVoting instance, votes: map as computed in view
-    # options: list of options for instance
+    # options: list of options for instance (map)
     # voters_map: map voter_id to voter
+    res = GenericVotingInstance()
     schulze_votes = []
     weight_sum = 0
     absolute = voting.absolute_majority
     for voter_id, vote in votes.items():
+        weight = voters_map[voter_id].weight
         if vote is None:
             if absolute:
-                pass
+                # make a vote for last option (No)
+                weight_sum += weight
+                n = len(options)
+                assert n
+                ranking = [1] * (n - 1)
+                ranking.append(0)
+                v = sv.SchulzeVote(ranking, weight)
+                schulze_votes.append(v)
+                res.votes[voter_id] = v
+            else:
+                res.votes[voter_id] = None
         else:
-            pass
+            weight_sum += weight
+            ranking = [ option_vote.sorting_position for option_vote in vote ]
+            v = sv.SchulzeVote(ranking, weight)
+            schulze_votes.append(v)
+            res.votes[voter_id]= v
+    res.instance = schulze_votes
+    res.weight_sum = weight_sum
+    return res

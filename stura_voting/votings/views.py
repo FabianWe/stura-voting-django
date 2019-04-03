@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from decimal import Decimal
+from collections import OrderedDict
 
 from django.shortcuts import render, reverse, redirect
 from django.views.generic.detail import DetailView
@@ -31,8 +32,8 @@ from .models import *
 from .forms import *
 from .utils import *
 
-from .median import median_for_evaluation
-from .schulze import schulze_for_evaluation
+from .median import median_for_evaluation, single_median_statistics
+from .schulze import schulze_for_evaluation, single_schulze_instance
 
 # TODO which views should be atomic
 # also see select_for_update
@@ -596,6 +597,21 @@ def session_results_generalized_view(request, pk, show_votes):
     schulze.fill_missing_voters(all_voters)
 
     merged = CombinedVotingResult(median, schulze)
+
+    # create the results objects for evaluation, we store them in a map, we
+    # might use this in a template
+    median_instances = OrderedDict()
+    for median_v_id, median_v in median.votings.items():
+        instance = single_median_statistics(median_v, median.votes[median_v_id], voters_map)
+        median_instances[median_v_id] = instance
+    # same for schulze
+    schulze_instances = OrderedDict()
+    for schulze_v_id, schulze_v in schulze.votings.items():
+        instance = single_schulze_instance(schulze_v,
+            schulze.votes[schulze_v_id],
+            schulze.voting_description[schulze_v_id],
+            voters_map)
+        schulze_instances[schulze_v_id] = instance
 
     warnings = list(map(str, merged.warnings))
     context = {'show_votes': show_votes, 'voters': all_voters,

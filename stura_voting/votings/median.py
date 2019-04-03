@@ -64,6 +64,7 @@ def median_for_evaluation(collection):
 
 
 def single_median_statistics(voting, votes, voters_map):
+    res = GenericVotingInstance()
     # create list of MedianVote instances
     median_votes = []
     # compute sum of all weights
@@ -79,14 +80,22 @@ def single_median_statistics(voting, votes, voters_map):
             if absolute:
                 weight = voters_map[voter_id].weight
                 weight_sum += weight
-                additional_votes.append(mv.MedianVote(0, weight))
+                v = mv.MedianVote(0, weight)
+                additional_votes.append(v)
+                res.votes[voter_id] = v
+            else:
+                res.votes[voter_id] = None
         else:
             weight = vote.voter.weight
             weight_sum += weight
-            median_votes.append(mv.MedianVote(vote.value, weight))
+            v = mv.MedianVote(vote.value, weight)
+            median_votes.append(v)
+            res.votes[voter_id] = v
             if last_vote is not None:
                 assert last_vote.value >= vote.value
             last_vote = vote
     # append all missing
     median_votes.extend(additional_votes)
-    return mv.MedianStatistics(median_votes, is_sorted=True), weight_sum
+    res.instance = mv.MedianStatistics(median_votes, is_sorted=True)
+    res.weight_sum = weight_sum
+    return res
