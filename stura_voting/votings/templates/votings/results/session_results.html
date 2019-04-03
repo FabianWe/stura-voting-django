@@ -17,6 +17,7 @@ limitations under the License.
 {% endcomment %}
 
 {% load bootstrap4 %}
+{% load hash %}
 
 {% block content %}
     <h2>Abstimmungsergebnisse für {{ collection.name }}</h2>
@@ -39,10 +40,17 @@ limitations under the License.
       <h3>{{ group.name }}</h3>
       {% for v_type, v, votes in group_entries %}
         {% if v_type == "median" %}
-          {% include 'votings/results/median_result.html' %}
+          {% with v_id=v.id m_result=median_results|hash:v.id median_inst=median_instances|hash:v.id %}
+            {% include 'votings/results/median_result.html' %}
+          {% endwith %}
         {% else %}
         <!-- schulze voting case -->
-          {% include 'votings/results/schulze_result.html' %}
+          {% comment %}
+          Sorry for the ugly with line...
+          {% endcomment %}
+          {% with v_id=v.id s_result=schulze_results|hash:v.id schulze_inst=schulze_instances|hash:v.id options=schulze_votings.voting_description|hash:v.id num_no=schulze_num_no|hash:v.id percent_no=schulze_percent_no|hash:v.id %}
+            {% include 'votings/results/schulze_result.html' %}
+          {% endwith %}
         {% endif %}
       <!-- group entries -->
       {% endfor %}
