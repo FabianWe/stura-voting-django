@@ -59,7 +59,7 @@ limitations under the License.
           {% for group, group_list in groups %}
             {% for v_type, v, results in group_list %}
               {% with voter_result=results|hash:voter.id %}
-                {% if voter_result %}
+                {% if voter_result is not None %}
                     {% if v_type == "median" %}
                       <td>{{ voter_result.value|currency:v.currency }}</td>
                     {% else %}
