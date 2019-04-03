@@ -26,6 +26,7 @@ from django.http import HttpResponseBadRequest
 # otherwise some really ugly import stuff
 from . import models as voting_models
 from . import results
+from . fraction import *
 
 from stura_voting_utils import SchulzeVotingSkeleton, MedianVotingSkeleton
 
@@ -137,6 +138,20 @@ def get_next_session_name_stura():
     config = settings.VOTING_SESSIONS_CONFIG
     return get_next_session_name(config['weekday'])
 
+
+def compute_majority(majority, votes_sum):
+    # majority: either a fraction <= 1 or a model description for a fraction:
+    # FIFTY_MAJORITY or TWO_THIRDS_MAJORITY
+    if not isinstance(majority, Fraction):
+        if majority == voting_models.FIFTY_MAJORITY:
+            majority = Fraction(1, 2)
+        elif majority == voting_models.TWO_THIRDS_MAJORITY:
+            majority = Fraction(2, 3)
+        else:
+            raise ValueError('Invalid majority description %s' % str(majority))
+    required_fraction = majority * Fraction(votes_sum, 1)
+    votes_required, _ = required_fraction.split()
+    return votes_required
 
 def add_votings(parsed_collection, collection_model):
     for group_num, group in enumerate(parsed_collection.groups):

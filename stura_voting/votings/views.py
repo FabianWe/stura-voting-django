@@ -577,6 +577,43 @@ def session_votes_list(request, pk):
 
     return render(request, 'votings/votes/votes_list.html', context)
 
+def session_results_generalized_view(request, pk, show_votes):
+    collection = get_object_or_404(VotingCollection, pk=pk)
+    all_voters = (Voter.objects
+                  .filter(revision=collection.revision)
+                  .select_related('revision')
+                  .order_by('name'))
+    # required for results methods
+    voters_map = dict()
+    for voter in all_voters:
+        voters_map[voter.id] = voter
+
+    # get all votings + results
+    median = median_for_evaluation(collection)
+    # fill missing votes with None
+    median.fill_missing_voters(all_voters)
+    schulze = schulze_for_evaluation(collection)
+    schulze.fill_missing_voters(all_voters)
+
+    merged = CombinedVotingResult(median, schulze)
+
+    warnings = list(map(str, merged.warnings))
+    context = {'show_votes': show_votes, 'voters': all_voters,
+        'collection': collection, 'warnings': warnings}
+
+    return render(request, 'votings/results/session_results.html', context)
+
+
+@transaction.atomic
+def session_results_view(request, pk):
+    return session_results_generalized_view(request, pk, False)
+
+
+@transaction.atomic
+def session_results_votes_view(request, pk):
+    return session_results_generalized_view(request, pk, True)
+
+
 class SessionPrintView(DetailView):
     model = VotingCollection
 

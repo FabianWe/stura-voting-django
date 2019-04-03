@@ -17,8 +17,11 @@ from itertools import groupby
 
 from .results import *
 from .models import *
+from .utils import compute_majority
 
 from django.utils.translation import gettext
+
+import median_voting as mv
 
 def median_for_evaluation(collection):
     # TODO check revisions or is this not required?
@@ -27,7 +30,7 @@ def median_for_evaluation(collection):
     votes_qs = (MedianVote.objects
                 .filter(voting__group__collection=collection)
                 .select_related('voting', 'voter')
-                .order_by('voting__id', 'value'))
+                .order_by('voting__id', '-value'))
     # TODO did we somewhere use order_by(voting) (or something like that)
     # instead of voting__id?
 
@@ -58,3 +61,32 @@ def median_for_evaluation(collection):
                 voter_mapping[vote.voter.id] = vote
         all_votings.votes[voting.id] = voter_mapping
     return all_votings
+
+
+def single_median_statistics(voting, votes, voters_map):
+    # create list of MedianVote instances
+    median_votes = []
+    # compute sum of all weights
+    weight_sum = 0
+    # appended s.t. we can keep the order
+    # should not be really necessary because all None votes are at the end though
+    additional_votes = []
+    absolute = voting.absolute_majority
+    # only for debuging to ensure the queryset is sorted
+    last_vote = None
+    for voter_id, vote in votes.items():
+        if vote is None:
+            if absolute:
+                weight = voters_map[voter_id].weight
+                weight_sum += weight
+                additional_votes.append(mv.MedianVote(0, weight))
+        else:
+            weight = vote.voter.weight
+            weight_sum += weight
+            median_votes.append(mv.MedianVote(vote.value, weight))
+            if last_vote is not None:
+                assert last_vote.value >= vote.value
+            last_vote = vote
+    # append all missing
+    median_votes.extend(additional_votes)
+    return mv.MedianStatistics(median_votes, is_sorted=True), weight_sum

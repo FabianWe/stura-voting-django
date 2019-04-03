@@ -86,3 +86,19 @@ def schulze_for_evaluation(collection):
     for remove in votings_to_remove:
         del all_votings.votes[remove]
     return all_votings
+
+
+def single_schulze_instance(voting, votes, options, voters_map):
+    # TODO how to check if we have at least two options?
+    # voting: SchulzeVoting instance, votes: map as computed in view
+    # options: list of options for instance
+    # voters_map: map voter_id to voter
+    schulze_votes = []
+    weight_sum = 0
+    absolute = voting.absolute_majority
+    for voter_id, vote in votes.items():
+        if vote is None:
+            if absolute:
+                pass
+        else:
+            pass
