@@ -82,6 +82,7 @@ limitations under the License.
       responsive: true,
       paging: false,
       ordering: false,
+      {% comment %}
       // not supported write now, looks not nice... use browser pring
       // dom: 'Bfrtip',
       // buttons: [
@@ -93,6 +94,7 @@ limitations under the License.
       //           title: 'Abgegebene Stimmen ' + session_name,
       //       }
       //   ],
+      {% endcomment %}
     });
     new $.fn.dataTable.FixedHeader( table );
   } );
