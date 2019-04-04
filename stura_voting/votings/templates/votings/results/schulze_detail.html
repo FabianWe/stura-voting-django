@@ -1,0 +1,63 @@
+{% comment %}
+Copyright 2018 - 2019 Fabian Wenzelmann
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+{% endcomment %}
+
+{% load hash %}
+
+<h5>Abstimmungsübersicht</h5>
+Optionen:
+<ol>
+  {% for option in options %}
+    <li>{{ option.option }}</li>
+  {% endfor %}
+</ol>
+<table class="table">
+  <thead>
+    <tr>
+      <th>Gruppe (Gewicht)</th>
+      <th>Abgestimmt</th>
+      <th>Korrigierter Betrag (z.B. absolute Mehrheit)</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% with votes=schulze_votings.votes|hash:v_id actual_voting=schulze_instances|hash:v_id %}
+      {% for voter in voters %}
+        {% with vote=votes|hash:voter.id actual_vote=actual_voting.votes|hash:voter.id %}
+          <tr>
+            <td>{{ voter.name }} ({{ voter.weight }})</td>
+            <td>
+              {% if vote is None %}
+                /
+              {% else %}
+                {% for option_vote in vote %}
+                  {{ option_vote.sorting_position }}
+                {% endfor %}
+              {% endif %}
+            </td>
+            <td>
+              {% if actual_vote is None %}
+                nicht einbezogen
+              {% else %}
+                {% for ranking_pos in actual_vote.ranking %}
+                  {{ ranking_pos }}
+                {% endfor %}
+              {% endif %}
+            </td>
+          </tr>
+        {% endwith %}
+      {% endfor %}
+    {% endwith %}
+  </tbody>
+</table>

@@ -634,7 +634,6 @@ def session_results_generalized_view(request, pk, show_votes):
 
     group_data = for_votes_list_template(merged)
 
-
     warnings = list(map(str, merged.warnings))
     context = {'show_votes': show_votes, 'voters': all_voters,
         'collection': collection, 'warnings': warnings,

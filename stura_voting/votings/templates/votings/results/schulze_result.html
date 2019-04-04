@@ -26,11 +26,7 @@ limitations under the License.
     Nein eingefügt.
   </p>
 {% endif %}
-<ol>
-  {% for option in options %}
-    <li>{{ option.option }}</li>
-  {% endfor %}
-</ol>
+
 <p>
   Bei einer
   {% if v.majority == "50" %}
@@ -75,3 +71,7 @@ limitations under the License.
     {% endfor %}
   </tbody>
 </table>
+
+{% if show_votes %}
+  {% include 'votings/results/schulze_detail.html' %}
+{% endif %}

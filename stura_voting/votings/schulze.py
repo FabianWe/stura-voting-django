@@ -123,8 +123,8 @@ def single_schulze_instance(voting, votes, options, voters_map):
                 weight_sum += weight
                 n = len(options)
                 assert n
-                ranking = [1] * (n - 1)
-                ranking.append(0)
+                ranking = [2] * (n - 1)
+                ranking.append(1)
                 v = sv.SchulzeVote(ranking, weight)
                 schulze_votes.append(v)
                 res.votes[voter_id] = v
