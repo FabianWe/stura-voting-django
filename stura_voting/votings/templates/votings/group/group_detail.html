@@ -23,7 +23,8 @@ limitations under the License.
 
     <p>
       <a href="{% url 'session_detail' group.collection.id %}" class="btn btn-primary" role="button"><i class="fas fa-poll-h fa-lg"></i> Zurück zur Sitzung</a>
-      <a href="{% url 'group_median_create' group.id %}" class="btn btn-success" role="button"><i class="fas fa-euro-sign fa-lg"></i> Median Abstimmung zufügen</a>
+      <a href="{% url 'group_median_create' group.id %}" class="btn btn-success" role="button"><i class="fas fa-euro-sign fa-lg"></i> Median-Abstimmung zufügen</a>
+      <a href="{% url 'group_schulze_create' group.id %}" class="btn btn-success" role="button"><i class="fas fa-stream fa-lg"></i> Schulze-Abstimmung zufügen</a>
     </p>
     <table class="table">
       <thead>

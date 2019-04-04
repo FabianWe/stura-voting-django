@@ -39,6 +39,7 @@ from .utils import *
 from .median import median_for_evaluation, single_median_statistics
 from .schulze import schulze_for_evaluation, single_schulze_instance
 
+
 # TODO which views should be atomic
 # also see select_for_update
 
@@ -251,7 +252,7 @@ def __handle_enter_median(result, v_id, val, voter):
         return
     voting = result.votings[v_id]
     # if val is None (no entry and result exists: delete it)
-    if val is None:
+    if not val:
         # delete if exists, otherwise keep as it is
         if v_id in result.votes:
             # just delete the single entry
@@ -366,8 +367,9 @@ def new_revision(request):
         form = RevisionForm(request.POST)
         if form.is_valid():
             rev = form.save()
-            for voter in form.cleaned_data['voters']:
-                Voter.objects.create(revision=rev, name=voter.name, weight=voter.weight)
+            if form.cleaned_data['voters']:
+                for voter in form.cleaned_data['voters']:
+                    Voter.objects.create(revision=rev, name=voter.name, weight=voter.weight)
             return redirect('new_revision_success', pk=rev.id)
     return render(request, 'votings/revision/new_revision.html', {'form': form})
 
@@ -684,6 +686,25 @@ class SessionPrintView(DetailView):
         context['option_map'] = option_map
         return context
 
+
+def _get_max_voting_num(group):
+    median_votings = results.median_votings(group=group)
+    schulze_votings = results.schulze_votings(group=group)
+    # find max voting id
+    # votings are sorted according to voting_num (we don't really need that)
+    # so we can just look at the last entries
+    # but: they're stored in a dictionary
+    # thus we have to iterate anyway...
+    max_voting_num = None
+    if (not median_votings.votings) and (not schulze_votings.votings):
+        max_voting_num = -1
+    else:
+        max_voting_num = max(map(lambda v: v.voting_num,
+                             chain(median_votings.votings.values(),
+                                  schulze_votings.votings.values())))
+    return max_voting_num
+
+
 class MedianVotingCreateView(CreateView):
     model = MedianVoting
     fields = ['name', 'value', 'majority', 'absolute_majority', 'currency']
@@ -709,23 +730,24 @@ class MedianVotingCreateView(CreateView):
         return reverse('group_update', args=[self.group.id])
 
 
-def _get_max_voting_num(group):
-    median_votings = results.median_votings(group=group)
-    schulze_votings = results.schulze_votings(group=group)
-    # find max voting id
-    # votings are sorted according to voting_num (we don't really need that)
-    # so we can just look at the last entries
-    # but: they're stored in a dictionary
-    # thus we have to iterate anyway...
-    max_voting_num = None
-    if (not median_votings.votings) and (not schulze_votings.votings):
-        max_voting_num = -1
+def create_schulze_view(request, pk):
+    if request.method == 'GET':
+        form = SchulzeVotingCreateForm()
     else:
-        max_voting_num = max(map(lambda v: v.voting_num,
-                             chain(median_votings.votings.values(),
-                                  schulze_votings.votings.values())))
-    return max_voting_num
-
-
-class SchulzeVotingCreateView(CreateView):
-    pass
+        form = SchulzeVotingCreateForm(request.POST)
+        if form.is_valid():
+            group = get_object_or_404(VotingGroup, pk=pk)
+            voting = form.save(commit=False)
+            voting.group = group
+            max_voting_num = _get_max_voting_num(group)
+            next_voting_num = max_voting_num + 1
+            voting.voting_num = next_voting_num
+            voting.save()
+            options = form.cleaned_data['options']
+            for option_num, option in enumerate(options):
+                SchulzeOption.objects.create(
+                    option=option,
+                    option_num=option_num,
+                    voting=voting,
+                )
+    return render(request, 'votings/voting/schulze_create.html', {'form': form})

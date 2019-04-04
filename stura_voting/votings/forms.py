@@ -20,6 +20,7 @@ from .results import *
 
 from stura_voting_utils.utils import output_currency
 
+
 class PeriodForm(forms.ModelForm):
 
     revision = VotersRevisionField(required=False)
@@ -157,6 +158,12 @@ class UpdateGroupForm(forms.Form):
         if current_order is not None:
             self.fields['order'].initial = ' '.join(map(str, current_order))
 
+class SchulzeVotingCreateForm(forms.ModelForm):
 
+    options = SchulzeOptionsField(required=True)
+
+    class Meta:
+        model = SchulzeVoting
+        fields = ('name', 'majority', 'absolute_majority')
 
 # https://jacobian.org/writing/dynamic-form-generation/

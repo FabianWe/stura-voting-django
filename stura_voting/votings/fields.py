@@ -13,10 +13,12 @@
 # limitations under the License.
 
 from django import forms
-from stura_voting_utils.parser import parse_voters, parse_voting_collection, ParseException, parse_currency
+from stura_voting_utils.parser import parse_voters, parse_voting_collection, ParseException, parse_currency, _schulze_option_rx
+from stura_voting_utils import SchulzeVotingSkeleton
 
 import re
 
+# TODO check maxlength before insertion?
 class VotersRevisionField(forms.CharField):
 
     widget = forms.Textarea
@@ -30,6 +32,29 @@ class VotersRevisionField(forms.CharField):
             raise forms.ValidationError("Can't parse voters from field: %s" % str(e))
 
 
+class SchulzeOptionsField(forms.CharField):
+
+    widget = forms.Textarea
+
+    def clean(self, value):
+        cleaned = super().clean(value)
+        # kind of hacky, but ok
+        options = []
+        for line in cleaned.split('\n'):
+            line = line.strip()
+            if not line:
+                continue
+            match = _schulze_option_rx.match(line)
+            if not match:
+                raise forms.ValidationError("Can't parse option line '%s'" % line)
+            o = match.group('option')
+            o = o.strip()
+            options.append(o)
+        if len(options) < 2:
+            raise forms.ValidationError('Not enough options for voting')
+        return options
+
+
 class VotingCollectionField(forms.CharField):
 
     widget = forms.Textarea
@@ -37,7 +62,14 @@ class VotingCollectionField(forms.CharField):
     def clean(self, value):
         cleaned = super().clean(value)
         try:
-            return parse_voting_collection(cleaned.split('\n'))
+            collection = parse_voting_collection(cleaned.split('\n'))
+            # check if each schulze voting has at least two options
+            for group in collection.groups:
+                for skel in group.get_votings():
+                    if isinstance(skel, SchulzeVotingSkeleton):
+                        if len(skel.options) < 2:
+                            raise forms.ValidationError('Not enough options for schulze voting')
+            return collection
         except ParseException as e:
             raise forms.ValidationError("Can't parse voting collection from field: %s" % str(e))
 
@@ -67,7 +99,7 @@ class CurrencyField(forms.CharField):
         return val, currency
 
 
-_schulze_option_rx = re.compile(r'[ /;,]')
+_schulze_vote_rx = re.compile(r'[ /;,]')
 
 
 class SchulzeVoteField(forms.CharField):
@@ -83,7 +115,7 @@ class SchulzeVoteField(forms.CharField):
         cleaned = cleaned.strip()
         if not cleaned:
             return None
-        split = _schulze_option_rx.split(cleaned)
+        split = _schulze_vote_rx.split(cleaned)
         ranking = []
         for s in split:
             s = s.strip()
