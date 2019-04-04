@@ -21,14 +21,9 @@ limitations under the License.
 {% block content %}
     <h2>Abstimmungsgruppe {{ group.name }} für {{ group.collection.name }}</h2>
 
-    {% comment %}
-    <p>
-        <a href="{% url 'revision_update' object.id %}" class="btn btn-primary" role="button"><i class="fas fa-edit fa-lg"></i> Bearbeiten</a>
-        <a href="{% url 'revision_delete' object.id %}" class="btn btn-danger" role="button"><i class="fas fa-trash fa-lg"></i> Löschen</a>
-    </p>
-    {% endcomment %}
     <p>
       <a href="{% url 'session_detail' group.collection.id %}" class="btn btn-primary" role="button"><i class="fas fa-poll-h fa-lg"></i> Zurück zur Sitzung</a>
+      <a href="{% url 'group_median_create' group.id %}" class="btn btn-success" role="button"><i class="fas fa-euro-sign fa-lg"></i> Median Abstimmung zufügen</a>
     </p>
     <table class="table">
       <thead>

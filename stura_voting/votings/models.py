@@ -88,7 +88,7 @@ class MedianVoting(models.Model):
     value = models.PositiveIntegerField(help_text='Value for this voting (for example 2000 (cent). Always meassured in cents, pence etc.)')
     majority = models.CharField(max_length=10, help_text='Required majority for voting', choices=MAJORiTY_CHOICES, default=FIFTY_MAJORITY)
     absolute_majority = models.BooleanField(help_text='Set to true if all voters should be considerd, even those who did not cast a vote. Thes voters will be treated as if they voted for 0€', default=False)
-    currency = models.CharField(max_length=10, blank=True, help_text='Currency of the vote, for example "$" or "€". For example value=100 and currency=€ means 1,00€.')
+    currency = models.CharField(max_length=10, blank=True, help_text='Currency of the vote, for example "$" or "€". For example value=100 and currency=€ means 1,00€.', default='€')
     group = models.ForeignKey('VotingGroup', on_delete=models.CASCADE, help_text='Group this voting belongs to')
     voting_num = models.PositiveIntegerField(help_text='Abstimmungsnummer innerhalb der Gruppe')
 

@@ -14,17 +14,19 @@
 
 from decimal import Decimal
 from collections import OrderedDict
+from itertools import chain
 
 from schulze_voting import evaluate_schulze
 
 from django.shortcuts import render, reverse, redirect
 from django.views.generic.detail import DetailView
-from django.views.generic import ListView, UpdateView
+from django.views.generic import ListView, UpdateView, CreateView
 from django.views.generic.edit import DeleteView
 from django.http import Http404
 from django.db import transaction
 from django.utils.translation import gettext
 from django.urls import reverse_lazy
+from django.utils.decorators import method_decorator
 
 from .results import *
 
@@ -681,3 +683,49 @@ class SessionPrintView(DetailView):
         context['groups'] = groups
         context['option_map'] = option_map
         return context
+
+class MedianVotingCreateView(CreateView):
+    model = MedianVoting
+    fields = ['name', 'value', 'majority', 'absolute_majority', 'currency']
+    template_name = 'votings/voting/median_create.html'
+
+    @method_decorator(transaction.atomic)
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
+
+    def form_valid(self, form):
+        instance = form.instance
+        # get group
+        pk = self.kwargs['pk']
+        group = get_object_or_404(VotingGroup, pk=pk)
+        self.group = group
+        max_voting_num = _get_max_voting_num(group)
+        next_voting_num = max_voting_num + 1
+        instance.group = group
+        instance.voting_num = next_voting_num
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse('group_update', args=[self.group.id])
+
+
+def _get_max_voting_num(group):
+    median_votings = results.median_votings(group=group)
+    schulze_votings = results.schulze_votings(group=group)
+    # find max voting id
+    # votings are sorted according to voting_num (we don't really need that)
+    # so we can just look at the last entries
+    # but: they're stored in a dictionary
+    # thus we have to iterate anyway...
+    max_voting_num = None
+    if (not median_votings.votings) and (not schulze_votings.votings):
+        max_voting_num = -1
+    else:
+        max_voting_num = max(map(lambda v: v.voting_num,
+                             chain(median_votings.votings.values(),
+                                  schulze_votings.votings.values())))
+    return max_voting_num
+
+
+class SchulzeVotingCreateView(CreateView):
+    pass

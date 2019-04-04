@@ -45,6 +45,7 @@ urlpatterns = [
     path('session/<int:pk>/voters/', views.enter_voterlist, name='enter_voterslist'),
     path('session/<int:coll>/voters/<int:v>/', views.enter_single_voter_view, name='enter_single_voter'),
     path('group/<int:pk>/edit/', views.edit_group_view, name='group_update'),
+    path('group/<int:pk>/median/create', views.MedianVotingCreateView.as_view(), name='group_median_create'),
     path('median/<int:pk>/delete/', views.MedianVotingDeleteView.as_view(), name='median_delete'),
     path('median/<int:pk>/edit/', views.MedianUpdateView.as_view(), name='median_update'),
     path('schulze/<int:pk>/delete/', views.SchulzeVotingDeleteView.as_view(), name='schulze_delete'),
