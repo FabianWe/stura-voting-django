@@ -19,7 +19,8 @@ limitations under the License.
 {% load bootstrap4 %}
 
 {% block content %}
-    <h2>Abstimmungsgruppe {{ group.name }} für {{ group.collection.name }}</h2>
+    <h2>Abstimmungsgruppe {{ group.name }} für
+        <a href="{% url 'session_detail' group.collection.id %}">{{ group.collection.name }}</a></h2>
 
     <p>
       <a href="{% url 'session_detail' group.collection.id %}" class="btn btn-primary" role="button"><i class="fas fa-poll-h fa-lg"></i> Zurück zur Sitzung</a>

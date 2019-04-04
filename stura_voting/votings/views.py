@@ -101,7 +101,7 @@ class VotingDeleteView(DeleteView):
     template_name = 'votings/voting/voting_confirm_delete.html'
 
     def get_success_url(self):
-        return reverse('session_detail', args=[self.object.group.collection.id])
+        return reverse('group_update', args=[self.object.group.id])
 
 
 class MedianVotingDeleteView(VotingDeleteView):
