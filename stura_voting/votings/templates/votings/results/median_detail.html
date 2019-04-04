@@ -14,4 +14,42 @@ See the License for the specific language governing permissions and
 limitations under the License.
 {% endcomment %}
 
+{% load hash %}
+{% load currency %}
+
 <h5>Abstimmungsübersicht</h5>
+
+<table class="table">
+  <thead>
+    <tr>
+      <th>Gruppe (Gewicht)</th>
+      <th>Abgestimmt</th>
+      <th>Korrigierter Betrag (z.B. absolute Mehrheit)</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% with votes=median_votings.votes|hash:v_id actual_voting=median_instances|hash:v_id %}
+      {% for voter in voters %}
+        {% with vote=votes|hash:voter.id actual_vote=actual_voting.votes|hash:voter.id %}
+          <tr>
+            <td>{{ voter.name }} ({{ voter.weight }})</td>
+            <td>
+              {% if vote is None %}
+                /
+              {% else %}
+                {{ vote.value|currency:v.currency }}
+              {% endif %}
+            </td>
+            <td>
+              {% if actual_vote is None %}
+                nicht einbezogen
+              {% else %}
+                {{ actual_vote.value|currency:v.currency }}
+              {% endif %}
+            </td>
+          </tr>
+        {% endwith %}
+      {% endfor %}
+    {% endwith %}
+  </tbody>
+</table>
