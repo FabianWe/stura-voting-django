@@ -34,8 +34,8 @@ from django.urls import path, include
 from votings.views import profile
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
     path('votings/', include('votings.urls'), name='index'),
     path('accounts/', include('django.contrib.auth.urls')),
     path('accounts/profile/', profile, name='votings_profile'),
+    path('admin/', admin.site.urls),
 ]
