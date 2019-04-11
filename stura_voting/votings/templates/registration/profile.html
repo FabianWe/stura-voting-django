@@ -1,0 +1,68 @@
+{% extends 'votings/base.html' %}
+
+{% comment %}
+Copyright 2018 - 2019 Fabian Wenzelmann
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+{% endcomment %}
+
+{% load bootstrap4 %}
+
+{% block content %}
+<h2>Profil</h2>
+{% if user.is_authenticated %}
+  <p>
+  Hallo
+  {% if user.first_name %}
+    {{ user.first_name }}
+  {% else %}
+    {{ user.username }}
+  {% endif %}
+  </p>
+  <table class="table">
+    <tr>
+      <td>Nutzer*innenname</td>
+      <td>{{ user.username }}</td>
+    </tr>
+    <tr>
+      <td>Vorname</td>
+      <td>{{ user.first_name }}</td>
+    </tr>
+    <tr>
+      <td>Nachname</td>
+      <td>{{ user.last_name }}</td>
+    </tr>
+    <tr>
+      <td>E-Mail</td>
+      <td>{{ user.email }}</td>
+    </tr>
+  </table>
+
+  {% if user.is_superuser %}
+    <p style="color:green">
+      <i class="fas fa-crown fa-2x"></i> Admin
+    </p>
+  {% else %}
+    <p style="color:red">
+      <i class="fas fa-frown fa-2x"></i> Kein Admin
+    </p>
+  {% endif %}
+{% endif %}
+
+<p>
+  <a href="{% url 'password_change' %}" class="btn btn-primary" role="button">
+    <i class="fas fa-key fa-lg"></i> Passwort ändern
+  </a>
+</p>
+
+{% endblock %}

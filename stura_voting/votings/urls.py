@@ -12,14 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from django.urls import path, include
+from django.urls import path
 
 from . import views
 
 urlpatterns = [
     # TODO singular / plural?
     path('', views.index, name='index'),
-    path('accounts/', include('django.contrib.auth.urls')),
     path('copyright/', views.copyright_view, name='copyright'),
     path('period/new', views.new_period, name='new_period'),
     path('revision/new', views.new_revision, name='new_revision'),

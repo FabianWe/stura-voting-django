@@ -27,6 +27,7 @@ from django.db.models import Max
 from django.utils.translation import gettext
 from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
+from django.contrib.auth.decorators import login_required
 
 from .results import *
 
@@ -48,6 +49,10 @@ def index(request):
 
 def copyright_view(request):
     return render(request, 'votings/copyright.html')
+
+@login_required
+def profile(request):
+    return render(request, 'registration/profile.html')
 
 
 def archive_index(request):
