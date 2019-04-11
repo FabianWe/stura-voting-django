@@ -154,3 +154,8 @@ BOOTSTRAP4 = {
     # so this is commented out, seems to work without it though
     #'javascript_in_head': True,
 }
+
+try:
+    from .local_settings import *
+except ImportError:
+    pass

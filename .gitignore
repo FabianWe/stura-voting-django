@@ -1,6 +1,9 @@
 # virtual env
 django-env
 
+# local settings
+stura_voting/stura_voting/local_settings.py
+
 # IDE
 .idea
 
