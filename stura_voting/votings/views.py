@@ -14,7 +14,6 @@
 
 from decimal import Decimal
 from collections import OrderedDict
-from itertools import chain
 
 from schulze_voting import evaluate_schulze
 
@@ -24,6 +23,7 @@ from django.views.generic import ListView, UpdateView, CreateView
 from django.views.generic.edit import DeleteView
 from django.http import Http404
 from django.db import transaction
+from django.db.models import Max
 from django.utils.translation import gettext
 from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
@@ -183,7 +183,7 @@ class PeriodDetailView(DetailView):
 
 class PeriodUpdateView(UpdateView):
     model = Period
-    fields = ('start', 'end')
+    fields = ('start', 'end','name')
     template_name = 'votings/period/update_period.html'
 
     def get_success_url(self):
@@ -688,21 +688,21 @@ class SessionPrintView(DetailView):
 
 
 def _get_max_voting_num(group):
-    median_votings = results.median_votings(group=group)
-    schulze_votings = results.schulze_votings(group=group)
-    # find max voting id
-    # votings are sorted according to voting_num (we don't really need that)
-    # so we can just look at the last entries
-    # but: they're stored in a dictionary
-    # thus we have to iterate anyway...
-    max_voting_num = None
-    if (not median_votings.votings) and (not schulze_votings.votings):
-        max_voting_num = -1
-    else:
-        max_voting_num = max(map(lambda v: v.voting_num,
-                             chain(median_votings.votings.values(),
-                                  schulze_votings.votings.values())))
-    return max_voting_num
+
+    max_median = (MedianVoting.objects.filter(group=group)
+                 .aggregate(Max('voting_num')))
+    # get actual value
+    max_median = max_median['voting_num__max']
+    res = -1
+    if max_median is not None:
+        res = max_median
+    max_schulze = (SchulzeVoting.objects.filter(group=group)
+                  .aggregate(Max('voting_num')))
+    # again the actual value
+    max_schulze = max_schulze['voting_num__max']
+    if max_schulze is not None:
+        res = max(res, max_schulze)
+    return res
 
 
 class MedianVotingCreateView(CreateView):
