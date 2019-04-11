@@ -38,6 +38,25 @@ limitations under the License.
       </li>
     </ul>
     <ul class="navbar-nav">
+      <!-- User stuff  -->
+      {% if user.is_authenticated %}
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="userdrop" data-toggle="dropdown">
+            <i class="fas fa-user fa-lg"></i> Account
+          </a>
+          <div class="dropdown-menu">
+            <a class="dropdown-item" href="{% url 'logout' %}">
+              <i class="fas fa-sign-out-alt"></i> Logout
+            </a>
+          </div>
+        </li>
+      {% else %}
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'login' %}">
+            <i class="fas fa-sign-in-alt fa-lg"></i> Login
+          </a>
+        </li>
+      {% endif %}
       <li class="nav-item">
         <a class="nav-link" href="{% url 'copyright' %}"><i class="far fa-copyright fa-lg"></i> Copyright</a>
       </li>
