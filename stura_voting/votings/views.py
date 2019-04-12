@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# TODO check super calls with multi inheritance (PermissionRequiredMixin)
+
 from decimal import Decimal
 from collections import OrderedDict
 
@@ -209,6 +211,7 @@ class PeriodDetailSuccess(PermissionRequiredMixin, PeriodDetailView):
         return context
 
 
+@permission_required('votings.enter_collection_results')
 def enter_voterlist(request, pk):
     collection = get_object_or_404(VotingCollection, pk=pk)
     with_vote_id = get_voters_with_vote(collection)
@@ -225,6 +228,7 @@ def enter_voterlist(request, pk):
 
 
 @transaction.atomic
+@permission_required('votings.enter_collection_results')
 def enter_single_voter_view(request, coll, v):
     collection = get_object_or_404(VotingCollection, pk=coll)
     voter = get_object_or_404(Voter, pk=v)
@@ -531,7 +535,10 @@ class SessionsList(ListView):
         return res.order_by('-time')
 
 
-class SessionUpdate(UpdateView):
+class SessionUpdate(PermissionRequiredMixin, UpdateView):
+    # permissions
+    permission_required = 'votings.change_votingcollection'
+
     model = VotingCollection
     fields = ('name', 'time')
     template_name = 'votings/session/update_session.html'
@@ -554,7 +561,10 @@ class SessionDetailView(DetailView):
         return context
 
 
-class SessionDetailSuccess(SessionDetailView):
+class SessionDetailSuccess(PermissionRequiredMixin, SessionDetailView):
+    # permissions
+    permission_required = 'votings.add_votingcollection'
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['success'] = True
@@ -562,6 +572,7 @@ class SessionDetailSuccess(SessionDetailView):
 
 
 @transaction.atomic
+@permission_required('votings.add_votingcollection')
 def new_session(request):
     if request.method == 'GET':
         form = SessionForm()
@@ -577,11 +588,15 @@ def new_session(request):
     return render(request, 'votings/session/new_session.html', {'form': form})
 
 
+@permission_required('votings.delete_votingcollection')
 def success_session_delete(request):
     return render(request, 'votings/session/success_session_delete.html')
 
 
-class SessionDelete(DeleteView):
+class SessionDelete(PermissionRequiredMixin, DeleteView):
+    # permissions
+    permission_required = 'votings.delete_votingcollection'
+
     model = VotingCollection
     success_url = reverse_lazy('session_delete_success')
     template_name = 'votings/session/session_confirm_delete.html'
@@ -698,6 +713,7 @@ def session_results_votes_view(request, pk):
 
 
 class SessionPrintView(DetailView):
+
     model = VotingCollection
 
     context_object_name = 'voting_session'

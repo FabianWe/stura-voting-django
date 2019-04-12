@@ -45,8 +45,14 @@ limitations under the License.
     {% endif %}
 
     <p>
-      <a href="{% url 'session_print' object.id %}" target="_blank" class="btn btn-primary" role="button"><i class="fas fa-print fa-lg"></i> Druckansicht</a>
-      <a href="{% url 'enter_voterslist' object.id %}" class="btn btn-primary" role="button"><i class="fas fa-person-booth fa-lg"></i> Abstimmungen Eintragen</a>
+      <a href="{% url 'session_print' object.id %}" target="_blank" class="btn btn-primary" role="button">
+        <i class="fas fa-print fa-lg"></i> Druckansicht
+      </a>
+      {% if perms.votings.enter_collection_results %}
+        <a href="{% url 'enter_voterslist' object.id %}" class="btn btn-primary" role="button">
+          <i class="fas fa-person-booth fa-lg"></i> Abstimmungen Eintragen
+        </a>
+      {% endif %}
       <a href="{% url 'votes_list' object.id %}" target="_blank" class="btn btn-primary" role="button"><i class="fas fa-table fa-lg"></i> Abstimmungsliste</a>
     </p>
     <p>
@@ -54,8 +60,16 @@ limitations under the License.
       <a href="{% url 'session_results_detailed' object.id %}" title="Auswertungsergebnisse und Abstimmungsübersicht anzeigen" class="btn btn-primary" role="button"><i class="fas fa-list-ol fa-lg"></i> Detaillierte Auswertung</a>
     </p>
     <p>
-      <a href="{% url 'session_update' object.id %}" class="btn btn-primary" role="button"><i class="fas fa-edit fa-lg"></i> Bearbeiten</a>
-      <a href="{% url 'session_delete' object.id %}" class="btn btn-danger" role="button"><i class="fas fa-trash fa-lg"></i> Löschen</a>
+      {% if perms.votings.change_votingcollection %}
+        <a href="{% url 'session_update' object.id %}" class="btn btn-primary" role="button">
+          <i class="fas fa-edit fa-lg"></i> Bearbeiten
+        </a>
+      {% endif %}
+      {% if perms.votings.delete_votingcollection %}
+        <a href="{% url 'session_delete' object.id %}" class="btn btn-danger" role="button">
+          <i class="fas fa-trash fa-lg"></i> Löschen
+        </a>
+      {% endif %}
     </p>
     Sitzung vom {{ object.time }} in der Abstimmungsperiode
     <a href="{% url 'period_detail' object.revision.period.id %}">{{ object.revision.period.name }}</a>
@@ -75,10 +89,10 @@ limitations under the License.
                 {% endwith %}
                 </p>
                 {% else %}
-                <p>Finanzantrag
-                <a href="{% url 'median_update' voting.id %}">{{ voting.name }}</a>
-                über {{ voting.value|currency:voting.currency }}
-              </p>
+                  <p>Finanzantrag
+                  <a href="{% url 'median_update' voting.id %}">{{ voting.name }}</a>
+                  über {{ voting.value|currency:voting.currency }}
+                  </p>
             {% endif %}
         {% endfor %}
     {% endfor %}

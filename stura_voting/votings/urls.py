@@ -38,11 +38,12 @@ urlpatterns = [
     path('session/new', views.new_session, name='new_session'),
     path('session/<int:pk>/edit/', views.SessionUpdate.as_view(), name='session_update'),
     path('session/<int:pk>/', views.SessionDetailView.as_view(), name='session_detail'),
-    path('session/<int:pk>/success', views.SessionDetailSuccess.as_view(), name='new_session_success'),
+    path('session/<int:pk>/success/', views.SessionDetailSuccess.as_view(), name='new_session_success'),
     path('session/delete/success/', views.success_session_delete, name='session_delete_success'),
     path('session/<int:pk>/delete/', views.SessionDelete.as_view(), name='session_delete'),
     path('session/<int:pk>/print/', views.SessionPrintView.as_view(), name='session_print'),
     path('session/<int:pk>/voters/', views.enter_voterlist, name='enter_voterslist'),
+    # in the enter_voterslist view links to enter_single_voter are not hidden, should be fine
     path('session/<int:coll>/voters/<int:v>/', views.enter_single_voter_view, name='enter_single_voter'),
     path('group/<int:pk>/edit/', views.edit_group_view, name='group_update'),
     path('group/<int:pk>/median/create', views.MedianVotingCreateView.as_view(), name='group_median_create'),
@@ -51,7 +52,8 @@ urlpatterns = [
     path('median/<int:pk>/edit/', views.MedianUpdateView.as_view(), name='median_update'),
     path('schulze/<int:pk>/delete/', views.SchulzeVotingDeleteView.as_view(), name='schulze_delete'),
     path('schulze/<int:pk>/edit/', views.SchulzeUpdateView.as_view(), name='schulze_update'),
+    # TODO no permission stuff yet
     path('votes/votes_list/<int:pk>/', views.session_votes_list, name='votes_list'),
-    path('session/<int:pk>/results/detailed', views.session_results_votes_view, name='session_results_detailed'),
+    path('session/<int:pk>/results/detailed/', views.session_results_votes_view, name='session_results_detailed'),
     path('session/<int:pk>/results/', views.session_results_view, name='session_results'),
 ]

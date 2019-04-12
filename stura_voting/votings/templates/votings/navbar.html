@@ -17,14 +17,22 @@ limitations under the License.
 <nav class="navbar navbar-expand-sm navbar-light bg-stura-orange">
   <ul class="navbar-nav mr-auto">
       <li class="nav-item">
-        <a class="nav-link" href="{% url 'index' %}"><i class="fas fa-home fa-lg"></i> Start</a>
+        <a class="nav-link" href="{% url 'index' %}">
+          <i class="fas fa-home fa-lg"></i> Start
+        </a>
       </li>
       <li class="nav-item">
-        <a class="nav-link" href="{% url 'archive_index' %}"><i class="fas fa-archive fa-lg"></i> Archiv</a>
+        <a class="nav-link" href="{% url 'archive_index' %}">
+          <i class="fas fa-archive fa-lg"></i> Archiv
+        </a>
       </li>
-      <li class="nav-item">
-        <a class="nav-link" href="{% url 'new_session' %}"><i class="fas fa-poll-h fa-lg"></i> Neue Sitzung</a>
-      </li>
+      {% if perms.votings.add_votingcollection %}
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'new_session' %}">
+            <i class="fas fa-poll-h fa-lg"></i> Neue Sitzung
+          </a>
+        </li>
+      {% endif %}
       <!-- Dropdown -->
       <!-- only show dropdown if not empty -->
       {% if perms.votings.add_period or perms.votings.add_votersrevision %}

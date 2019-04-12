@@ -18,11 +18,15 @@ from django.core.management.base import BaseCommand
 from django.contrib.auth.models import Group
 from django.contrib.auth.models import Permission
 
+ADDITIONAL_KEYWORD = '__additional__'
+
 ALL_PERMS = ['add', 'change', 'delete', 'view']
 
 GROUPS = {'praesidium': {
             'voters revision': ALL_PERMS,
             'period': ALL_PERMS,
+            'voting collection': ALL_PERMS,
+            ADDITIONAL_KEYWORD: ['enter_collection_results'],
             }
          }
 
@@ -37,6 +41,9 @@ class Command(BaseCommand):
             all_permissions = []
             if created:
                 print('\tCreated new group "%s"' % group_name)
+            additional = None
+            if ADDITIONAL_KEYWORD in perm_models:
+                additional = perm_models.pop(ADDITIONAL_KEYWORD)
             for p_model, perms in perm_models.items():
                 for perm in perms:
                     name = "Can %s %s" % (perm, p_model)
@@ -46,6 +53,15 @@ class Command(BaseCommand):
                         all_permissions.append(perm_model)
                     except Permission.DoesNotExist:
                         logging.warning('Permission "%s" not found' % perm)
+            # add additional ones if exist
+            if additional:
+                for c_name in additional:
+                    print('   ... Adding permission "%s"' % c_name)
+                    try:
+                        perm_model = Permission.objects.get(codename=c_name)
+                        all_permissions.append(perm_model)
+                    except Permission.DoesNotExist:
+                        logging.warning('Permission "%s" not found' % c_name)
             # add all collected permissions for this group, cast as tuple
             # to use in call to add
             perm_tuple = tuple(all_permissions)

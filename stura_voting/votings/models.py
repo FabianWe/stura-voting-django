@@ -73,6 +73,13 @@ class VotingCollection(models.Model):
                                 default=get_next_session_stura)
     revision = models.ForeignKey('VotersRevision', on_delete=models.CASCADE, help_text='Group of voters for this voting')
 
+    class Meta:
+        permissions = (
+            ("view_collection_results", "Can view results of a collection"),
+            ("enter_collection_results", "Can enter results for all who are entitled to vote"),
+        )
+
+
 
 class VotingGroup(models.Model):
     name = models.CharField(max_length=150, help_text='Name of the group, for example "Financial Votes"')
