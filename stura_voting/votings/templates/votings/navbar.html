@@ -43,10 +43,14 @@ limitations under the License.
 
           <div class="dropdown-menu">
             {% if perms.votings.add_period %}
-              <a class="dropdown-item" href="{% url 'new_period' %}">Sitzungsperiode</a>
+              <a class="dropdown-item" href="{% url 'new_period' %}">
+                <i class="fas fa-hourglass-half"></i> Sitzungsperiode
+              </a>
             {% endif %}
             {% if perms.votings.add_votersrevision %}
-              <a class="dropdown-item" href="{% url 'new_revision' %}">Revision</a>
+              <a class="dropdown-item" href="{% url 'new_revision' %}">
+                <i class="fas fa-users"></i> Revision
+              </a>
             {% endif %}
           </div>
 
@@ -77,7 +81,9 @@ limitations under the License.
         </li>
       {% endif %}
       <li class="nav-item">
-        <a class="nav-link" href="{% url 'copyright' %}"><i class="far fa-copyright fa-lg"></i> Copyright</a>
+        <a class="nav-link" href="{% url 'copyright' %}">
+          <i class="far fa-copyright fa-lg"></i> Copyright
+        </a>
       </li>
     </ul>
   </nav>
