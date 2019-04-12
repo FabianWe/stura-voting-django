@@ -20,7 +20,9 @@ limitations under the License.
         <a class="nav-link" href="{% url 'index' %}"><i class="fas fa-home fa-lg"></i> Start</a>
       </li>
       <li class="nav-item">
-        <!-- TODO this was far, but fas should be correct? -->
+        <a class="nav-link" href="{% url 'archive_index' %}"><i class="fas fa-archive fa-lg"></i> Archiv</a>
+      </li>
+      <li class="nav-item">
         <a class="nav-link" href="{% url 'new_session' %}"><i class="fas fa-poll-h fa-lg"></i> Neue Sitzung</a>
       </li>
       <!-- Dropdown -->
@@ -33,19 +35,16 @@ limitations under the License.
           <a class="dropdown-item" href="{% url 'new_revision' %}">Revision</a>
         </div>
       </li>
-      <li class="nav-item">
-        <a class="nav-link" href="{% url 'archive_index' %}"><i class="fas fa-archive fa-lg"></i> Archiv</a>
-      </li>
     </ul>
     <ul class="navbar-nav">
       <!-- User stuff  -->
       {% if user.is_authenticated %}
         <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle" href="{% url 'votings_profile' %}" id="userdrop" data-toggle="dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="userdrop" data-toggle="dropdown">
             <i class="fas fa-user fa-lg"></i> Account
           </a>
           <div class="dropdown-menu">
-            <a class="dropdown-item" href="#">
+            <a class="dropdown-item" href="{% url 'votings_profile' %}">
               <i class="fas fa-user-circle"></i> Mein Account
             </a>
             <a class="dropdown-item" href="{% url 'logout' %}">
