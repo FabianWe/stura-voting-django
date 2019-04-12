@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# TODO check super calls with multi inheritance (PermissionRequiredMixin)
 
 from decimal import Decimal
 from collections import OrderedDict
@@ -65,6 +64,7 @@ def archive_index(request):
 
 
 @transaction.atomic
+@permission_required('votings.change_votinggroup')
 def edit_group_view(request, pk):
     group = get_object_or_404(VotingGroup, pk=pk)
     context = {'group': group}
@@ -112,7 +112,10 @@ class VotingDeleteView(DeleteView):
         return reverse('group_update', args=[self.object.group.id])
 
 
-class MedianVotingDeleteView(VotingDeleteView):
+class MedianVotingDeleteView(PermissionRequiredMixin, VotingDeleteView):
+    # permissions
+    permission_required = 'votings.delete_medianvoting'
+
     model = MedianVoting
 
     def get_context_data(self, **kwargs):
@@ -122,7 +125,10 @@ class MedianVotingDeleteView(VotingDeleteView):
         return context
 
 
-class SchulzeVotingDeleteView(VotingDeleteView):
+class SchulzeVotingDeleteView(PermissionRequiredMixin, VotingDeleteView):
+    # permissions
+    permission_required = 'votings.delete_schulzevoting'
+
     model = SchulzeVoting
 
     def get_context_data(self, **kwargs):
@@ -136,7 +142,10 @@ class SchulzeVotingDeleteView(VotingDeleteView):
         return context
 
 
-class MedianUpdateView(UpdateView):
+class MedianUpdateView(PermissionRequiredMixin, UpdateView):
+    # permissions
+    permission_required = 'votings.change_medianvoting'
+
     model = MedianVoting
     fields = ('name', 'majority', 'absolute_majority')
 
@@ -146,7 +155,10 @@ class MedianUpdateView(UpdateView):
     def get_success_url(self):
         return reverse('session_detail', args=[self.object.group.collection.id])
 
-class SchulzeUpdateView(UpdateView):
+class SchulzeUpdateView(PermissionRequiredMixin, UpdateView):
+    # permissions
+    permission_required = 'votings.change_schulzevoting'
+
     model = SchulzeVoting
     fields = ('name', 'majority', 'absolute_majority')
 
@@ -745,7 +757,10 @@ def _get_max_voting_num(group):
     return res
 
 
-class MedianVotingCreateView(CreateView):
+class MedianVotingCreateView(PermissionRequiredMixin, CreateView):
+    # permissions
+    permission_required = 'votings.add_medianvoting'
+
     model = MedianVoting
     fields = ['name', 'value', 'majority', 'absolute_majority', 'currency']
     template_name = 'votings/voting/median_create.html'
@@ -769,7 +784,8 @@ class MedianVotingCreateView(CreateView):
     def get_success_url(self):
         return reverse('group_update', args=[self.group.id])
 
-
+@transaction.atomic
+@permission_required('votings.add_schulzevoting')
 def create_schulze_view(request, pk):
     if request.method == 'GET':
         form = SchulzeVotingCreateForm()

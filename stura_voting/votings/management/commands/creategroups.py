@@ -26,8 +26,11 @@ GROUPS = {'praesidium': {
             'voters revision': ALL_PERMS,
             'period': ALL_PERMS,
             'voting collection': ALL_PERMS,
+            'voting group': ALL_PERMS,
+            'median voting': ALL_PERMS,
+            'schulze voting': ALL_PERMS,
             ADDITIONAL_KEYWORD: ['enter_collection_results'],
-            }
+            },
          }
 
 class Command(BaseCommand):
@@ -41,9 +44,7 @@ class Command(BaseCommand):
             all_permissions = []
             if created:
                 print('\tCreated new group "%s"' % group_name)
-            additional = None
-            if ADDITIONAL_KEYWORD in perm_models:
-                additional = perm_models.pop(ADDITIONAL_KEYWORD)
+            additional = perm_models.pop(ADDITIONAL_KEYWORD, None)
             for p_model, perms in perm_models.items():
                 for perm in perms:
                     name = "Can %s %s" % (perm, p_model)
@@ -52,7 +53,7 @@ class Command(BaseCommand):
                         perm_model = Permission.objects.get(name=name)
                         all_permissions.append(perm_model)
                     except Permission.DoesNotExist:
-                        logging.warning('Permission "%s" not found' % perm)
+                        logging.warning('Permission "%s" not found' % name)
             # add additional ones if exist
             if additional:
                 for c_name in additional:

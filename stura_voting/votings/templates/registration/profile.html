@@ -50,14 +50,27 @@ limitations under the License.
 
   {% if user.is_superuser %}
     <p style="color:green">
-      <i class="fas fa-crown fa-2x"></i> Admin
+      <i class="fas fa-chess-queen fa-2x"></i> Admin
     </p>
   {% else %}
     <p style="color:red">
-      <i class="fas fa-frown fa-2x"></i> Kein Admin
+      <i class="fas fa-chess-pawn fa-2x"></i> Kein Admin
     </p>
   {% endif %}
 {% endif %}
+
+<p>
+  {% if user.groups.all %}
+    Du bist Mitglied in folgenden Gruppen
+    <ul>
+      {% for g in user.groups.all %}
+        <li>{{ g }}</li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    Du bist Mitglied in keiner Gruppe.
+  {% endif %}
+</p>
 
 <p>
   <a href="{% url 'password_change' %}" class="btn btn-primary" role="button">

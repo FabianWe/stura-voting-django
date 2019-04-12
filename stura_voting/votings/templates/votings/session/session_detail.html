@@ -75,25 +75,31 @@ limitations under the License.
     <a href="{% url 'period_detail' object.revision.period.id %}">{{ object.revision.period.name }}</a>
     mit <a href="{% url 'revision_detail' object.revision.id %}">Revision vom {{ object.revision.created }}</a>.
     {% for group, group_entries in groups %}
-        <h3>{{ group.name }} <a href="{% url 'group_update' group.id %}" title="Gruppe bearbeiten"><i class="fas fa-clipboard-list"></i></a></h3>
-        {% for voting_type, voting in group_entries %}
-            {% if voting_type == "schulze" %}
-                <p>
-                  Abstimmung <a href="{% url 'schulze_update' voting.id %}">{{ voting.name }}</a>
-                {% with options=option_map|hash:voting.id %}
-                    <ul>
-                        {% for option in options %}
-                            <li>{{ option }}</li>
-                        {% endfor %}
-                    </ul>
-                {% endwith %}
-                </p>
-                {% else %}
-                  <p>Finanzantrag
-                  <a href="{% url 'median_update' voting.id %}">{{ voting.name }}</a>
-                  über {{ voting.value|currency:voting.currency }}
-                  </p>
-            {% endif %}
-        {% endfor %}
+      <h3>{{ group.name }}
+      {% if perms.votings.change_votinggroup %}
+        <a href="{% url 'group_update' group.id %}" title="Gruppe bearbeiten">
+          <i class="fas fa-clipboard-list"></i>
+        </a>
+      {% endif %}
+      </h3>
+      {% for voting_type, voting in group_entries %}
+        {% if voting_type == "schulze" %}
+          <p>
+          Abstimmung <a href="{% url 'schulze_update' voting.id %}">{{ voting.name }}</a>
+          {% with options=option_map|hash:voting.id %}
+              <ul>
+                  {% for option in options %}
+                      <li>{{ option }}</li>
+                  {% endfor %}
+              </ul>
+          {% endwith %}
+          </p>
+          {% else %}
+            <p>Finanzantrag
+            <a href="{% url 'median_update' voting.id %}">{{ voting.name }}</a>
+            über {{ voting.value|currency:voting.currency }}
+            </p>
+        {% endif %}
+      {% endfor %}
     {% endfor %}
 {% endblock %}
