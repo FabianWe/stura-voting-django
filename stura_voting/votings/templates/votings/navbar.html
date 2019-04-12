@@ -32,7 +32,9 @@ limitations under the License.
         </a>
         <div class="dropdown-menu">
           <a class="dropdown-item" href="{% url 'new_period' %}">Sitzungsperiode</a>
-          <a class="dropdown-item" href="{% url 'new_revision' %}">Revision</a>
+          {% if perms.votings.add_voters_revision %}
+            <a class="dropdown-item" href="{% url 'new_revision' %}">Revision</a>
+          {% endif %}
         </div>
       </li>
     </ul>
