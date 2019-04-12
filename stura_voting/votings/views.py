@@ -27,7 +27,8 @@ from django.db.models import Max
 from django.utils.translation import gettext
 from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, permission_required
+from django.contrib.auth.mixins import PermissionRequiredMixin
 
 from .results import *
 
@@ -359,12 +360,14 @@ def __handle_enter_schulze(result, v_id, val, voter):
                                            option=option)
 
 
+@permission_required('votings.add_voters_revision')
 def revision_success(request, pk):
     rev = get_object_or_404(VotersRevision, pk=pk)
     return render(request, 'votings/revision/success_revision.html', {'revision': rev})
 
 
 @transaction.atomic
+@permission_required('votings.add_voters_revision')
 def new_revision(request):
     if request.method == 'GET':
         form = RevisionForm()
@@ -400,7 +403,10 @@ class RevisionDetailView(DetailView):
         context['voters'] = voters
         return context
 
-class RevisionDeleteView(DeleteView):
+class RevisionDeleteView(PermissionRequiredMixin, DeleteView):
+    # permissions
+    permission_required = 'votings.delete_voters_revision'
+
     model = VotersRevision
     success_url = reverse_lazy('revision_delete_success')
     template_name = 'votings/revision/revision_confirm_delete.html'
@@ -412,6 +418,7 @@ class RevisionDeleteView(DeleteView):
         return context
 
 
+@permission_required('votings.delete_voters_revision')
 def revision_delete_success_view(request):
     return render(request, 'votings/revision/revision_success_delete.html')
 
@@ -434,6 +441,7 @@ def period_delete_success_view(request):
 
 
 @transaction.atomic
+@permission_required('votings.change_voters_revision')
 def update_revision_view(request, pk):
     revision = get_object_or_404(VotersRevision, pk=pk)
     voters = Voter.objects.filter(revision=revision).order_by('name').select_for_update()

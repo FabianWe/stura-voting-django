@@ -20,8 +20,7 @@ urlpatterns = [
     # TODO singular / plural?
     path('', views.index, name='index'),
     path('copyright/', views.copyright_view, name='copyright'),
-    path('period/new', views.new_period, name='new_period'),
-    path('revision/new', views.new_revision, name='new_revision'),
+    path('revision/new/', views.new_revision, name='new_revision'),
     path('revision/<int:pk>/success/', views.revision_success, name='new_revision_success'),
     path('revision/<int:pk>/edit/', views.update_revision_view, name='revision_update'),
     path('revision/<int:pk>/delete/', views.RevisionDeleteView.as_view(), name='revision_delete'),
@@ -29,6 +28,7 @@ urlpatterns = [
     path('revision/<int:pk>/', views.RevisionDetailView.as_view(), name='revision_detail'),
     path('archive', views.archive_index, name='archive_index'),
     path('period/<int:pk>/edit/', views.PeriodUpdateView.as_view(), name='period_update'),
+    path('period/new', views.new_period, name='new_period'),
     path('period/<int:pk>/delete/', views.PeriodDeleteView.as_view(), name='period_delete'),
     path('period/<int:pk>/', views.PeriodDetailView.as_view(), name='period_detail'),
     path('period/delete/success/', views.period_delete_success_view, name='period_delete_success'),
