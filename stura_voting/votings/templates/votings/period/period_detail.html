@@ -29,8 +29,13 @@ limitations under the License.
 {% endif %}
 
 <p>
-    <a href="{% url 'period_update' object.id %}" class="btn btn-primary" role="button"><i class="fas fa-edit fa-lg"></i> Bearbeiten</a>
-    <a href="{% url 'period_delete' object.id %}" class="btn btn-danger" role="button"><i class="fas fa-trash fa-lg"></i> Löschen</a>
+    {% if perms.votings.change_period %}
+      <a href="{% url 'period_update' object.id %}" class="btn btn-primary" role="button"><i class="fas fa-edit fa-lg"></i> Bearbeiten</a>
+    {% endif %}
+
+    {% if perms.votings.delete_period %}
+      <a href="{% url 'period_delete' object.id %}" class="btn btn-danger" role="button"><i class="fas fa-trash fa-lg"></i> Löschen</a>
+    {% endif %}
 </p>
 
 <p>Zeitraum von {{ period.start }} bis {{ period.end }}</p>

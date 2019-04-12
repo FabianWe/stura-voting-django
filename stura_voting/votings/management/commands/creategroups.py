@@ -18,9 +18,13 @@ from django.core.management.base import BaseCommand
 from django.contrib.auth.models import Group
 from django.contrib.auth.models import Permission
 
-GROUPS = {'praesidium':
-            {'voters revision':
-                ['add', 'change', 'delete']}}
+ALL_PERMS = ['add', 'change', 'delete', 'view']
+
+GROUPS = {'praesidium': {
+            'voters revision': ALL_PERMS,
+            'period': ALL_PERMS,
+            }
+         }
 
 class Command(BaseCommand):
     help = 'Create groups commonly used in the tool and add permissions to them'

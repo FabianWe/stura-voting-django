@@ -155,6 +155,7 @@ class SchulzeUpdateView(UpdateView):
         return reverse('session_detail', args=[self.object.group.collection.id])
 
 @transaction.atomic
+@permission_required('votings.add_period')
 def new_period(request):
     if request.method == 'GET':
         form = PeriodForm()
@@ -187,7 +188,10 @@ class PeriodDetailView(DetailView):
         return context
 
 
-class PeriodUpdateView(UpdateView):
+class PeriodUpdateView(PermissionRequiredMixin, UpdateView):
+    # permissions
+    permission_required = 'votings.change_period'
+
     model = Period
     fields = ('start', 'end','name')
     template_name = 'votings/period/update_period.html'
@@ -195,7 +199,10 @@ class PeriodUpdateView(UpdateView):
     def get_success_url(self):
         return reverse('period_detail', args=[self.object.id])
 
-class PeriodDetailSuccess(PeriodDetailView):
+class PeriodDetailSuccess(PermissionRequiredMixin, PeriodDetailView):
+    # permissions
+    permission_required = 'votings.add_period'
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['success'] = True
@@ -422,7 +429,10 @@ class RevisionDeleteView(PermissionRequiredMixin, DeleteView):
 def revision_delete_success_view(request):
     return render(request, 'votings/revision/revision_success_delete.html')
 
-class PeriodDeleteView(DeleteView):
+class PeriodDeleteView(PermissionRequiredMixin, DeleteView):
+    # permissions
+    permission_required = 'votings.delete_period'
+
     model = Period
     success_url = reverse_lazy('period_delete_success')
     template_name = 'votings/period/period_confirm_delete.html'
@@ -436,6 +446,7 @@ class PeriodDeleteView(DeleteView):
         return context
 
 
+@permission_required('votings.delete_period')
 def period_delete_success_view(request):
     return render(request, 'votings/period/period_success_delete.html')
 

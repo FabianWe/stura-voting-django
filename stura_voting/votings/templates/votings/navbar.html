@@ -26,17 +26,24 @@ limitations under the License.
         <a class="nav-link" href="{% url 'new_session' %}"><i class="fas fa-poll-h fa-lg"></i> Neue Sitzung</a>
       </li>
       <!-- Dropdown -->
-      <li class="nav-item dropdown">
-        <a class="nav-link dropdown-toggle" href="#" id="navbardrop" data-toggle="dropdown">
-          <i class="fas fa-plus fa-lg"></i> Neu
-        </a>
-        <div class="dropdown-menu">
-          <a class="dropdown-item" href="{% url 'new_period' %}">Sitzungsperiode</a>
-          {% if perms.votings.add_votersrevision %}
-            <a class="dropdown-item" href="{% url 'new_revision' %}">Revision</a>
-          {% endif %}
-        </div>
-      </li>
+      <!-- only show dropdown if not empty -->
+      {% if perms.votings.add_period or perms.votings.add_votersrevision %}
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="navbardrop" data-toggle="dropdown">
+            <i class="fas fa-plus fa-lg"></i> Neu
+          </a>
+
+          <div class="dropdown-menu">
+            {% if perms.votings.add_period %}
+              <a class="dropdown-item" href="{% url 'new_period' %}">Sitzungsperiode</a>
+            {% endif %}
+            {% if perms.votings.add_votersrevision %}
+              <a class="dropdown-item" href="{% url 'new_revision' %}">Revision</a>
+            {% endif %}
+          </div>
+
+        </li>
+      {% endif %}
     </ul>
     <ul class="navbar-nav">
       <!-- User stuff  -->
