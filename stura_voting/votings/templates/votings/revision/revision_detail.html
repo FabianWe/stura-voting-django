@@ -22,11 +22,11 @@ limitations under the License.
     <h2>Revision vom {{ object.created }} für {{ object.period.name }}</h2>
 
     <p>
-        {% if perms.votings.change_voters_revision %}
+        {% if perms.votings.change_votersrevision %}
           <a href="{% url 'revision_update' object.id %}" class="btn btn-primary" role="button"><i class="fas fa-edit fa-lg"></i> Bearbeiten</a>
         {% endif %}
 
-        {% if perms.votings.delete_voters_revision %}
+        {% if perms.votings.delete_votersrevision %}
           <a href="{% url 'revision_delete' object.id %}" class="btn btn-danger" role="button"><i class="fas fa-trash fa-lg"></i> Löschen</a>
         {% endif %}
     </p>

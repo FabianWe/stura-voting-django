@@ -360,14 +360,14 @@ def __handle_enter_schulze(result, v_id, val, voter):
                                            option=option)
 
 
-@permission_required('votings.add_voters_revision')
+@permission_required('votings.add_votersrevision')
 def revision_success(request, pk):
     rev = get_object_or_404(VotersRevision, pk=pk)
     return render(request, 'votings/revision/success_revision.html', {'revision': rev})
 
 
 @transaction.atomic
-@permission_required('votings.add_voters_revision')
+@permission_required('votings.add_votersrevision')
 def new_revision(request):
     if request.method == 'GET':
         form = RevisionForm()
@@ -405,7 +405,7 @@ class RevisionDetailView(DetailView):
 
 class RevisionDeleteView(PermissionRequiredMixin, DeleteView):
     # permissions
-    permission_required = 'votings.delete_voters_revision'
+    permission_required = 'votings.delete_votersrevision'
 
     model = VotersRevision
     success_url = reverse_lazy('revision_delete_success')
@@ -418,7 +418,7 @@ class RevisionDeleteView(PermissionRequiredMixin, DeleteView):
         return context
 
 
-@permission_required('votings.delete_voters_revision')
+@permission_required('votings.delete_votersrevision')
 def revision_delete_success_view(request):
     return render(request, 'votings/revision/revision_success_delete.html')
 
@@ -441,7 +441,7 @@ def period_delete_success_view(request):
 
 
 @transaction.atomic
-@permission_required('votings.change_voters_revision')
+@permission_required('votings.change_votersrevision')
 def update_revision_view(request, pk):
     revision = get_object_or_404(VotersRevision, pk=pk)
     voters = Voter.objects.filter(revision=revision).order_by('name').select_for_update()
