@@ -41,7 +41,7 @@ limitations under the License.
       {% if user.is_authenticated %}
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" href="#" id="userdrop" data-toggle="dropdown">
-            <i class="fas fa-user fa-lg"></i> Account
+            <i class="fas fa-user fa-lg"></i> {{ user.username }}
           </a>
           <div class="dropdown-menu">
             <a class="dropdown-item" href="{% url 'votings_profile' %}">
