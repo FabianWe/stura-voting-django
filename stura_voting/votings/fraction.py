@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 # Copyright 2018 - 2019 Fabian Wenzelmann
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,6 +18,19 @@ import math
 
 
 class Fraction(object):
+    """This class defines a fraction with numerator and denominator (both ints).
+
+    The class supports the operators +, -, * and / (each takes two Fraction instances
+    and return a Fraction).
+
+    Attributes:
+        numerator (int): The numerator of the fraction.
+        denominator (int): The denominator of the fraction != 0.
+
+    Raises:
+        ZeroDivisionError: If denominator is 0.
+
+    """
     def __init__(self, numerator=0, denominator=1):
         if denominator == 0:
             raise ZeroDivisionError()
@@ -48,6 +63,11 @@ class Fraction(object):
         return Fraction(a * d, b * c)
 
     def normalize(self):
+        """Returns the reduced fraction, for example 50/100 ==> 1/2.
+
+        Returns:
+            Fraction: The reduced fraction.
+        """
         a, b, = self.__get_tuple()
         gcd = math.gcd(a, b)
         return Fraction(a // gcd, b // gcd)
@@ -59,10 +79,23 @@ class Fraction(object):
         return str(self)
 
     def split(self):
+        """Converts the fraction into an integer and rest part.
+
+        For example the fraction 10/3 is splitted into an integer part of 3 and the remaining
+        fraction 1/3.
+
+        Returns:
+            (tuple of int and Fraction): The integer part and the rest.
+        """
         a, b = self.__get_tuple()
         div = a // b
         rest = self - Fraction(div)
         return div, rest
 
     def is_zero(self):
+        """Returns True if the fraction represents the number 0 and False otherwise.
+
+        Returns:
+            bool: True if the fraction is 0, False otherwise.
+        """
         return self.numerator == 0
