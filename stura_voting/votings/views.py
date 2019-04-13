@@ -13,7 +13,6 @@
 # limitations under the License.
 
 
-from decimal import Decimal
 from collections import OrderedDict
 
 from schulze_voting import evaluate_schulze
@@ -49,8 +48,10 @@ from .schulze import schulze_for_evaluation, single_schulze_instance
 def index(request):
     return render(request, 'votings/index.html')
 
+
 def copyright_view(request):
     return render(request, 'votings/copyright.html')
+
 
 @login_required
 def profile(request):
@@ -64,7 +65,7 @@ def archive_index(request):
 
 
 @transaction.atomic
-@permission_required('votings.change_votinggroup')
+@permission_required(('votings.change_votinggroup', 'votings.change_medianvoting', 'votings.change_schulzevoting'))
 def edit_group_view(request, pk):
     group = get_object_or_404(VotingGroup, pk=pk)
     context = {'group': group}
@@ -155,6 +156,7 @@ class MedianUpdateView(PermissionRequiredMixin, UpdateView):
     def get_success_url(self):
         return reverse('session_detail', args=[self.object.group.collection.id])
 
+
 class SchulzeUpdateView(PermissionRequiredMixin, UpdateView):
     # permissions
     permission_required = 'votings.change_schulzevoting'
@@ -168,8 +170,9 @@ class SchulzeUpdateView(PermissionRequiredMixin, UpdateView):
     def get_success_url(self):
         return reverse('session_detail', args=[self.object.group.collection.id])
 
+
 @transaction.atomic
-@permission_required('votings.add_period')
+@permission_required(('votings.add_period', 'votings.add_votersrevision'))
 def new_period(request):
     if request.method == 'GET':
         form = PeriodForm()
@@ -212,6 +215,7 @@ class PeriodUpdateView(PermissionRequiredMixin, UpdateView):
 
     def get_success_url(self):
         return reverse('period_detail', args=[self.object.id])
+
 
 class PeriodDetailSuccess(PermissionRequiredMixin, PeriodDetailView):
     # permissions
@@ -273,10 +277,10 @@ def __handle_enter_median(result, v_id, val, voter):
     # val: None or tuple (value, currency)
     # first lookup voting and ensure it exists
     if v_id not in result.votings:
-        msg = _('Median voting with id %(voting)d does not exist, not saved' % {
+        msg = gettext('Median voting with id %(voting)d does not exist, not saved' % {
             'voting': v_id,
         })
-        waring = QueryWarning(msg)
+        warning = QueryWarning(msg)
         result.warnings.append(warning)
         return
     voting = result.votings[v_id]
@@ -307,10 +311,10 @@ def __handle_enter_schulze(result, v_id, val, voter):
     # is correct
     # first lookup voting and ensure it exists
     if v_id not in result.votings:
-        msg = _('Schulze voting with id %(voting)d does not exist, not saved' % {
+        msg = gettext('Schulze voting with id %(voting)d does not exist, not saved' % {
             'voting': v_id,
         })
-        waring = QueryWarning(msg)
+        warning = QueryWarning(msg)
         result.warnings.append(warning)
         return
     # if val is None (no entry and result exists: delete it)
@@ -323,7 +327,7 @@ def __handle_enter_schulze(result, v_id, val, voter):
     else:
         # update or insert
         if v_id not in result.voting_description:
-            msg = _('Schulze voting with id %(voting)d has no options, not saved' % {
+            msg = gettext('Schulze voting with id %(voting)d has no options, not saved' % {
                 'voting': v_id,
             })
             warning = QueryWarning(msg)
@@ -331,11 +335,11 @@ def __handle_enter_schulze(result, v_id, val, voter):
             return
         voting_options = result.voting_description[v_id]
         if len(val) != len(voting_options):
-            msg = _('Invalid schulze result. Internal error? Result for voting %(voting)d not saved' % {
+            msg = gettext('Invalid schulze result. Internal error? Result for voting %(voting)d not saved' % {
                 'voting': v_id
             })
             warning = QueryWarning(msg)
-            result.warnings.append(waring)
+            result.warnings.append(warning)
             return
         if v_id in result.votes:
             # update
@@ -345,7 +349,7 @@ def __handle_enter_schulze(result, v_id, val, voter):
             # got inserted. So now we prevent an update / insertion if something
             # is wrong
             if len(current_votes) != len(voting_options):
-                msg = _('Number of options %(options)d does not match number of votes %(votes)d for voting %(voting)d. Not saved' % {
+                msg = gettext('Number of options %(options)d does not match number of votes %(votes)d for voting %(voting)d. Not saved' % {
                     'options': len(voting_options),
                     'votes': len(current_votes),
                     'voting': v_id,
@@ -360,7 +364,7 @@ def __handle_enter_schulze(result, v_id, val, voter):
                     # then when create a warning and return
                     for vote in current_votes:
                         vote.delete()
-                    msg = _('Invalid vote for option for vote %(vote)d: Got vote for option %(option)d instead of %(for)d. Existing entries were deleted!' % {
+                    msg = gettext('Invalid vote for option for vote %(vote)d: Got vote for option %(option)d instead of %(for)d. Existing entries were deleted!' % {
                         'vote': v_id,
                         'option': vote.option.id,
                         'for': option.id,
@@ -426,6 +430,7 @@ class RevisionDetailView(DetailView):
         context['voters'] = voters
         return context
 
+
 class RevisionDeleteView(PermissionRequiredMixin, DeleteView):
     # permissions
     permission_required = 'votings.delete_votersrevision'
@@ -444,6 +449,7 @@ class RevisionDeleteView(PermissionRequiredMixin, DeleteView):
 @permission_required('votings.delete_votersrevision')
 def revision_delete_success_view(request):
     return render(request, 'votings/revision/revision_success_delete.html')
+
 
 class PeriodDeleteView(PermissionRequiredMixin, DeleteView):
     # permissions
@@ -557,6 +563,7 @@ class SessionUpdate(PermissionRequiredMixin, UpdateView):
 
     def get_success_url(self):
         return reverse('session_update', args=[self.object.id])
+
 
 class SessionDetailView(DetailView):
     model = VotingCollection
@@ -701,6 +708,7 @@ def session_results_generalized_view(request, pk, show_votes):
 
     return render(request, 'votings/results/session_results.html', context)
 
+
 def __votes_before_no(schulze_res, weight_sum):
     num = []
     percent = []
@@ -713,6 +721,7 @@ def __votes_before_no(schulze_res, weight_sum):
             percent.append(0.0)
 
     return num, percent
+
 
 @transaction.atomic
 def session_results_view(request, pk):
