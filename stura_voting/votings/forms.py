@@ -40,7 +40,8 @@ class RevisionForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['period'].queryset = self.fields['period'].queryset.order_by('-start', '-created')
+        self.fields['period'].queryset = self.fields['period'].queryset.order_by(
+            '-start', '-created')
 
 
 class SessionForm(forms.ModelForm):
@@ -54,7 +55,8 @@ class SessionForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['revision'].queryset = self.fields['revision'].queryset.order_by('-period__start', '-created')
+        self.fields['revision'].queryset = self.fields['revision'].queryset.order_by(
+            '-period__start', '-created')
 
 
 class RevisionUpdateForm(forms.Form):
@@ -63,7 +65,8 @@ class RevisionUpdateForm(forms.Form):
     def __init__(self, *args, **kwargs):
         voters = kwargs.pop('voters')
         super().__init__(*args, **kwargs)
-        voters_text = '\n'.join('* %s: %d' % (voter.name, voter.weight) for voter in voters)
+        voters_text = '\n'.join('* %s: %d' %
+                                (voter.name, voter.weight) for voter in voters)
         self.fields['voters'].initial = voters_text
 
 
@@ -94,10 +97,8 @@ class ResultsSingleVoterForm(DynamicVotingsListForm):
         self.schulze_result = schulze_result
         for group, voting_list in all_results.by_group():
             group_field_name = self.label_field_prefix + str(group.id)
-            self.fields[group_field_name] = forms.CharField(label='',
-                                                            initial=str(group.name),
-                                                            required=False,
-                                                            disabled=True)
+            self.fields[group_field_name] = forms.CharField(
+                label='', initial=str(group.name), required=False, disabled=True)
             for voting in voting_list:
                 voting_id = voting.id
                 if isinstance(voting, MedianVoting):
@@ -106,9 +107,13 @@ class ResultsSingleVoterForm(DynamicVotingsListForm):
                     if not currency:
                         currency = None
                     as_currency = output_currency(voting.value, currency)
-                    self.fields[field_name] = CurrencyField(max_value=voting.value,
-                                                            label='Finanzantrag: %s (%s)' % (str(voting.name), as_currency),
-                                                            required=False)
+                    self.fields[field_name] = CurrencyField(
+                        max_value=voting.value,
+                        label='Finanzantrag: %s (%s)' %
+                        (str(
+                            voting.name),
+                            as_currency),
+                        required=False)
                     # add initial value (if exists)
                     if voting_id in median_result.votes:
                         result = median_result.votes[voting_id]
@@ -116,14 +121,20 @@ class ResultsSingleVoterForm(DynamicVotingsListForm):
                         self.fields[field_name].initial = as_currency
                 elif isinstance(voting, SchulzeVoting):
                     field_name = self.schulze_field_prefix + str(voting_id)
-                    num_options = len(schulze_result.voting_description[voting_id])
-                    self.fields[field_name] = SchulzeVoteField(num_options=num_options,
-                                                               label='Abstimmung: %s (%d)' % (str(voting.name), num_options),
-                                                               required=False)
+                    num_options = len(
+                        schulze_result.voting_description[voting_id])
+                    self.fields[field_name] = SchulzeVoteField(
+                        num_options=num_options,
+                        label='Abstimmung: %s (%d)' %
+                        (str(
+                            voting.name),
+                            num_options),
+                        required=False)
                     if voting_id in schulze_result.votes:
                         result = schulze_result.votes[voting_id]
                         assert result
-                        ranking_str = ' '.join(str(vote.sorting_position) for vote in result)
+                        ranking_str = ' '.join(
+                            str(vote.sorting_position) for vote in result)
                         self.fields[field_name].initial = ranking_str
                 else:
                     assert False
@@ -139,9 +150,10 @@ class ResultsSingleVoterForm(DynamicVotingsListForm):
 
 
 class UpdateGroupForm(forms.Form):
-    order = GroupOrderField(num_votings=-1,
-                            label='Anordnung: Positionsnummer für jede Abstimmung (muss eindeutig sein)',
-                            required=False)
+    order = GroupOrderField(
+        num_votings=-1,
+        label='Anordnung: Positionsnummer für jede Abstimmung (muss eindeutig sein)',
+        required=False)
 
     def __init__(self, *args, **kwargs):
         num_votings = None
@@ -157,6 +169,7 @@ class UpdateGroupForm(forms.Form):
         self.fields['order'].num_votings = num_votings
         if current_order is not None:
             self.fields['order'].initial = ' '.join(map(str, current_order))
+
 
 class SchulzeVotingCreateForm(forms.ModelForm):
 

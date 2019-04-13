@@ -19,23 +19,30 @@ from .models import *
 
 import schulze_voting as sv
 
+
 def schulze_for_evaluation(collection):
     # TODO check revisions or is this not required?
     all_votings = schulze_votings(collection=collection)
     # now get all votes
-    votes_qs = (SchulzeVote.objects
-                .filter(option__voting__group__collection=collection)
-                .select_related('option', 'voter')
-                .order_by('option__voting__id', 'voter__id', 'option__option_num'))
+    votes_qs = (
+        SchulzeVote.objects .filter(
+            option__voting__group__collection=collection) .select_related(
+            'option',
+            'voter') .order_by(
+                'option__voting__id',
+                'voter__id',
+            'option__option_num'))
     # now fill all_votings.votes with ordered dicts: for each voting
     # map to a list of lists of SchulzeVote objects and do some sanity checks
     # we do this in some places so probably we could write a nicer function
     # for this...
 
     # sanity checks are postponed until later to keep the code clearer
-    for voting, votes_for_voting in groupby(votes_qs, lambda vote: vote.option.voting):
+    for voting, votes_for_voting in groupby(
+            votes_qs, lambda vote: vote.option.voting):
         voter_mapping = dict()
-        for voter, votes_for_voter in groupby(votes_for_voting, lambda vote: vote.voter):
+        for voter, votes_for_voter in groupby(
+                votes_for_voting, lambda vote: vote.voter):
             votes_list = list(votes_for_voter)
             voter_mapping[voter.id] = votes_list
         all_votings.votes[voting.id] = voter_mapping
@@ -46,40 +53,44 @@ def schulze_for_evaluation(collection):
         # first assert that voting exists
         # again, this should really not happen ;)
         if voting_id not in all_votings.votings or voting_id not in all_votings.voting_description:
-            msg = gettext('Invalid voting with id %(voting_id)s: Does not exist' % {
-                'voting_id': voting_id,
-            })
+            msg = gettext(
+                'Invalid voting with id %(voting_id)s: Does not exist' % {
+                    'voting_id': voting_id,
+                })
             all_votings.warnings.append(QueryWarning(msg))
             continue
         voting = all_votings.votings[voting_id]
         options = all_votings.voting_description[voting_id]
         if not options:
-            msg = gettext('Invalid schulze voting %(voting_name)s: No options given. Not including in result' % {
-                'voting_name': voting.name,
-            })
+            msg = gettext(
+                'Invalid schulze voting %(voting_name)s: No options given. Not including in result' % {
+                    'voting_name': voting.name,
+                })
             all_votings.warnings.append(QueryWarning(msg))
             votings_to_remove.add(voting_id)
             continue
         voters_to_remove = set()
         for voter_id, votes_for_voter in voter_mapping.items():
             if len(options) != len(votes_for_voter):
-                msg = gettext('Invalid vote for voting %(voting_name)s: Expected ranking of length %(expected) and got length %(got)d. Not considered. Voter id is %(voter_id)d' % {
-                    'voting_name': voting.name,
-                    'expected': len(options),
-                    'got': len(votes_for_voter),
-                    'voter_id': voter_id,
-                })
+                msg = gettext(
+                    'Invalid vote for voting %(voting_name)s: Expected ranking of length %(expected) and got length %(got)d. Not considered. Voter id is %(voter_id)d' % {
+                        'voting_name': voting.name,
+                        'expected': len(options),
+                        'got': len(votes_for_voter),
+                        'voter_id': voter_id,
+                    })
                 all_votings.warnings.append(QueryWarning(msg))
                 # remove entry for this voter
                 voters_to_remove.add(voter_id)
                 continue
             for vote, option in zip(votes_for_voter, options):
                 if vote.option != option:
-                    msg = gettext('Invalid vote for voting %(voting_name)s: Expected vote for %(expected_name)s and got vote for %(got_name)s' % {
-                        'voting_name': voting.name,
-                        'expected_name': option.option,
-                        'got_name': vote.option.name,
-                    })
+                    msg = gettext(
+                        'Invalid vote for voting %(voting_name)s: Expected vote for %(expected_name)s and got vote for %(got_name)s' % {
+                            'voting_name': voting.name,
+                            'expected_name': option.option,
+                            'got_name': vote.option.name,
+                        })
                     all_votings.warnings.append(QueryWarning(msg))
                     # remove
                     voters_to_remove.add(voter_id)
@@ -132,10 +143,10 @@ def single_schulze_instance(voting, votes, options, voters_map):
                 res.votes[voter_id] = None
         else:
             weight_sum += weight
-            ranking = [ option_vote.sorting_position for option_vote in vote ]
+            ranking = [option_vote.sorting_position for option_vote in vote]
             v = sv.SchulzeVote(ranking, weight)
             schulze_votes.append(v)
-            res.votes[voter_id]= v
+            res.votes[voter_id] = v
     res.instance = schulze_votes
     res.weight_sum = weight_sum
     res.majority = compute_majority(voting.majority, weight_sum)

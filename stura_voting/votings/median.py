@@ -23,6 +23,7 @@ from django.utils.translation import gettext
 
 import median_voting as mv
 
+
 def median_for_evaluation(collection):
     # TODO check revisions or is this not required?
     all_votings = median_votings(collection=collection)
@@ -43,19 +44,21 @@ def median_for_evaluation(collection):
         for vote in votes:
             if vote.voting.id not in all_votings.votings:
                 # this should really not happen ;)
-                msg = gettext('Invalid voting %(voting_name)s: Does not exist.' % {
-                    'voting_name': vote.voting.name,
-                })
+                msg = gettext(
+                    'Invalid voting %(voting_name)s: Does not exist.' % {
+                        'voting_name': vote.voting.name,
+                    })
                 all_votings.warnings.append(QueryWarning(msg))
                 continue
             if vote.value > voting.value:
                 # not very nice, but should be fine...
-                msg = gettext('Invalid vote for voting %(voting_name)s: Value %(got)d is greater than voting value %(voting_value)d. Vote for %(voter)s not counted' % {
-                    'voting_name': voting.name,
-                    'got': vote.value,
-                    'voting_value': voting.value,
-                    'voter': vote.voter.name,
-                })
+                msg = gettext(
+                    'Invalid vote for voting %(voting_name)s: Value %(got)d is greater than voting value %(voting_value)d. Vote for %(voter)s not counted' % {
+                        'voting_name': voting.name,
+                        'got': vote.value,
+                        'voting_value': voting.value,
+                        'voter': vote.voter.name,
+                    })
                 all_votings.warnings.append(QueryWarning(msg))
             else:
                 voter_mapping[vote.voter.id] = vote
@@ -70,7 +73,8 @@ def single_median_statistics(voting, votes, voters_map):
     # compute sum of all weights
     weight_sum = 0
     # appended s.t. we can keep the order
-    # should not be really necessary because all None votes are at the end though
+    # should not be really necessary because all None votes are at the end
+    # though
     additional_votes = []
     absolute = voting.absolute_majority
     # only for debuging to ensure the queryset is sorted

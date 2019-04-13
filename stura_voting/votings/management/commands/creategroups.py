@@ -23,15 +23,16 @@ ADDITIONAL_KEYWORD = '__additional__'
 ALL_PERMS = ['add', 'change', 'delete', 'view']
 
 GROUPS = {'praesidium': {
-            'voters revision': ALL_PERMS,
-            'period': ALL_PERMS,
-            'voting collection': ALL_PERMS,
-            'voting group': ALL_PERMS,
-            'median voting': ALL_PERMS,
-            'schulze voting': ALL_PERMS,
-            ADDITIONAL_KEYWORD: ['enter_collection_results'],
-            },
-         }
+    'voters revision': ALL_PERMS,
+    'period': ALL_PERMS,
+    'voting collection': ALL_PERMS,
+    'voting group': ALL_PERMS,
+    'median voting': ALL_PERMS,
+    'schulze voting': ALL_PERMS,
+    ADDITIONAL_KEYWORD: ['enter_collection_results'],
+},
+}
+
 
 class Command(BaseCommand):
     help = 'Create groups commonly used in the tool and add permissions to them'

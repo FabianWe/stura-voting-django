@@ -50,13 +50,63 @@ def get_next_semester(reference_date=None):
     """
     if reference_date is None:
         reference_date = datetime.date.today()
-    # we want the closest date, there are probably smarter ways of doing this, but well we don't care very much :)
-    candidates = [('winter', datetime.date(month=10, day=1, year=reference_date.year-1), datetime.date(month=3, day=31, year=reference_date.year)),
-                  ('winter', datetime.date(month=10, day=1, year=reference_date.year), datetime.date(month=3, day=31, year=reference_date.year + 1)),
-                  ('winter', datetime.date(month=10, day=1, year=reference_date.year + 1), datetime.date(month=3, day=31, year=reference_date.year + 2)),
-                  ('summer', datetime.date(month=4, day=1, year=reference_date.year-1), datetime.date(month=3, day=31, year=reference_date.year-1)),
-                  ('summer', datetime.date(month=4, day=1, year=reference_date.year), datetime.date(month=9, day=30, year=reference_date.year)),
-                  ('summer', datetime.date(month=4, day=1, year=reference_date.year + 1), datetime.date(month=9, day=30, year=reference_date.year + 1)),
+    # we want the closest date, there are probably smarter ways of doing this,
+    # but well we don't care very much :)
+    candidates = [
+        ('winter',
+         datetime.date(
+             month=10,
+             day=1,
+             year=reference_date.year - 1),
+            datetime.date(
+             month=3,
+             day=31,
+             year=reference_date.year)),
+        ('winter',
+         datetime.date(
+             month=10,
+             day=1,
+             year=reference_date.year),
+         datetime.date(
+             month=3,
+             day=31,
+             year=reference_date.year + 1)),
+        ('winter',
+         datetime.date(
+             month=10,
+             day=1,
+             year=reference_date.year + 1),
+         datetime.date(
+             month=3,
+             day=31,
+             year=reference_date.year + 2)),
+        ('summer',
+         datetime.date(
+             month=4,
+             day=1,
+             year=reference_date.year - 1),
+         datetime.date(
+             month=3,
+             day=31,
+             year=reference_date.year - 1)),
+        ('summer',
+         datetime.date(
+             month=4,
+             day=1,
+             year=reference_date.year),
+         datetime.date(
+             month=9,
+             day=30,
+             year=reference_date.year)),
+        ('summer',
+         datetime.date(
+             month=4,
+             day=1,
+             year=reference_date.year + 1),
+         datetime.date(
+             month=9,
+             day=30,
+             year=reference_date.year + 1)),
     ]
     # now we have all candidates, check which one is closest to today
     min_delta = None
@@ -102,7 +152,7 @@ def get_semester_end(reference_date=None):
 def get_semester_name(reference_date=None):
     term, next_start, _ = get_next_semester(reference_date)
     if term == 'winter':
-        return 'Wintersemester %d/%d' % (next_start.year, next_start.year+1)
+        return 'Wintersemester %d/%d' % (next_start.year, next_start.year + 1)
     else:
         return 'Sommersemester %d' % next_start.year
 
@@ -110,7 +160,8 @@ def get_semester_name(reference_date=None):
 def next_session_date(weekday, reference_date=None):
     if reference_date is None:
         reference_date = datetime.date.today()
-    return reference_date + relativedelta.relativedelta(days=+1, weekday=weekday(+1))
+    return reference_date + \
+        relativedelta.relativedelta(days=+1, weekday=weekday(+1))
 
 
 def get_next_session_datetime(weekday, hour, minute, reference_date=None):
@@ -121,7 +172,10 @@ def get_next_session_datetime(weekday, hour, minute, reference_date=None):
     return make_aware(time)
 
 
-def get_next_session_name(weekday, reference_date=None, format='Sitzung vom %s'):
+def get_next_session_name(
+        weekday,
+        reference_date=None,
+        format='Sitzung vom %s'):
     date = next_session_date(weekday, reference_date)
     fmt_date = formats.date_format(date, 'DATE_FORMAT')
     return format % fmt_date
@@ -129,7 +183,10 @@ def get_next_session_name(weekday, reference_date=None, format='Sitzung vom %s')
 
 def get_next_session_stura():
     config = settings.VOTING_SESSIONS_CONFIG
-    return get_next_session_datetime(config['weekday'], config['hour'], config['minute'])
+    return get_next_session_datetime(
+        config['weekday'],
+        config['hour'],
+        config['minute'])
 
 
 def get_next_session_name_stura():
@@ -151,11 +208,11 @@ def compute_majority(majority, votes_sum):
     votes_required, _ = required_fraction.split()
     return votes_required
 
+
 def add_votings(parsed_collection, collection_model):
     for group_num, group in enumerate(parsed_collection.groups):
-        model_group = voting_models.VotingGroup.objects.create(name=group.name,
-                                                 collection=collection_model,
-                                                 group_num=group_num)
+        model_group = voting_models.VotingGroup.objects.create(
+            name=group.name, collection=collection_model, group_num=group_num)
         for voting_num, skel in enumerate(group.get_votings()):
             if isinstance(skel, SchulzeVotingSkeleton):
                 schulze_voting = voting_models.SchulzeVoting.objects.create(

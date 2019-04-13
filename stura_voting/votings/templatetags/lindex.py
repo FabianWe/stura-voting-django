@@ -16,6 +16,7 @@ from django import template
 
 register = template.Library()
 
+
 @register.filter
 def lindex(l, i):
     if i < len(l):

@@ -29,19 +29,23 @@ from . import models as voting_models
 def get_median_votes(collection, voter=None, **kwargs):
     collection = utils.get_instance(voting_models.VotingCollection, collection)
     if voter is None:
-        return voting_models.MedianVote.objects.filter(voting__group__collection=collection, **kwargs)
+        return voting_models.MedianVote.objects.filter(
+            voting__group__collection=collection, **kwargs)
     else:
         voter = utils.get_instance(voting_models.Voter, voter)
-        return voting_models.MedianVote.objects.filter(voting__group__collection=collection, voter=voter, **kwargs)
+        return voting_models.MedianVote.objects.filter(
+            voting__group__collection=collection, voter=voter, **kwargs)
 
 
 def get_schulze_votes(collection, voter=None, **kwargs):
     collection = utils.get_instance(voting_models.VotingCollection, collection)
     if voter is None:
-        return voting_models.SchulzeVote.objects.filter(option__voting__group__collection=collection, **kwargs)
+        return voting_models.SchulzeVote.objects.filter(
+            option__voting__group__collection=collection, **kwargs)
     else:
         voter = utils.get_instance(voting_models.Voter, voter)
-        return voting_models.SchulzeVote.objects.filter(option__voting__group__collection=collection, voter=voter, **kwargs)
+        return voting_models.SchulzeVote.objects.filter(
+            option__voting__group__collection=collection, voter=voter, **kwargs)
 
 
 def get_voters_with_vote(collection):
@@ -68,13 +72,13 @@ class MedianWarning(object):
         self.voting = voting
         self.got = got
 
-
     def __str__(self):
-        return gettext('Warning for voting with id %(voting)d: Expected value between 0 and %(max)d but got value %(got)d' % {
-            'voting': self.voting.id,
-            'max': self.voting.value,
-            'got': self.got,
-        })
+        return gettext(
+            'Warning for voting with id %(voting)d: Expected value between 0 and %(max)d but got value %(got)d' % {
+                'voting': self.voting.id,
+                'max': self.voting.value,
+                'got': self.got,
+            })
 
 
 class SchulzeWarning(object):
@@ -98,7 +102,8 @@ class GenericVotingResult(object):
         self.voting_description = dict()
 
     def by_group(self):
-        for group_instance, group in groupby(self.votings.values(), lambda voting: voting.group):
+        for group_instance, group in groupby(
+                self.votings.values(), lambda voting: voting.group):
             yield group_instance, list(group)
 
     def for_overview_template(self):
@@ -123,7 +128,9 @@ class GenericVotingResult(object):
                     group_list.append(('schulze', v))
                     v_id = v.id
                     if v_id not in self.voting_description:
-                        msg = gettext('No options for schulze voting %(voting)d' % {'voting': v_id})
+                        msg = gettext(
+                            'No options for schulze voting %(voting)d' % {
+                                'voting': v_id})
                         warning = QueryWarning(msg)
                         self.warnings.append(warning)
                         option_map[v_id] = []
@@ -153,21 +160,17 @@ class CombinedVotingResult(object):
     def median_key(id):
         return GenericVotingResult.median_prefix + str(id)
 
-
     @staticmethod
     def schulze_key(id):
         return GenericVotingResult.schulze_prefix + str(id)
-
 
     @staticmethod
     def parse_median_key(s):
         return int(s[len(GenericVotingResult.median_prefix):])
 
-
     @staticmethod
     def parse_schulze_key(s):
         return int(s[len(GenericVotingResult.schulze_prefix):])
-
 
     @staticmethod
     def parse_key(s):
@@ -178,32 +181,30 @@ class CombinedVotingResult(object):
         else:
             return None
 
-
     def __init__(self, median, schulze):
         self.median = median
         self.schulze = schulze
         self.warnings = median.warnings + schulze.warnings
 
-
     def get_schulze_vote(self, voting_id):
         return self.schulze.votes[voting_id]
-
 
     def get_median_vote(self, voting_id):
         return self.median.votes[voting_id]
 
-
     def combined_votings(self):
         def key(e):
             return e.group.group_num, e.voting_num
-        merged_list = merge(self.median.votings.values(), self.schulze.votings.values(), key=key)
+        merged_list = merge(
+            self.median.votings.values(),
+            self.schulze.votings.values(),
+            key=key)
         yield from merged_list
 
-
     def by_group(self):
-        for group_instance, group in groupby(self.combined_votings(), lambda voting: voting.group):
+        for group_instance, group in groupby(
+                self.combined_votings(), lambda voting: voting.group):
             yield group_instance, list(group)
-
 
     def for_overview_template(self):
         # returns groups, option_map where
@@ -227,7 +228,9 @@ class CombinedVotingResult(object):
                     group_list.append(('schulze', v))
                     v_id = v.id
                     if v_id not in self.schulze.voting_description:
-                        msg = gettext('No options for schulze voting %(voting)d' % {'voting': v_id})
+                        msg = gettext(
+                            'No options for schulze voting %(voting)d' % {
+                                'voting': v_id})
                         warning = QueryWarning(msg)
                         self.warnings.append(warning)
                         option_map[v_id] = []
@@ -249,12 +252,14 @@ def median_votings(select_for_update=False, **kwargs):
         votings_qs = kwargs['votings_qs']
     elif 'collection' in kwargs:
         collection = kwargs['collection']
-        votings_qs = (voting_models.MedianVoting.objects.filter(group__collection=collection)
-                     .order_by('group__group_num', 'voting_num'))
+        votings_qs = (
+            voting_models.MedianVoting.objects.filter(
+                group__collection=collection) .order_by(
+                'group__group_num', 'voting_num'))
     elif 'group' in kwargs:
         group = kwargs['group']
         votings_qs = (voting_models.MedianVoting.objects.filter(group=group)
-                     .order_by('voting_num'))
+                      .order_by('voting_num'))
     else:
         raise TypeError('Missing queryset / filter')
 
@@ -278,9 +283,11 @@ def schulze_votings(select_for_update=False, **kwargs):
     if 'votings_qs' in kwargs:
         votings_qs = kwargs['votings_qs']
     elif 'collection' in kwargs:
-         collection = kwargs['collection']
-         votings_qs = (voting_models.SchulzeVoting.objects.filter(group__collection=collection)
-                       .order_by('group__group_num', 'voting_num'))
+        collection = kwargs['collection']
+        votings_qs = (
+            voting_models.SchulzeVoting.objects.filter(
+                group__collection=collection) .order_by(
+                'group__group_num', 'voting_num'))
     elif 'group' in kwargs:
         group = kwargs['group']
         votings_qs = (voting_models.SchulzeVoting.objects.filter(group=group)
@@ -292,12 +299,16 @@ def schulze_votings(select_for_update=False, **kwargs):
         options_qs = kwargs['options_qs']
     elif 'collection' in kwargs:
         collection = kwargs['collection']
-        options_qs = (voting_models.SchulzeOption.objects.filter(voting__group__collection=collection)
-                      .order_by('voting__id', 'option_num'))
+        options_qs = (
+            voting_models.SchulzeOption.objects.filter(
+                voting__group__collection=collection) .order_by(
+                'voting__id', 'option_num'))
     elif 'group' in kwargs:
         group = kwargs['group']
-        options_qs = (voting_models.SchulzeOption.objects.filter(voting__group=group)
-                      .order_by('voting__id', 'option_num'))
+        options_qs = (
+            voting_models.SchulzeOption.objects.filter(
+                voting__group=group) .order_by(
+                'voting__id', 'option_num'))
 
     if select_for_update:
         votings_qs = votings_qs.select_for_update()
@@ -312,10 +323,11 @@ def schulze_votings(select_for_update=False, **kwargs):
         voting_id = option.voting.id
         # just to be sure, should not happen
         if voting_id not in res.votings:
-            msg = gettext('Found option with id %(option)d for voting %(voting)d, but voting does not exist' %{
-                'option': option.id,
-                'voting': voting_id,
-            })
+            msg = gettext(
+                'Found option with id %(option)d for voting %(voting)d, but voting does not exist' % {
+                    'option': option.id,
+                    'voting': voting_id,
+                })
             res.warnings.append(SchulzeWarning(msg))
             continue
         if voting_id in res.voting_description:
@@ -328,8 +340,11 @@ def schulze_votings(select_for_update=False, **kwargs):
 # TODO add select_for_update?
 def median_votes_for_voter(collection, voter):
     # could proabably be done in a single more efficient query
-    votings_qs = (voting_models.MedianVoting.objects.filter(group__collection=collection)
-                 .order_by('group__group_num', 'voting_num'))
+    votings_qs = (
+        voting_models.MedianVoting.objects.filter(
+            group__collection=collection) .order_by(
+            'group__group_num',
+            'voting_num'))
     votes_qs = (voting_models.MedianVote.objects
                 .select_for_update()
                 .filter(voter=voter, voting__group__collection=collection)
@@ -353,16 +368,23 @@ def median_votes_for_voter(collection, voter):
 
 def schulze_votes_for_voter(collection, voter):
     # all votings
-    votings_qs = (voting_models.SchulzeVoting.objects.filter(group__collection=collection)
-                  .order_by('group__group_num', 'voting_num'))
+    votings_qs = (
+        voting_models.SchulzeVoting.objects.filter(
+            group__collection=collection) .order_by(
+            'group__group_num',
+            'voting_num'))
     # all options
-    options_qs = (voting_models.SchulzeOption.objects.filter(voting__group__collection=collection)
-                  .order_by('voting__id', 'option_num'))
+    options_qs = (
+        voting_models.SchulzeOption.objects.filter(
+            voting__group__collection=collection) .order_by(
+            'voting__id', 'option_num'))
     # all options voted for
-    votes_qs = (voting_models.SchulzeVote.objects.filter(voter=voter, option__voting__group__collection=collection)
-                .select_for_update()
-                .select_related('option')
-                .order_by('option__voting__id', 'option__option_num'))
+    votes_qs = (
+        voting_models.SchulzeVote.objects.filter(
+            voter=voter,
+            option__voting__group__collection=collection) .select_for_update() .select_related('option') .order_by(
+            'option__voting__id',
+            'option__option_num'))
     res = GenericVotingResult()
 
     # fetch all schulze votings
@@ -373,10 +395,11 @@ def schulze_votes_for_voter(collection, voter):
         voting_id = option.voting.id
         # just to be sure, should not happen
         if voting_id not in res.votings:
-            msg = gettext('Found option with id %(option)d for voting %(voting)d, but voting does not exist' %{
-                'option': option.id,
-                'voting': voting_id,
-            })
+            msg = gettext(
+                'Found option with id %(option)d for voting %(voting)d, but voting does not exist' % {
+                    'option': option.id,
+                    'voting': voting_id,
+                })
             res.warnings.append(SchulzeWarning(msg))
             continue
         if voting_id in res.voting_description:
@@ -388,11 +411,12 @@ def schulze_votes_for_voter(collection, voter):
         voting_id = schulze_vote.option.voting.id
         # just to be sure
         if voting_id not in res.votings:
-            msg = gettext('Found a vote with id %(vote)d for schulze option with id %(option)d for voting %(voting)d, but voting does not exist' % {
-                'vote': schulze_vote.id,
-                'option': schulze_vote.option.id,
-                'voting': voting_id,
-            })
+            msg = gettext(
+                'Found a vote with id %(vote)d for schulze option with id %(option)d for voting %(voting)d, but voting does not exist' % {
+                    'vote': schulze_vote.id,
+                    'option': schulze_vote.option.id,
+                    'voting': voting_id,
+                })
             res.warnings.append(SchulzeWarning(msg))
             continue
         if voting_id in res.votes:
@@ -402,28 +426,34 @@ def schulze_votes_for_voter(collection, voter):
     # now perform sanity checks
     for voting_id, votes in res.votes.items():
         if voting_id not in res.voting_description:
-            msg = gettext('Vote with id %(vote)d has no description' % {'vote': voting_id})
+            msg = gettext(
+                'Vote with id %(vote)d has no description' % {
+                    'vote': voting_id})
             res.warnings.append(msg)
             continue
         voting_options = res.voting_description[voting_id]
         if len(votes) != len(voting_options):
-            msg = gettext('Number of options %(options)d does not match number of votes %(votes)d for voting %(voting)d' % {
-                'options': len(voting_options),
-                'votes': len(votes),
-                'voting': voting_id,
-            })
+            msg = gettext(
+                'Number of options %(options)d does not match number of votes %(votes)d for voting %(voting)d' % {
+                    'options': len(voting_options),
+                    'votes': len(votes),
+                    'voting': voting_id,
+                })
             res.warnings.append(SchulzeWarning(msg))
             continue
         for vote, option in zip(votes, voting_options):
             if vote.option != option:
-                msg = gettext('Invalid vote for option for voting %(voting)d: Got vote for option %(option)d instead of %(for)d' % {
-                    'voting': voting_id,
-                    'option': vote.option.id,
-                    'for': option.id,
+                msg = gettext(
+                    'Invalid vote for option for voting %(voting)d: Got vote for option %(option)d instead of %(for)d' % {
+                        'voting': voting_id,
+                        'option': vote.option.id,
+                        'for': option.id,
                     })
                 res.warnings.append(SchulzeWarning(msg))
-                # no continue here, evaluation works fine but probably something is wrong
+                # no continue here, evaluation works fine but probably
+                # something is wrong
     return res
+
 
 def for_votes_list_template(voting_result):
     # assumes missing entries have be filled with fill_missing_voters
@@ -441,6 +471,7 @@ def for_votes_list_template(voting_result):
                 assert False
         groups.append((group, group_list))
     return groups
+
 
 class GenericVotingInstance(object):
     # fields: instance, MedianStatistics for median

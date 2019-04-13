@@ -18,6 +18,7 @@ from stura_voting_utils.utils import output_currency
 
 register = template.Library()
 
+
 @register.filter
 def hash(d, key):
     # was empty list before because we used it in a very special place...

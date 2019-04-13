@@ -19,6 +19,8 @@ from stura_voting_utils import SchulzeVotingSkeleton
 import re
 
 # TODO check maxlength before insertion?
+
+
 class VotersRevisionField(forms.CharField):
 
     widget = forms.Textarea
@@ -29,7 +31,9 @@ class VotersRevisionField(forms.CharField):
             voters = list(parse_voters(cleaned.split('\n')))
             return voters
         except ParseException as e:
-            raise forms.ValidationError("Can't parse voters from field: %s" % str(e))
+            raise forms.ValidationError(
+                "Can't parse voters from field: %s" %
+                str(e))
 
 
 class SchulzeOptionsField(forms.CharField):
@@ -46,7 +50,8 @@ class SchulzeOptionsField(forms.CharField):
                 continue
             match = _schulze_option_rx.match(line)
             if not match:
-                raise forms.ValidationError("Can't parse option line '%s'" % line)
+                raise forms.ValidationError(
+                    "Can't parse option line '%s'" % line)
             o = match.group('option')
             o = o.strip()
             options.append(o)
@@ -68,10 +73,13 @@ class VotingCollectionField(forms.CharField):
                 for skel in group.get_votings():
                     if isinstance(skel, SchulzeVotingSkeleton):
                         if len(skel.options) < 2:
-                            raise forms.ValidationError('Not enough options for schulze voting')
+                            raise forms.ValidationError(
+                                'Not enough options for schulze voting')
             return collection
         except ParseException as e:
-            raise forms.ValidationError("Can't parse voting collection from field: %s" % str(e))
+            raise forms.ValidationError(
+                "Can't parse voting collection from field: %s" %
+                str(e))
 
 
 # TODO test both fields
@@ -95,7 +103,9 @@ class CurrencyField(forms.CharField):
         except ParseException as e:
             raise forms.ValidationError('No valid currency: %s' % str(e))
         if val < 0 or val > self.max_value:
-            raise forms.ValidationError('Invalid currency: Must be >= 0 and <= max_value (%d)' % self.max_value)
+            raise forms.ValidationError(
+                'Invalid currency: Must be >= 0 and <= max_value (%d)' %
+                self.max_value)
         return val, currency
 
 
@@ -108,7 +118,6 @@ class SchulzeVoteField(forms.CharField):
         num_options = kwargs.pop('num_options')
         self.num_options = num_options
         super().__init__(**kwargs)
-
 
     def clean(self, value):
         cleaned = super().clean(value)
@@ -124,13 +133,18 @@ class SchulzeVoteField(forms.CharField):
             try:
                 val = int(s)
                 if val < 0:
-                    raise forms.ValidationError('Invalid Schulze vote: Must be a postive integer')
+                    raise forms.ValidationError(
+                        'Invalid Schulze vote: Must be a postive integer')
                 ranking.append(val)
             except ValueError as e:
-                raise forms.ValidationError('Invalid Schulze vote: Must be list of integers: %s' % str(e))
+                raise forms.ValidationError(
+                    'Invalid Schulze vote: Must be list of integers: %s' %
+                    str(e))
         if len(ranking) != self.num_options:
-            raise forms.ValidationError('Invalid Schulze vote: Does not match number of options in voting')
+            raise forms.ValidationError(
+                'Invalid Schulze vote: Does not match number of options in voting')
         return ranking
+
 
 class GroupOrderField(forms.CharField):
     def __init__(self, **kwargs):
@@ -152,12 +166,17 @@ class GroupOrderField(forms.CharField):
             try:
                 val = int(s)
                 if val < 0:
-                    raise forms.ValidationError('Invalid group position: Must be a postive integer')
+                    raise forms.ValidationError(
+                        'Invalid group position: Must be a postive integer')
                 order.append(val)
             except ValueError as e:
-                raise forms.ValidationError('Invalid group position: Must be list of integers: %s' % str(e))
+                raise forms.ValidationError(
+                    'Invalid group position: Must be list of integers: %s' %
+                    str(e))
         if len(order) != self.num_votings:
-            raise forms.ValidationError('Invalid group position: Does not match number of votings')
+            raise forms.ValidationError(
+                'Invalid group position: Does not match number of votings')
         if len(order) != len(set(order)):
-            raise forms.ValidationError('Invalid group position: Positions must be unique')
+            raise forms.ValidationError(
+                'Invalid group position: Positions must be unique')
         return order

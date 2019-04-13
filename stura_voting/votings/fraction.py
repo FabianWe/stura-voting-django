@@ -14,6 +14,7 @@
 
 import math
 
+
 class Fraction(object):
     def __init__(self, numerator=0, denominator=1):
         if denominator == 0:

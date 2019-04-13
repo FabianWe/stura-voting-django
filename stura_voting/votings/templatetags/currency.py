@@ -18,6 +18,7 @@ from stura_voting_utils.utils import output_currency
 
 register = template.Library()
 
+
 @register.filter
 def currency(val, currency):
     # TODO we could use localized versions...

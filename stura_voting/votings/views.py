@@ -60,17 +60,22 @@ def profile(request):
 
 def archive_index(request):
     return render(request, 'votings/archive.html',
-             {'periods': Period.objects.order_by('-start', '-created')[:10],
-              'collections': VotingCollection.objects.order_by('-time')[:10]})
+                  {'periods': Period.objects.order_by('-start', '-created')[:10],
+                   'collections': VotingCollection.objects.order_by('-time')[:10]})
 
 
 @transaction.atomic
-@permission_required(('votings.change_votinggroup', 'votings.change_medianvoting', 'votings.change_schulzevoting'))
+@permission_required(
+    ('votings.change_votinggroup',
+     'votings.change_medianvoting',
+     'votings.change_schulzevoting'))
 def edit_group_view(request, pk):
     group = get_object_or_404(VotingGroup, pk=pk)
     context = {'group': group}
-    median_votings = results.median_votings(group=group, select_for_update=True)
-    schulze_votings = results.schulze_votings(group=group, select_for_update=True)
+    median_votings = results.median_votings(
+        group=group, select_for_update=True)
+    schulze_votings = results.schulze_votings(
+        group=group, select_for_update=True)
     merged = results.CombinedVotingResult(median_votings, schulze_votings)
     context['median_votings'] = median_votings
     context['schulze_votings'] = schulze_votings
@@ -135,9 +140,9 @@ class SchulzeVotingDeleteView(PermissionRequiredMixin, VotingDeleteView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         num_voters = (SchulzeVote.objects.filter(option__voting=self.object)
-                        .values_list('voter__id', flat=True)
-                        .distinct()
-                        .count())
+                      .values_list('voter__id', flat=True)
+                      .distinct()
+                      .count())
         # without values_list sqlite does not work
         context['num_voters'] = num_voters
         return context
@@ -154,7 +159,9 @@ class MedianUpdateView(PermissionRequiredMixin, UpdateView):
     template_name = 'votings/voting/median_update.html'
 
     def get_success_url(self):
-        return reverse('session_detail', args=[self.object.group.collection.id])
+        return reverse(
+            'session_detail', args=[
+                self.object.group.collection.id])
 
 
 class SchulzeUpdateView(PermissionRequiredMixin, UpdateView):
@@ -168,7 +175,9 @@ class SchulzeUpdateView(PermissionRequiredMixin, UpdateView):
     template_name = 'votings/voting/schulze_update.html'
 
     def get_success_url(self):
-        return reverse('session_detail', args=[self.object.group.collection.id])
+        return reverse(
+            'session_detail', args=[
+                self.object.group.collection.id])
 
 
 @transaction.atomic
@@ -184,7 +193,8 @@ def new_period(request):
                 # create a first revision
                 rev = VotersRevision.objects.create(period=period, note='')
                 for voter in form.cleaned_data['revision']:
-                    Voter.objects.create(revision=rev, name=voter.name, weight=voter.weight)
+                    Voter.objects.create(
+                        revision=rev, name=voter.name, weight=voter.weight)
             return redirect('period_detail_success', pk=period.id)
     return render(request, 'votings/period/new_period.html', {'form': form})
 
@@ -198,9 +208,14 @@ class PeriodDetailView(DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         period = context['period']
-        revs = VotersRevision.objects.filter(period=period).order_by('-period__start', '-period__created', '-created')
+        revs = VotersRevision.objects.filter(
+            period=period).order_by(
+            '-period__start',
+            '-period__created',
+            '-created')
         context['revisions'] = revs
-        collections = VotingCollection.objects.filter(revision__period=period).order_by('-time')
+        collections = VotingCollection.objects.filter(
+            revision__period=period).order_by('-time')
         context['collections'] = collections
         return context
 
@@ -210,7 +225,7 @@ class PeriodUpdateView(PermissionRequiredMixin, UpdateView):
     permission_required = 'votings.change_period'
 
     model = Period
-    fields = ('start', 'end','name')
+    fields = ('start', 'end', 'name')
     template_name = 'votings/period/update_period.html'
 
     def get_success_url(self):
@@ -231,7 +246,8 @@ class PeriodDetailSuccess(PermissionRequiredMixin, PeriodDetailView):
 def enter_voterlist(request, pk):
     collection = get_object_or_404(VotingCollection, pk=pk)
     with_vote_id = get_voters_with_vote(collection)
-    all_voters = Voter.objects.filter(revision=collection.revision).order_by('name')
+    all_voters = Voter.objects.filter(
+        revision=collection.revision).order_by('name')
     with_vote = []
     without_vote = []
     for voter in all_voters:
@@ -239,7 +255,10 @@ def enter_voterlist(request, pk):
             with_vote.append(voter)
         else:
             without_vote.append(voter)
-    context = {'collection': collection, 'with_vote': with_vote, 'without_vote': without_vote}
+    context = {
+        'collection': collection,
+        'with_vote': with_vote,
+        'without_vote': without_vote}
     return render(request, 'votings/session/enter_voterlist.html', context)
 
 
@@ -255,19 +274,22 @@ def enter_single_voter_view(request, coll, v):
     if request.method == 'GET':
         form = ResultsSingleVoterForm(collection=collection, voter=voter)
     else:
-        form = ResultsSingleVoterForm(request.POST, collection=collection, voter=voter)
+        form = ResultsSingleVoterForm(
+            request.POST, collection=collection, voter=voter)
         if form.is_valid():
             for v_type, v_id, val in form.votings():
                 if v_type == 'median':
                     __handle_enter_median(form.median_result, v_id, val, voter)
                 elif v_type == 'schulze':
-                    __handle_enter_schulze(form.schulze_result, v_id, val, voter)
+                    __handle_enter_schulze(
+                        form.schulze_result, v_id, val, voter)
                 else:
                     assert False
     context['form'] = form
     # our methods might change the contents of schulze and median warnings, thus
     # the merged result does not contain all warnings, we merge them here again
-    context['warnings'] = list(map(str, form.median_result.warnings + form.schulze_result.warnings))
+    context['warnings'] = list(
+        map(str, form.median_result.warnings + form.schulze_result.warnings))
     return render(request, 'votings/session/enter_single.html', context)
 
 
@@ -277,9 +299,10 @@ def __handle_enter_median(result, v_id, val, voter):
     # val: None or tuple (value, currency)
     # first lookup voting and ensure it exists
     if v_id not in result.votings:
-        msg = gettext('Median voting with id %(voting)d does not exist, not saved' % {
-            'voting': v_id,
-        })
+        msg = gettext(
+            'Median voting with id %(voting)d does not exist, not saved' % {
+                'voting': v_id,
+            })
         warning = QueryWarning(msg)
         result.warnings.append(warning)
         return
@@ -311,9 +334,10 @@ def __handle_enter_schulze(result, v_id, val, voter):
     # is correct
     # first lookup voting and ensure it exists
     if v_id not in result.votings:
-        msg = gettext('Schulze voting with id %(voting)d does not exist, not saved' % {
-            'voting': v_id,
-        })
+        msg = gettext(
+            'Schulze voting with id %(voting)d does not exist, not saved' % {
+                'voting': v_id,
+            })
         warning = QueryWarning(msg)
         result.warnings.append(warning)
         return
@@ -327,17 +351,18 @@ def __handle_enter_schulze(result, v_id, val, voter):
     else:
         # update or insert
         if v_id not in result.voting_description:
-            msg = gettext('Schulze voting with id %(voting)d has no options, not saved' % {
-                'voting': v_id,
-            })
+            msg = gettext(
+                'Schulze voting with id %(voting)d has no options, not saved' % {
+                    'voting': v_id,
+                })
             warning = QueryWarning(msg)
             result.warnings.append(warning)
             return
         voting_options = result.voting_description[v_id]
         if len(val) != len(voting_options):
-            msg = gettext('Invalid schulze result. Internal error? Result for voting %(voting)d not saved' % {
-                'voting': v_id
-            })
+            msg = gettext(
+                'Invalid schulze result. Internal error? Result for voting %(voting)d not saved' % {
+                    'voting': v_id})
             warning = QueryWarning(msg)
             result.warnings.append(warning)
             return
@@ -349,11 +374,12 @@ def __handle_enter_schulze(result, v_id, val, voter):
             # got inserted. So now we prevent an update / insertion if something
             # is wrong
             if len(current_votes) != len(voting_options):
-                msg = gettext('Number of options %(options)d does not match number of votes %(votes)d for voting %(voting)d. Not saved' % {
-                    'options': len(voting_options),
-                    'votes': len(current_votes),
-                    'voting': v_id,
-                })
+                msg = gettext(
+                    'Number of options %(options)d does not match number of votes %(votes)d for voting %(voting)d. Not saved' % {
+                        'options': len(voting_options),
+                        'votes': len(current_votes),
+                        'voting': v_id,
+                    })
                 warning = QueryWarning(msg)
                 result.warnings.append(warning)
                 return
@@ -364,10 +390,11 @@ def __handle_enter_schulze(result, v_id, val, voter):
                     # then when create a warning and return
                     for vote in current_votes:
                         vote.delete()
-                    msg = gettext('Invalid vote for option for vote %(vote)d: Got vote for option %(option)d instead of %(for)d. Existing entries were deleted!' % {
-                        'vote': v_id,
-                        'option': vote.option.id,
-                        'for': option.id,
+                    msg = gettext(
+                        'Invalid vote for option for vote %(vote)d: Got vote for option %(option)d instead of %(for)d. Existing entries were deleted!' % {
+                            'vote': v_id,
+                            'option': vote.option.id,
+                            'for': option.id,
                         })
                     warning = QueryWarning(msg)
                     result.warnings.append(warning)
@@ -382,7 +409,7 @@ def __handle_enter_schulze(result, v_id, val, voter):
         else:
             # we know that len(val) == len(voting_options, so insert)
             for option, ranking_pos in zip(voting_options, val):
-                SchulzeVote.objects.create(sorting_position= ranking_pos,
+                SchulzeVote.objects.create(sorting_position=ranking_pos,
                                            voter=voter,
                                            option=option)
 
@@ -390,7 +417,9 @@ def __handle_enter_schulze(result, v_id, val, voter):
 @permission_required('votings.add_votersrevision')
 def revision_success(request, pk):
     rev = get_object_or_404(VotersRevision, pk=pk)
-    return render(request, 'votings/revision/success_revision.html', {'revision': rev})
+    return render(request,
+                  'votings/revision/success_revision.html',
+                  {'revision': rev})
 
 
 @transaction.atomic
@@ -404,9 +433,12 @@ def new_revision(request):
             rev = form.save()
             if form.cleaned_data['voters']:
                 for voter in form.cleaned_data['voters']:
-                    Voter.objects.create(revision=rev, name=voter.name, weight=voter.weight)
+                    Voter.objects.create(
+                        revision=rev, name=voter.name, weight=voter.weight)
             return redirect('new_revision_success', pk=rev.id)
-    return render(request, 'votings/revision/new_revision.html', {'form': form})
+    return render(request,
+                  'votings/revision/new_revision.html',
+                  {'form': form})
 
 
 class PeriodsList(ListView):
@@ -441,7 +473,8 @@ class RevisionDeleteView(PermissionRequiredMixin, DeleteView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        num_sessions = VotingCollection.objects.filter(revision=self.object).count()
+        num_sessions = VotingCollection.objects.filter(
+            revision=self.object).count()
         context['num_sessions'] = num_sessions
         return context
 
@@ -461,9 +494,11 @@ class PeriodDeleteView(PermissionRequiredMixin, DeleteView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        num_revisions = VotersRevision.objects.filter(period=self.object).count()
+        num_revisions = VotersRevision.objects.filter(
+            period=self.object).count()
         context['num_revisions'] = num_revisions
-        num_sessions = VotingCollection.objects.filter(revision__period=self.object).count()
+        num_sessions = VotingCollection.objects.filter(
+            revision__period=self.object).count()
         context['num_sessions'] = num_sessions
         return context
 
@@ -477,17 +512,22 @@ def period_delete_success_view(request):
 @permission_required('votings.change_votersrevision')
 def update_revision_view(request, pk):
     revision = get_object_or_404(VotersRevision, pk=pk)
-    voters = Voter.objects.filter(revision=revision).order_by('name').select_for_update()
+    voters = Voter.objects.filter(
+        revision=revision).order_by('name').select_for_update()
     if request.method == 'GET':
         form = RevisionUpdateForm(voters=voters)
     else:
         form = RevisionUpdateForm(request.POST, voters=voters)
         if form.is_valid():
             transmitted_voters = form.cleaned_data['voters']
-            update_summary = __update_voters(voters, transmitted_voters, revision)
+            update_summary = __update_voters(
+                voters, transmitted_voters, revision)
             # render success template and show information about what happend
             context = {'revision': revision, 'update_summary': update_summary}
-            return render(request, 'votings/revision/revision_update_success.html', context)
+            return render(
+                request,
+                'votings/revision/revision_update_success.html',
+                context)
     num_sessions = VotingCollection.objects.filter(revision=revision).count()
     return render(request, 'votings/revision/revision_update.html', {
         'revision': revision,
@@ -513,22 +553,24 @@ def __update_voters(old_voters, new_voters, revision):
             old_voter = old[new_voter_name]
             if new_voter.weight != old_voter.weight:
                 # update
-                entry = gettext('Changed weight for %(voter)s from %(old)d to %(new)d' % {
-                    'voter': new_voter_name,
-                    'old': old_voter.weight,
-                    'new': new_voter.weight,
-                })
+                entry = gettext(
+                    'Changed weight for %(voter)s from %(old)d to %(new)d' % {
+                        'voter': new_voter_name,
+                        'old': old_voter.weight,
+                        'new': new_voter.weight,
+                    })
                 summary.append(entry)
                 old_voter.weight = new_voter.weight
                 old_voter.save(update_fields=['weight'])
         else:
             # insert
             entry = gettext('Inserted new voter %(voter)s with weigth %(weight)d' % {
-                'voter': new_voter_name,
-                'weight': new_voter.weight,
-            })
+                            'voter': new_voter_name, 'weight': new_voter.weight, })
             summary.append(entry)
-            Voter.objects.create(revision=revision, name=new_voter_name, weight=new_voter.weight)
+            Voter.objects.create(
+                revision=revision,
+                name=new_voter_name,
+                weight=new_voter.weight)
     # now iterate over all old entries.
     # the entries not in the new list can be deleted
     # we could probably just delete with a single query with name__in = ...
@@ -537,7 +579,8 @@ def __update_voters(old_voters, new_voters, revision):
     for old_voter_name, old_voter in old.items():
         if old_voter_name not in new:
             # delete
-            entry = gettext('Delete voter %(voter)s' % {'voter': old_voter_name})
+            entry = gettext('Delete voter %(voter)s' %
+                            {'voter': old_voter_name})
             summary.append(entry)
             old_voter.delete()
     return summary
@@ -620,10 +663,12 @@ class SessionDelete(PermissionRequiredMixin, DeleteView):
     success_url = reverse_lazy('session_delete_success')
     template_name = 'votings/session/session_confirm_delete.html'
 
+
 @transaction.atomic
 def session_votes_list(request, pk):
     collection = get_object_or_404(VotingCollection, pk=pk)
-    all_voters = Voter.objects.filter(revision=collection.revision).order_by('name')
+    all_voters = Voter.objects.filter(
+        revision=collection.revision).order_by('name')
 
     # get all votings + results
     median = median_for_evaluation(collection)
@@ -638,9 +683,10 @@ def session_votes_list(request, pk):
 
     warnings = list(map(str, merged.warnings))
     context = {'groups': group_data, 'voters': all_voters,
-        'collection': collection, 'warnings': warnings}
+               'collection': collection, 'warnings': warnings}
 
     return render(request, 'votings/votes/votes_list.html', context)
+
 
 def session_results_generalized_view(request, pk, show_votes):
     collection = get_object_or_404(VotingCollection, pk=pk)
@@ -666,12 +712,14 @@ def session_results_generalized_view(request, pk, show_votes):
     # might use this in a template
     median_instances = OrderedDict()
     for median_v_id, median_v in median.votings.items():
-        instance = single_median_statistics(median_v, median.votes[median_v_id], voters_map)
+        instance = single_median_statistics(
+            median_v, median.votes[median_v_id], voters_map)
         median_instances[median_v_id] = instance
     # same for schulze
     schulze_instances = OrderedDict()
     for schulze_v_id, schulze_v in schulze.votings.items():
-        instance = single_schulze_instance(schulze_v,
+        instance = single_schulze_instance(
+            schulze_v,
             schulze.votes[schulze_v_id],
             schulze.voting_description[schulze_v_id],
             voters_map)
@@ -679,7 +727,8 @@ def session_results_generalized_view(request, pk, show_votes):
 
     median_results = dict()
     for median_id, gen_instance in median_instances.items():
-        median_results[median_id] = gen_instance.instance.median(votes_required=gen_instance.majority)
+        median_results[median_id] = gen_instance.instance.median(
+            votes_required=gen_instance.majority)
 
     schulze_results = dict()
     # also map to list of how many voters (weights) ranked an option before no
@@ -697,12 +746,18 @@ def session_results_generalized_view(request, pk, show_votes):
     group_data = for_votes_list_template(merged)
 
     warnings = list(map(str, merged.warnings))
-    context = {'show_votes': show_votes, 'voters': all_voters,
-        'collection': collection, 'warnings': warnings,
-        'median_results': median_results, 'schulze_results': schulze_results,
-        'groups': group_data, 'median_instances': median_instances,
+    context = {
+        'show_votes': show_votes,
+        'voters': all_voters,
+        'collection': collection,
+        'warnings': warnings,
+        'median_results': median_results,
+        'schulze_results': schulze_results,
+        'groups': group_data,
+        'median_instances': median_instances,
         'schulze_instances': schulze_instances,
-        'median_votings': median, 'schulze_votings': schulze,
+        'median_votings': median,
+        'schulze_votings': schulze,
         'schulze_num_no': schulze_num_no,
         'schulze_percent_no': schulze_percent_no}
 
@@ -751,14 +806,14 @@ class SessionPrintView(DetailView):
 def _get_max_voting_num(group):
 
     max_median = (MedianVoting.objects.filter(group=group)
-                 .aggregate(Max('voting_num')))
+                  .aggregate(Max('voting_num')))
     # get actual value
     max_median = max_median['voting_num__max']
     res = -1
     if max_median is not None:
         res = max_median
     max_schulze = (SchulzeVoting.objects.filter(group=group)
-                  .aggregate(Max('voting_num')))
+                   .aggregate(Max('voting_num')))
     # again the actual value
     max_schulze = max_schulze['voting_num__max']
     if max_schulze is not None:
@@ -793,6 +848,7 @@ class MedianVotingCreateView(PermissionRequiredMixin, CreateView):
     def get_success_url(self):
         return reverse('group_update', args=[self.group.id])
 
+
 @transaction.atomic
 @permission_required('votings.add_schulzevoting')
 def create_schulze_view(request, pk):
@@ -815,4 +871,6 @@ def create_schulze_view(request, pk):
                     option_num=option_num,
                     voting=voting,
                 )
-    return render(request, 'votings/voting/schulze_create.html', {'form': form})
+    return render(request,
+                  'votings/voting/schulze_create.html',
+                  {'form': form})
