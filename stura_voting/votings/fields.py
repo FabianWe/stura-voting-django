@@ -22,6 +22,14 @@ import re
 
 
 class VotersRevisionField(forms.CharField):
+    """A field for a voters revision.
+
+    A voters revision field must have a multiline text content of the form:
+    Beginning with *, followed by the name, a colon and the voters weight: "* <NAME>: <WEIGHT>".
+
+    The clean method returns the list of all voters in the form of stura_voting_utils.WeightedVoter.
+
+    """
 
     widget = forms.Textarea
 
@@ -37,6 +45,15 @@ class VotersRevisionField(forms.CharField):
 
 
 class SchulzeOptionsField(forms.CharField):
+    """A field for parsing Schulze options.
+
+    A schulze option field must have a multiline text content of the for:
+    Beginning with *, followed by the option name: "* <OPTION TEXT>".
+
+    The clean method returns the list of all option strings.
+    At least two options must exist, otherwise a ValidationError is raised.
+
+    """
 
     widget = forms.Textarea
 
@@ -61,6 +78,14 @@ class SchulzeOptionsField(forms.CharField):
 
 
 class VotingCollectionField(forms.CharField):
+    """A field to parse a whole voting collection.
+
+    The content must be a (multilined) description of the voting collection as defined in
+    stura_voting_utils.parse_voting_collection. The clean method returns this parsed instance.
+    The clean method may raise a ValidationError if the collection can't be parsed (invalid syntax)
+    or if a schulze voting has less than two options.
+
+    """
 
     widget = forms.Textarea
 
@@ -85,6 +110,17 @@ class VotingCollectionField(forms.CharField):
 # TODO test both fields
 
 class CurrencyField(forms.CharField):
+    """A field for a currency value.
+
+    The field must be a valid currency according to stura_votings_util.parse_currency.
+    For example "100,00 €" would be valid.
+    If the field is left empty the clean method returns None if this field is left empty
+    (empty string).
+    It returns the integer value and currency (as a tuple).
+    For example "100,00 €" would return (10000, '€').
+    If no currency symbol was provided it returns None instead.
+
+    """
 
     def __init__(self, **kwargs):
         self.max_value = kwargs.pop('max_value')
@@ -113,6 +149,21 @@ _schulze_vote_rx = re.compile(r'[ /;,]')
 
 
 class SchulzeVoteField(forms.CharField):
+    """A field used for a vote casted for a schulze voting.
+
+    The field must be a list of integers (the sorting positions). Smaller values mean
+    "higher ranked". The integers must be separated by a space, "/", ";" or ",".
+    The number of integers in the ranking must match the number of options in the voting.
+    The clean method returns the ranking as a list of integers.
+    A validation error in clean may be raised:
+    If one of the entries can't be parsed as an integer, if one of the integers is < 0
+    or if the number of integers does not match the number of options in the voting
+    (num_options).
+
+    Attributes:
+        num_options (int): The number of options in the schulze voting.
+
+    """
 
     def __init__(self, **kwargs):
         num_options = kwargs.pop('num_options')
@@ -147,6 +198,19 @@ class SchulzeVoteField(forms.CharField):
 
 
 class GroupOrderField(forms.CharField):
+    """A field used to change the order of votings in a group.
+
+    This field works nearly as SchulzeVoteField, but instead of num_options has a
+    num_votings attribute that defines the number of votings in a specific group.
+    This field is meant to change the order in which votings are sorted in a group.
+
+     In additon the clean method may raise an error if one position appears more than once
+     in the order; otherwise works like SchulzeVoteField.
+
+     Attributes:
+         num_votings (int): The number of votings in the group.
+
+    """
     def __init__(self, **kwargs):
         num_votings = kwargs.pop('num_votings')
         self.num_votings = num_votings
