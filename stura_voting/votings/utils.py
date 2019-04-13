@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import datetime
-from heapq import merge
 
 from dateutil import relativedelta
 
@@ -21,9 +20,8 @@ from django.utils.timezone import make_aware
 from django.utils import formats
 from django.conf import settings
 from django.shortcuts import get_object_or_404
-from django.http import HttpResponseBadRequest
 
-# otherwise some really ugly import stuff
+# otherwise some really ugly import issues
 from . import models as voting_models
 from . import results
 from . fraction import *
