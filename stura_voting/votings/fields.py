@@ -211,6 +211,7 @@ class GroupOrderField(forms.CharField):
          num_votings (int): The number of votings in the group.
 
     """
+
     def __init__(self, **kwargs):
         num_votings = kwargs.pop('num_votings')
         self.num_votings = num_votings
@@ -239,8 +240,8 @@ class GroupOrderField(forms.CharField):
                     str(e))
         if len(order) != self.num_votings:
             raise forms.ValidationError(
-                'Invalid group position: Does not match number of votings')
+                'Invalid position in group: Does not match number of votings')
         if len(order) != len(set(order)):
             raise forms.ValidationError(
-                'Invalid group position: Positions must be unique')
+                'Invalid position in group: Positions must be unique')
         return order

@@ -339,7 +339,6 @@ def schulze_votings(select_for_update=False, **kwargs):
 
 # TODO add select_for_update?
 def median_votes_for_voter(collection, voter):
-    # could proabably be done in a single more efficient query
     votings_qs = (
         voting_models.MedianVoting.objects.filter(
             group__collection=collection) .order_by(
