@@ -16,7 +16,6 @@ from collections import OrderedDict
 from itertools import groupby
 from heapq import merge
 
-from django.core.exceptions import ObjectDoesNotExist
 from django.utils.translation import gettext
 
 from . import utils
@@ -52,14 +51,14 @@ def get_voters_with_vote(collection):
     # returns all voters that casted a vote for any of the votes in the
     # collection
     # returns them by id as a set
-    all = get_median_votes(collection).values_list('voter__id', flat=True)
-    result = set(all)
-    all = get_schulze_votes(collection).values_list('voter__id', flat=True)
-    result.update(all)
+    all_voters = get_median_votes(collection).values_list('voter__id', flat=True)
+    result = set(all_voters)
+    all_voters = get_schulze_votes(collection).values_list('voter__id', flat=True)
+    result.update(all_voters)
     return result
 
 
-def QueryWarning(object):
+class QueryWarning(object):
     def __init__(self, message):
         self.message = message
 
@@ -157,27 +156,27 @@ class CombinedVotingResult(object):
     schulze_prefix = 'schulze_'
 
     @staticmethod
-    def median_key(id):
-        return GenericVotingResult.median_prefix + str(id)
+    def median_key(m_id):
+        return CombinedVotingResult.median_prefix + str(m_id)
 
     @staticmethod
-    def schulze_key(id):
-        return GenericVotingResult.schulze_prefix + str(id)
+    def schulze_key(s_id):
+        return CombinedVotingResult.schulze_prefix + str(s_id)
 
     @staticmethod
     def parse_median_key(s):
-        return int(s[len(GenericVotingResult.median_prefix):])
+        return int(s[len(CombinedVotingResult.median_prefix):])
 
     @staticmethod
     def parse_schulze_key(s):
-        return int(s[len(GenericVotingResult.schulze_prefix):])
+        return int(s[len(CombinedVotingResult.schulze_prefix):])
 
     @staticmethod
     def parse_key(s):
-        if s.startswith(GenericVotingResult.median_prefix):
-            return 'median', GenericVotingResult.parse_median_key(s)
-        elif s.startswith(GenericVotingResult.schulze_prefix):
-            return 'schulze', GenericVotingResult.parse_schulze_key(s)
+        if s.startswith(CombinedVotingResult.median_prefix):
+            return 'median', CombinedVotingResult.parse_median_key(s)
+        elif s.startswith(CombinedVotingResult.schulze_prefix):
+            return 'schulze', CombinedVotingResult.parse_schulze_key(s)
         else:
             return None
 
@@ -247,7 +246,6 @@ def median_votings(select_for_update=False, **kwargs):
     # usage: provide a query for votings like votings_qs = ...
     # or provide collection=VotingCollection(...) for all votings in a certain collection
     # or provide group=VotingGroup(...) for all votings in a certain group
-    votings_qs = None
     if 'votings_qs' in kwargs:
         votings_qs = kwargs['votings_qs']
     elif 'collection' in kwargs:
