@@ -26,6 +26,21 @@ from . import models as voting_models
 # (I know that this is not the right place for this TODO)
 
 def get_median_votes(collection, voter=None, **kwargs):
+    """Returns all median votes for a given collection.
+
+    Returns a queryset containing all votes for all median votings in the given collection.
+
+    Args:
+        collection (models.VotingCollection): Collection pk or models.VotingCollection to
+            gather results for.
+        voter (models.Voter or None): If None all median votes are returned, otherwise
+            only for this particular voter are returned.
+        **kwargs: Additional arguments directly passed to the queryset filter.
+
+    Returns:
+        queryset: All votes for all votings in the collection (or only for a particular
+            voter).
+    """
     collection = utils.get_instance(voting_models.VotingCollection, collection)
     if voter is None:
         return voting_models.MedianVote.objects.filter(
@@ -37,6 +52,21 @@ def get_median_votes(collection, voter=None, **kwargs):
 
 
 def get_schulze_votes(collection, voter=None, **kwargs):
+    """Returns all schulze votes for a given collection.
+
+    Returns a queryset containing all votes for all schulze votings in the given collection.
+
+    Args:
+        collection (models.VotingCollection): Collection pk or models.VotingCollection to
+            gather results for.
+        voter (models.Voter or None): If None all schulze votes are returned, otherwise
+            only for this particular voter are returned.
+        **kwargs: Additional arguments directly passed to the queryset filter.
+
+    Returns:
+        queryset: All votes for all votings in the collection (or only for a particular
+            voter).
+    """
     collection = utils.get_instance(voting_models.VotingCollection, collection)
     if voter is None:
         return voting_models.SchulzeVote.objects.filter(
@@ -51,6 +81,15 @@ def get_voters_with_vote(collection):
     # returns all voters that casted a vote for any of the votes in the
     # collection
     # returns them by id as a set
+    """Returns a set of all voters that voted for a least one voting.
+
+    Args:
+        collection (models.VotingCollection): The collection to gather votes for.
+
+    Returns:
+        set of int: The set of all voter ids that participated in at least one of the median
+            and schulze votings in the collection.
+    """
     all_voters = get_median_votes(collection).values_list('voter__id', flat=True)
     result = set(all_voters)
     all_voters = get_schulze_votes(collection).values_list('voter__id', flat=True)
@@ -59,6 +98,16 @@ def get_voters_with_vote(collection):
 
 
 class QueryWarning(object):
+    """A warning encountered during performing a query.
+
+    This is a more or less generic warning class we use to notify about warnings (wrong
+    vote etc.).
+    Can be converted to string with str.
+
+    Attributes:
+        message (string): The warning message.
+
+    """
     def __init__(self, message):
         self.message = message
 
@@ -67,6 +116,14 @@ class QueryWarning(object):
 
 
 class MedianWarning(object):
+    """A warning for a median voting, describing that an invalid entry was found.
+
+    A warning can be converted to a string with str.
+
+    Attributes:
+        voting (models.MedianVoting): The voting for which something went wrong.
+        got (int): The value we found during the voting.
+    """
     def __init__(self, voting, got):
         self.voting = voting
         self.got = got
@@ -81,6 +138,15 @@ class MedianWarning(object):
 
 
 class SchulzeWarning(object):
+    """A warning for a schulze voting.
+
+    A more or less generic class for warnings directly connected to a schulze voting.
+    A warning can be converted to a string with str.
+
+    Attributes:
+        message (str): Description of the warning.
+
+    """
     def __init__(self, message):
         self.message = message
 
