@@ -333,15 +333,15 @@ class SchulzeVote(models.Model):
 
     """
     sorting_position = models.IntegerField(
-        help_text='Position in the voting (the smaller the higher the option was voted)')
+        help_text=gettext_lazy('Position in the voting (the smaller the higher the option was voted)'))
     voter = models.ForeignKey(
         'Voter',
         on_delete=models.CASCADE,
-        help_text='The voter of this vote')
+        help_text=gettext_lazy('The voter of this vote'))
     option = models.ForeignKey(
         'SchulzeOption',
         on_delete=models.CASCADE,
-        help_text='The option this entry is created for')
+        help_text=gettext_lazy('The option this entry is created for'))
 
     class Meta:
         unique_together = ('voter', 'option',)
