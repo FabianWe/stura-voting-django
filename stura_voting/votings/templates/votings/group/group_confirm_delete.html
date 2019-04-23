@@ -1,0 +1,41 @@
+{% extends 'votings/base.html' %}
+
+{% comment %}
+Copyright 2018 - 2019 Fabian Wenzelmann
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+{% endcomment %}
+
+{% load bootstrap4 %}
+
+{% block content %}
+<h2>Gruppe {{ object.name }} löschen</h2>
+<div class="alert alert-warning" role="alert">
+  <h4><i class="fas fa-exclamation-triangle"></i> Hinweis</h4>
+  <p>
+  Gruppen sollten nur im äußersten Notfall gelöscht werden!
+  Es werden alle Abstimmungen und eingetragenen Stimmen aus dieser Gruppe gelöscht!
+  </p>
+  <p>
+    {% if num_votings %}
+      <b>Es werden insgesamt {{ num_votings }} Abstimmungen ebenfalls gelöscht.</b>
+    {% else %}
+      Es wurden keine Abstimmungen in dieser Gruppe gefunden.
+    {% endif %}
+  </p>
+</div>
+    <form role="form" method="post">
+      {% csrf_token %}
+      <div class="form-group"><button class="btn btn-danger" type="submit"><i class="fas fa-trash"></i> Löschen bestätigen</button></div>
+    </form>
+{% endblock %}

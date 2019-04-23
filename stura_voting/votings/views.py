@@ -112,7 +112,6 @@ def edit_group_view(request, pk):
 
 
 class VotingDeleteView(DeleteView):
-    # success_url = reverse_lazy('revision_delete_success')
     template_name = 'votings/voting/voting_confirm_delete.html'
 
     def get_success_url(self):
@@ -130,6 +129,7 @@ class MedianVotingDeleteView(PermissionRequiredMixin, VotingDeleteView):
         num_voters = MedianVote.objects.filter(voting=self.object).count()
         context['num_voters'] = num_voters
         return context
+
 
 
 class SchulzeVotingDeleteView(PermissionRequiredMixin, VotingDeleteView):
@@ -483,6 +483,27 @@ class RevisionDeleteView(PermissionRequiredMixin, DeleteView):
 @permission_required('votings.delete_votersrevision')
 def revision_delete_success_view(request):
     return render(request, 'votings/revision/revision_success_delete.html')
+
+
+class VotingGroupDeleteView(DeleteView):
+    # permissions
+    permission_required = 'votings.delete_votinggroup'
+
+    model = VotingGroup
+    template_name = 'votings/group/group_confirm_delete.html'
+    success_url = reverse_lazy('group_delete_success')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        num_votings = MedianVoting.objects.filter(group=self.object).count()
+        num_votings += SchulzeVoting.objects.filter(group=self.object).count()
+        context['num_votings'] = num_votings
+        return context
+
+
+@permission_required('votings.delete_votinggroup')
+def group_delete_success_view(request):
+    return render(request, 'votings/group/group_success_delete.html')
 
 
 class PeriodDeleteView(PermissionRequiredMixin, DeleteView):

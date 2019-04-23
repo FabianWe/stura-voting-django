@@ -100,6 +100,13 @@ urlpatterns = [
         name='enter_single_voter'),
     path('group/<int:pk>/edit/', views.edit_group_view, name='group_update'),
     path(
+        'group/<int:pk>/delete/',
+        views.VotingGroupDeleteView.as_view(),
+        name='group_delete'),
+    path('group/delete/success/',
+         views.group_delete_success_view,
+         name='group_delete_success'),
+    path(
         'group/<int:pk>/median/create',
         views.MedianVotingCreateView.as_view(),
         name='group_median_create'),
