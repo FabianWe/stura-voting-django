@@ -172,6 +172,7 @@ class GenericVotingResult(object):
             yield group_instance, list(group)
 
     def for_overview_template(self):
+        # TODO is this used somewhere? I think only in combined required?
         # returns groups, option_map where
         # groups is a list of (group, group_list)
         # where group is the group instance
@@ -271,7 +272,7 @@ class CombinedVotingResult(object):
                 self.combined_votings(), lambda voting: voting.group):
             yield group_instance, list(group)
 
-    def for_overview_template(self):
+    def for_overview_template(self, all_groups=None):
         # returns groups, option_map where
         # groups is a list of (group, group_list)
         # where group is the group instance
@@ -282,9 +283,20 @@ class CombinedVotingResult(object):
         #
         # option_map is a mapping from each schulze_voting id to a list of its
         # options as string
+
+        # if we should also include empty groups, check this
+        if all_groups is not None:
+            if isinstance(all_groups, voting_models.VotingCollection):
+                all_groups = (voting_models.VotingGroup.objects.filter(collection=all_groups)
+                              .order_by('group_num'))
+
+
+        # a set for all groups for which we found an entry (ids)
+        groups_set = set()
         groups = []
         option_map = dict()
         for group, votings in self.by_group():
+            groups_set.add(group.id)
             group_list = []
             for v in votings:
                 if isinstance(v, voting_models.MedianVoting):
@@ -305,6 +317,15 @@ class CombinedVotingResult(object):
                 else:
                     assert False
             groups.append((group, group_list))
+        # now: if we should also fetch empty groups check which groups have not
+        # been found, add an empty list
+        if all_groups is not None:
+            groups_not_found = []
+            for group in all_groups:
+                if group.id not in groups_set:
+                    groups_not_found.append((group, []))
+            # merge lists
+            groups = list(merge(groups, groups_not_found, key=lambda e: e[0].group_num))
         return groups, option_map
 
 

@@ -215,6 +215,10 @@ class ResultsSingleVoterForm(DynamicVotingsListForm):
                 yield 'schulze', voting_id, value
 
 
+class NewGroupForm(forms.Form):
+    name = forms.CharField(required=True,
+                           max_length=VotingGroup._meta.get_field('name').max_length)
+
 class UpdateGroupForm(forms.Form):
     """A form used to change the order of votings in a group.
 

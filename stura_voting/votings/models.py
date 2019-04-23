@@ -19,8 +19,6 @@ from django.utils.translation import gettext_lazy
 
 from .utils import *
 
-# TODO change display names
-
 FIFTY_MAJORITY = '50'
 TWO_THIRDS_MAJORITY = '2/3'
 

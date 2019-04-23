@@ -352,9 +352,7 @@ def add_votings(parsed_collection, collection_model):
                 assert False
 
 
-def get_groups_template(collection):
-    # see GenericVotingResult.for_overview_template
-    # also returns the warnings for the session
+def get_groups_template(collection, empty_groups=False):
     """Returns all groups and voting information to be used inside the session views.
 
      It will do the following: It queries all votings for the given collection with
@@ -364,8 +362,13 @@ def get_groups_template(collection):
      It returns the groups and option_map from CombinedVotingResult.for_overview_template
      and the combined warnings.
 
+     Note that empty groups will not be present, if you want to force empty groups to
+     appear use empty_groups=True.
+
     Args:
         collection (VotingCollection): The voting collection to gather the results for.
+        empty_groups (bool): If true all groups will be fetched, even those without a voting.
+            Defaults to False.
 
     Returns:
         groups, option_map, list of warnings: See CombinedVotingResult.for_overview_template.
@@ -373,7 +376,11 @@ def get_groups_template(collection):
     median_votings = results.median_votings(collection=collection)
     schulze_votings = results.schulze_votings(collection=collection)
     merged = results.CombinedVotingResult(median_votings, schulze_votings)
-    groups, option_map = merged.for_overview_template()
+    groups, option_map = None, None
+    if empty_groups:
+        groups, option_map = merged.for_overview_template(all_groups=collection)
+    else:
+        groups, option_map = merged.for_overview_template()
     return groups, option_map, merged.warnings
 
 

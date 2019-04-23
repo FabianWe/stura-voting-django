@@ -29,6 +29,7 @@ from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth.mixins import PermissionRequiredMixin
+from django.http.response import HttpResponseBadRequest
 
 from .results import *
 
@@ -616,7 +617,7 @@ class SessionDetailView(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        groups, option_map, warnings = get_groups_template(self.object)
+        groups, option_map, warnings = get_groups_template(self.object, empty_groups=True)
         context['groups'] = groups
         context['option_map'] = option_map
         context['warnings'] = list(map(str, warnings))
@@ -797,7 +798,7 @@ class SessionPrintView(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        groups, option_map, _ = get_groups_template(self.object)
+        groups, option_map, _ = get_groups_template(self.object, empty_groups=False)
         context['groups'] = groups
         context['option_map'] = option_map
         return context
@@ -819,6 +820,15 @@ def _get_max_voting_num(group):
     if max_schulze is not None:
         res = max(res, max_schulze)
     return res
+
+
+def _get_max_group_num(collection):
+    max_group = (VotingGroup.objects.filter(collection=collection)
+                 .aggregate(Max('group_num')))
+    if max_group is None:
+        return -1
+    max_group = max_group['group_num__max']
+    return max_group
 
 
 class MedianVotingCreateView(PermissionRequiredMixin, CreateView):
@@ -847,6 +857,30 @@ class MedianVotingCreateView(PermissionRequiredMixin, CreateView):
 
     def get_success_url(self):
         return reverse('group_update', args=[self.group.id])
+
+
+@transaction.atomic
+@permission_required(('votings.change_votingcollection', 'votings.add_votinggroup'))
+def new_group(request, pk):
+    collection = get_object_or_404(VotingCollection, pk=pk)
+    if request.method == 'GET':
+        form = NewGroupForm()
+    else:
+        form = NewGroupForm(request.POST)
+        if form.is_valid():
+            group_num = _get_max_group_num(collection) + 1
+            print('Create', group_num)
+            VotingGroup.objects.create(
+                name=form.cleaned_data['name'],
+                collection=collection,
+                group_num=group_num,
+            )
+            return redirect('session_detail', pk=pk)
+        else:
+            print('Not valid')
+            print(form.errors)
+    context = {'form': form, 'collection': collection}
+    return render(request, 'votings/group/new_group.html', context)
 
 
 @transaction.atomic

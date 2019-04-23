@@ -65,6 +65,11 @@ limitations under the License.
           <i class="fas fa-edit fa-lg"></i> Bearbeiten
         </a>
       {% endif %}
+      {% if perms.votings.add_votinggroup %}
+        <a href="{% url 'session_group_create' object.id %}" class="btn btn-primary" role="button">
+          <i class="fas fa-object-group fa-lg"></i> Gruppe hinzufügen
+        </a>
+      {% endif %}
       {% if perms.votings.delete_votingcollection %}
         <a href="{% url 'session_delete' object.id %}" class="btn btn-danger" role="button">
           <i class="fas fa-trash fa-lg"></i> Löschen

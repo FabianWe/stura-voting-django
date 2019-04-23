@@ -93,6 +93,7 @@ urlpatterns = [
         name='enter_voterslist'),
     # in the enter_voterslist view links to enter_single_voter are not hidden,
     # should be fine
+    path('session/<int:pk>/group/create/', views.new_group, name='session_group_create'),
     path(
         'session/<int:coll>/voters/<int:v>/',
         views.enter_single_voter_view,
