@@ -20,6 +20,11 @@ limitations under the License.
 
 {% block content %}
     <h2>Sitzung Bearbeiten</h2>
+    <p>
+      <a href="{% url 'session_detail' object.id %}" class="btn btn-primary" role=button>
+        <i class="fas fa-arrow-circle-left fa-lg"></i> Zurück zur Übersicht
+      </a>
+    </p>
     <form role="form" method="post">
         {% csrf_token %}
         {% bootstrap_form form %}
