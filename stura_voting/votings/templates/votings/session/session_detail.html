@@ -45,21 +45,6 @@ limitations under the License.
     {% endif %}
 
     <p>
-      <a href="{% url 'session_print' object.id %}" target="_blank" class="btn btn-primary" role="button">
-        <i class="fas fa-print fa-lg"></i> Druckansicht
-      </a>
-      {% if perms.votings.enter_collection_results %}
-        <a href="{% url 'enter_voterslist' object.id %}" class="btn btn-primary" role="button">
-          <i class="fas fa-person-booth fa-lg"></i> Abstimmungen Eintragen
-        </a>
-      {% endif %}
-      <a href="{% url 'votes_list' object.id %}" target="_blank" class="btn btn-primary" role="button"><i class="fas fa-table fa-lg"></i> Abstimmungsliste</a>
-    </p>
-    <p>
-      <a href="{% url 'session_results' object.id %}" title="Auswertungsergebnisse anzeigen" class="btn btn-primary" role="button"><i class="fas fa-chart-pie fa-lg"></i> Auswerten</a>
-      <a href="{% url 'session_results_detailed' object.id %}" title="Auswertungsergebnisse und Abstimmungsübersicht anzeigen" class="btn btn-primary" role="button"><i class="fas fa-list-ol fa-lg"></i> Detaillierte Auswertung</a>
-    </p>
-    <p>
       {% if perms.votings.change_votingcollection %}
         <a href="{% url 'session_update' object.id %}" class="btn btn-primary" role="button">
           <i class="fas fa-edit fa-lg"></i> Bearbeiten
@@ -75,6 +60,22 @@ limitations under the License.
           <i class="fas fa-trash fa-lg"></i> Löschen
         </a>
       {% endif %}
+    </p>
+
+    <p>
+      <a href="{% url 'session_print' object.id %}" target="_blank" class="btn btn-primary" role="button">
+        <i class="fas fa-print fa-lg"></i> Druckansicht
+      </a>
+      {% if perms.votings.enter_collection_results %}
+        <a href="{% url 'enter_voterslist' object.id %}" class="btn btn-primary" role="button">
+          <i class="fas fa-person-booth fa-lg"></i> Abstimmungen Eintragen
+        </a>
+      {% endif %}
+      <a href="{% url 'votes_list' object.id %}" target="_blank" class="btn btn-primary" role="button"><i class="fas fa-table fa-lg"></i> Abstimmungsliste</a>
+    </p>
+    <p>
+      <a href="{% url 'session_results' object.id %}" title="Auswertungsergebnisse anzeigen" class="btn btn-primary" role="button"><i class="fas fa-chart-pie fa-lg"></i> Auswerten</a>
+      <a href="{% url 'session_results_detailed' object.id %}" title="Auswertungsergebnisse und Abstimmungsübersicht anzeigen" class="btn btn-primary" role="button"><i class="fas fa-list-ol fa-lg"></i> Detaillierte Auswertung</a>
     </p>
     Sitzung vom {{ object.time }} in der Abstimmungsperiode
     <a href="{% url 'period_detail' object.revision.period.id %}">{{ object.revision.period.name }}</a>

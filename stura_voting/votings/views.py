@@ -42,11 +42,13 @@ from .utils import *
 from .median import median_for_evaluation, single_median_statistics
 from .schulze import schulze_for_evaluation, single_schulze_instance
 
+from django.utils import timezone
 
 # TODO which views should be atomic
 # also see select_for_update
 
 def index(request):
+    query_votes(end=timezone.now(), query='initiative fachbereich', split=True)
     return render(request, 'votings/index.html')
 
 
@@ -286,6 +288,7 @@ def enter_single_voter_view(request, coll, v):
                         form.schulze_result, v_id, val, voter)
                 else:
                     assert False
+            return redirect('enter_voterslist', pk=coll)
     context['form'] = form
     # our methods might change the contents of schulze and median warnings, thus
     # the merged result does not contain all warnings, we merge them here again
@@ -485,7 +488,7 @@ def revision_delete_success_view(request):
     return render(request, 'votings/revision/revision_success_delete.html')
 
 
-class VotingGroupDeleteView(DeleteView):
+class VotingGroupDeleteView(PermissionRequiredMixin, DeleteView):
     # permissions
     permission_required = 'votings.delete_votinggroup'
 

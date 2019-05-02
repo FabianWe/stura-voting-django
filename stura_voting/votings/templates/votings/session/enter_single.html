@@ -20,6 +20,11 @@ limitations under the License.
 
 {% block content %}
 <h2>Abstimmungen von {{ voter.name }} für {{ collection.name }}</h2>
+<p>
+  <a href="{% url 'enter_voterslist' collection.id %}" class="btn btn-primary" role=button>
+    <i class="fas fa-arrow-circle-left fa-lg"></i> Zurück zur Liste
+  </a>
+</p>
 
 {% if warnings %}
   <div class="alert alert-danger" role="alert">

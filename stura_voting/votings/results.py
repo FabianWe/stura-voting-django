@@ -20,6 +20,7 @@ from django.utils.translation import gettext
 
 from . import utils
 from . import models as voting_models
+from django.db.models import Q
 
 
 # TODO in subpackage (stura_voting_utils) specify requirements
@@ -569,3 +570,54 @@ class GenericVotingInstance(object):
         self.votes = dict()
         self.weight_sum = None
         self.majority = None
+
+
+def query_votes(**kwargs):
+    # filter by: timespan or specific user (bound to revision) or
+    # username contains
+    # also possible: all of it
+    # returns, what? for voting? for session
+    # for session is good: all votings for which a voter voted something
+    period = kwargs.pop('period', None)
+    start, end = kwargs.pop('start', None), kwargs.pop('end', None)
+    query = kwargs.pop('query', None)
+    # build filter args
+    schulze_kwargs = dict()
+    median_kwargs = dict()
+    if period is not None:
+        schulze_kwargs.update(option__voting__group__collection__revision__period=period)
+        median_kwargs.update(voting__group__collection__revision__period=period)
+    if start is not None:
+        schulze_kwargs.update(option__voting__group__collection__time__gte=start)
+        median_kwargs.update(voting__group__collection__time__gte=start)
+    if end is not None:
+        schulze_kwargs.update(option__voting__group__collection__time__lte=end)
+        median_kwargs.update(voting__group__collection__time__lte=end)
+    schulze_q, median_q = None, None
+    if query is not None:
+        if kwargs.pop('split', False):
+            split = query.split(' ')
+            split = map(lambda s: s.strip(), split)
+            split = list(filter(lambda s: s, split))
+            if split:
+                schulze_q = Q()
+                median_q = Q()
+                for sub in map(lambda s: s.strip(), split):
+                    schulze_q = schulze_q | Q(voter__name__icontains=sub)
+                    median_q = median_q | Q(voter__name__icontains=sub)
+        else:
+            if query:
+                schulze_kwargs.update(voter__name__icontains=query)
+                median_kwargs.update(voter__name__icontains=query)
+    schulze_args, median_args = (), ()
+    if schulze_q is not None:
+        schulze_args += (schulze_q,)
+    if median_q is not None:
+        median_args += (median_q,)
+    schulze_votes = voting_models.SchulzeVote.objects.filter(*schulze_args, **schulze_kwargs)
+    median_votes = voting_models.MedianVote.objects.filter(*median_args, **median_kwargs)
+    for v in schulze_votes:
+        print(v)
+    for v in median_votes:
+        print(v)
+    print('Total:', len(schulze_votes) + len(median_votes))
