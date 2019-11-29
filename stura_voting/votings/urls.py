@@ -143,4 +143,5 @@ urlpatterns = [
         'session/<int:pk>/results/',
         views.session_results_view,
         name='session_results'),
+    path('star/test/', views.star_test_view, name='star_test'),
 ]

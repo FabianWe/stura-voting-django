@@ -18,12 +18,21 @@ limitations under the License.
 
 {% load bootstrap4 %}
 
+{% block additional_static %}
+  {{ block.super }}
+    {{ form.media }}
+{% endblock %}
+
 {% block content %}
     <h2>Schulze-Abstimmung anlegen</h2>
 
     <form role="form" method="post">
         {% csrf_token %}
         {% bootstrap_form form %}
+        {% comment %}
+        TODO change to old one later?
         {% buttons submit='Speichern' %}{% endbuttons %}
+        {% endcomment %}
+         <div class="form-group"><button id="mybutton" class="btn btn-default" type="submit">Speichern</button></div>
     </form>
 {% endblock %}

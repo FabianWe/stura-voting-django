@@ -272,3 +272,9 @@ class SchulzeVotingCreateForm(forms.ModelForm):
         fields = ('name', 'majority', 'absolute_majority')
 
 # https://jacobian.org/writing/dynamic-form-generation/
+
+class StarTestForm(forms.Form):
+    from .widgets import StarWidget
+    #starone = forms.IntegerField(min_value=1, widget=StarWidget(on_selected='empty', clear='always'), required=True, help_text="heeelp")
+    #startwo = forms.IntegerField(min_value=1, max_value=10, widget=StarWidget(on_selected='empty', clear='always'), required=True, help_text="heeelp")
+    starthree = forms.IntegerField(min_value=1, max_value=6, widget=StarWidget(submit_button='mybutton'), required=True)

@@ -48,6 +48,7 @@ from django.utils import timezone
 # also see select_for_update
 
 def index(request):
+    # TODO remove
     query_votes(end=timezone.now(), query='initiative fachbereich', split=True)
     return render(request, 'votings/index.html')
 
