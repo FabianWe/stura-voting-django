@@ -1,4 +1,4 @@
-Django==2.2
+Django==2.2.7
 psycopg2
 django-bootstrap4
 pytz
